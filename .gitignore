@@ -1,0 +1,17 @@
+# Virtual environment
+venv/
+.venv/
+
+# PyCharm project files
+.idea/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# macOS junk
+.DS_Store
+
+# Optional: if you ever have local databases or logs
+*.sqlite3
+*.log
