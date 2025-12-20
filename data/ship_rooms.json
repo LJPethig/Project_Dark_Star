@@ -5,10 +5,7 @@
     "description": [
       "You awaken in your small, familiar cabin.",
       "The hum of life support fills the air. Dim lights flicker on automatically.",
-      "Your bunk is unmade. Personal effects are scattered — reminders of a life spent in the black.",
-      "",
-      "A soft chime from the wall panel:",
-      "\"Reminder: Replace CO₂ scrubber filters in 48 hours. Current air quality: 92%.\""
+      "Your bunk is unmade. Personal effects are scattered — reminders of a life spent in the black."
     ],
     "background": "resources/images/quarters.png",
     "exits": {"forward": "galley"}
