@@ -254,8 +254,24 @@ class ShipView(arcade.View):
 
             response = None
 
-            if cmd in self.current_location["exits"]:
-                next_id = self.current_location["exits"][cmd]
+            # Normalize command for prefixes like "go ", "enter ", etc.
+            normalized_cmd = cmd
+            if normalized_cmd.startswith(("enter ", "go ", "go to ", "head ", "move ")):
+                normalized_cmd = normalized_cmd.split(" ", 2)[-1].strip()
+
+            # Try direct exit name (e.g., "galley")
+            if normalized_cmd in self.current_location["exits"]:
+                exit_data = self.current_location["exits"][normalized_cmd]
+                next_id = exit_data["target"]
+            else:
+                # Try direction (e.g., "forward")
+                next_id = None
+                for exit_key, exit_data in self.current_location["exits"].items():
+                    if "direction" in exit_data and normalized_cmd == exit_data["direction"].lower():
+                        next_id = exit_data["target"]
+                        break
+
+            if next_id:
                 self.current_location = self.game_manager.ship["rooms"][next_id]
                 self._load_background()
                 self._rebuild_description()

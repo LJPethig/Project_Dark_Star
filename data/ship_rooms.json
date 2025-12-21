@@ -5,19 +5,33 @@
     "description": [
       "You awaken in your small, familiar cabin.",
       "The hum of life support fills the air. Dim lights flicker on automatically.",
-      "Your bunk is unmade. Personal effects are scattered — reminders of a life spent in the black."
+      "Your bunk is unmade. Personal effects are scattered — reminders of a life spent in the black.",
+      "A hatch **leads forward to the galley**, humming faintly with activity."
     ],
     "background": "resources/images/quarters.png",
-    "exits": {"forward": "galley"}
+    "exits": {
+      "galley": {
+        "target": "galley",
+        "label": "galley",
+        "direction": "forward"
+      }
+    }
   },
   {
     "id": "galley",
     "name": "Galley",
     "description": [
       "A cramped kitchen area. Food synthesizer, water recycler, small table bolted to the floor.",
-      "Everything is functional, nothing is luxurious."
+      "Everything is functional, nothing is luxurious.",
+      "A hatch **leads back to crew quarters** — your bunk calls."
     ],
     "background": "resources/images/galley.png",
-    "exits": {"aft": "quarters"}
+    "exits": {
+      "quarters": {
+        "target": "quarters",
+        "label": "crew quarters",
+        "direction": "back"
+      }
+    }
   }
 ]
