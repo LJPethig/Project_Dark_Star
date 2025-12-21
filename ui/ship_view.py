@@ -3,7 +3,7 @@ from constants import *
 
 
 class ShipView(arcade.View):
-    """Main view for the player's ship interior using arcade.Text."""
+    """Main view with correct section-based layout."""
 
     def __init__(self, game_manager):
         super().__init__()
@@ -11,7 +11,7 @@ class ShipView(arcade.View):
         self.current_location = game_manager.get_current_location()
 
         self.current_input = ""
-        self.last_response = ""  # Only the most recent response is kept
+        self.last_response = ""
 
         # Cursor blink
         self.cursor_visible = True
@@ -20,7 +20,7 @@ class ShipView(arcade.View):
         # Section manager
         self.section_manager = arcade.SectionManager(self)
 
-        # Left: Image section (70%)
+        # Left: Image section (55%)
         image_width = int(SCREEN_WIDTH * LEFT_PANEL_RATIO)
         self.image_section = arcade.Section(
             left=0,
@@ -30,34 +30,58 @@ class ShipView(arcade.View):
         )
         self.section_manager.add_section(self.image_section)
 
-        # Right: Full text panel (30%)
-        text_left = image_width
-        text_width = SCREEN_WIDTH - text_left
-        self.text_section = arcade.Section(
-            left=text_left,
-            bottom=0,
-            width=text_width,
-            height=SCREEN_HEIGHT
+        # Right text panel starts above event section
+        self.text_left = image_width
+        self.text_width = SCREEN_WIDTH - image_width
+
+        # Event section height (full width, bottom)
+        self.event_section_height = EVENT_SECTION_HEIGHT
+
+        # Calculate heights for right-side sections
+        right_text_height = SCREEN_HEIGHT - self.event_section_height
+        self.description_section_height = int(right_text_height * DESCRIPTION_SECTION_RATIO)
+        self.input_section_height = INPUT_SECTION_HEIGHT
+        self.response_section_height = right_text_height - self.description_section_height - self.input_section_height
+
+        # Create sections
+        self.description_section = arcade.Section(
+            left=self.text_left,
+            bottom=self.event_section_height + self.input_section_height + self.response_section_height,
+            width=self.text_width,
+            height=self.description_section_height
         )
-        self.section_manager.add_section(self.text_section)
+        self.response_section = arcade.Section(
+            left=self.text_left,
+            bottom=self.event_section_height + self.input_section_height,
+            width=self.text_width,
+            height=self.response_section_height
+        )
+        self.input_section = arcade.Section(
+            left=self.text_left,
+            bottom=self.event_section_height,
+            width=self.text_width,
+            height=self.input_section_height
+        )
+        self.section_manager.add_section(self.description_section)
+        self.section_manager.add_section(self.response_section)
+        self.section_manager.add_section(self.input_section)
 
         # Load background
         self.background_list = arcade.SpriteList()
         self._load_background()
 
-        # Common text positioning
-        self.text_x = text_left + 40
-        self.text_width = text_width - 80
+        # Text padding
+        self.text_padding = TEXT_PADDING
 
-        # --- UPPER AREA: Fixed room title + description ---
-        self.title_text = arcade.Text(
+        # --- Description section content (global Y) ---
+        self.description_title = arcade.Text(
             self.current_location["name"],
-            x=self.text_x,
-            y=SCREEN_HEIGHT - 60,
+            x=self.text_left + self.text_padding,
+            y=SCREEN_HEIGHT - TITLE_PADDING,
             color=ACCENT_COLOR,
-            font_size=FONT_SIZE_TITLE,
+            font_size=DESCRIPTION_TITLE_FONT_SIZE,
             font_name=FONT_NAME_PRIMARY,
-            width=self.text_width,
+            width=self.text_width - 2 * self.text_padding,
             multiline=True,
             anchor_y="top"
         )
@@ -65,39 +89,31 @@ class ShipView(arcade.View):
         self.description_texts = []
         self._rebuild_description()
 
-        # --- LOWER AREA: Split into response + input ---
-        self.lower_section_height = int(SCREEN_HEIGHT * 0.45)  # ~45% of screen
-
-        # Response area (top part of lower section)
+        # --- Response section content (global Y) ---
         self.response_text = arcade.Text(
             "",
-            x=self.text_x,
-            y=self.lower_section_height - 60,  # Start near top of lower section
+            x=self.text_left + self.text_padding,
+            y=self.response_section.bottom + self.response_section.height - RESPONSE_PADDING_TOP,
             color=TEXT_COLOR,
-            font_size=FONT_SIZE_DEFAULT,
+            font_size=RESPONSE_FONT_SIZE,
             font_name=FONT_NAME_PRIMARY,
-            width=self.text_width,
+            width=self.text_width - 2 * self.text_padding,
             multiline=True,
             anchor_y="top"
         )
 
-        # Input prompt fixed at very bottom
+        # --- Input section content (global Y) ---
         self.input_text = arcade.Text(
             "> ",
-            x=self.text_x,
-            y=80,  # Fixed position from bottom
+            x=self.text_left + self.text_padding,
+            y=self.input_section.bottom + self.input_section.height - INPUT_PADDING_BOTTOM,
             color=TEXT_COLOR,
-            font_size=FONT_SIZE_PROMPT,
+            font_size=INPUT_FONT_SIZE,
             font_name=FONT_NAME_PRIMARY,
-            width=self.text_width,
+            width=self.text_width - 2 * self.text_padding,
             multiline=True,
             anchor_y="bottom"
         )
-
-        # Divider between upper (description) and lower section
-        # Optional: another divider between response and input
-        self.divider_y = self.lower_section_height
-        self.response_input_divider_y = 140  # Adjust based on input height
 
     def _load_background(self):
         self.background_list = arcade.SpriteList()
@@ -115,26 +131,26 @@ class ShipView(arcade.View):
 
     def _rebuild_description(self):
         self.description_texts = []
-        current_y = SCREEN_HEIGHT - 140
+        current_y = SCREEN_HEIGHT - TITLE_PADDING - DESCRIPTION_TITLE_FONT_SIZE - SECTION_TITLE_PADDING
 
         for line in self.current_location["description"]:
             if not line.strip():
-                current_y -= 30
+                current_y -= LINE_SPACING
                 continue
 
-            msg_text = arcade.Text(
+            txt = arcade.Text(
                 line,
-                x=self.text_x,
+                x=self.text_left + self.text_padding,
                 y=current_y,
                 color=TEXT_COLOR,
-                font_size=FONT_SIZE_DEFAULT,
+                font_size=DESCRIPTION_FONT_SIZE,
                 font_name=FONT_NAME_PRIMARY,
-                width=self.text_width,
+                width=self.text_width - 2 * self.text_padding,
                 multiline=True,
                 anchor_y="top"
             )
-            current_y -= msg_text.content_height + 12
-            self.description_texts.append(msg_text)
+            current_y -= txt.content_height + LINE_SPACING
+            self.description_texts.append(txt)
 
     def _update_response_display(self):
         self.response_text.text = self.last_response
@@ -156,47 +172,44 @@ class ShipView(arcade.View):
         # Draw background image
         self.background_list.draw()
 
-        # Overlays
+        # Overlay on image section
         arcade.draw_lrbt_rectangle_filled(
             self.image_section.left, self.image_section.right,
             self.image_section.bottom, self.image_section.top,
             BACKGROUND_OVERLAY
         )
+
+        # Dividers between right sections (global Y)
+        divider_color = DIVIDER_COLOR
+        arcade.draw_line(
+            self.text_left + 20,
+            self.description_section.bottom,
+            self.text_left + self.text_width - 20,
+            self.description_section.bottom,
+            divider_color,
+            DIVIDER_THICKNESS
+        )
+        arcade.draw_line(
+            self.text_left + 20,
+            self.response_section.bottom,
+            self.text_left + self.text_width - 20,
+            self.response_section.bottom,
+            divider_color,
+            DIVIDER_THICKNESS
+        )
+
+        # Event section background (reserved)
         arcade.draw_lrbt_rectangle_filled(
-            self.text_section.left, self.text_section.right,
-            self.text_section.bottom, self.text_section.top,
-            PANEL_OVERLAY
+            0, SCREEN_WIDTH,
+            0, self.event_section_height,
+            EVENT_SECTION_BG_COLOR
         )
 
-        # Divider between upper and lower
-        arcade.draw_line(
-            self.text_section.left + 20,
-            self.divider_y,
-            self.text_section.right - 20,
-            self.divider_y,
-            (100, 150, 200, 180),
-            2
-        )
-
-        # Optional divider between response and input (comment out if not wanted)
-        arcade.draw_line(
-            self.text_section.left + 20,
-            self.response_input_divider_y,
-            self.text_section.right - 20,
-            self.response_input_divider_y,
-            (80, 120, 160, 140),
-            1
-        )
-
-        # Draw upper fixed content
-        self.title_text.draw()
+        # Draw all text (global coordinates)
+        self.description_title.draw()
         for txt in self.description_texts:
             txt.draw()
-
-        # Draw latest response in lower top area
         self.response_text.draw()
-
-        # Draw fixed input prompt at bottom
         self.input_text.draw()
 
     def on_key_press(self, key, modifiers):
@@ -204,12 +217,10 @@ class ShipView(arcade.View):
             cmd = self.current_input.strip().lower()
             self.current_input = ""
 
-            # Clear previous response immediately
             self.last_response = ""
             self._update_response_display()
 
             if cmd:
-                # Optionally show the command itself (comment out if you don't want to see it)
                 self.last_response = f"> {cmd}\n"
 
             response = None
@@ -235,6 +246,6 @@ class ShipView(arcade.View):
                 self.current_input = self.current_input[:-1]
                 self._update_input_display()
 
-        elif 32 <= key <= 126:  # Printable ASCII
+        elif 32 <= key <= 126:
             self.current_input += chr(key)
             self._update_input_display()
