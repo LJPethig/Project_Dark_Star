@@ -24,7 +24,7 @@ class ShipView(arcade.View):
         image_width = int(SCREEN_WIDTH * LEFT_PANEL_RATIO)
         self.image_section = arcade.Section(
             left=0,
-            bottom=0,
+            bottom= EVENT_SECTION_HEIGHT,
             width=image_width,
             height=SCREEN_HEIGHT
         )
@@ -36,6 +36,7 @@ class ShipView(arcade.View):
 
         # Event section height (full width, bottom)
         self.event_section_height = EVENT_SECTION_HEIGHT
+        self.event_section_width = SCREEN_WIDTH
 
         # Calculate heights for right-side sections
         right_text_height = SCREEN_HEIGHT - self.event_section_height
@@ -62,9 +63,16 @@ class ShipView(arcade.View):
             width=self.text_width,
             height=self.input_section_height
         )
+        self.event_section = arcade.Section(
+            left=0,
+            bottom=0,
+            width=self.text_width,
+            height=self.event_section_height
+        )
         self.section_manager.add_section(self.description_section)
         self.section_manager.add_section(self.response_section)
         self.section_manager.add_section(self.input_section)
+        self.section_manager.add_section(self.event_section)
 
         # Load background
         self.background_list = arcade.SpriteList()
@@ -106,13 +114,13 @@ class ShipView(arcade.View):
         self.input_text = arcade.Text(
             "> ",
             x=self.text_left + self.text_padding,
-            y=self.input_section.bottom + self.input_section.height - INPUT_PADDING_BOTTOM,
+            y=self.input_section.bottom + self.input_section.height - INPUT_PADDING_TOP,
             color=TEXT_COLOR,
             font_size=INPUT_FONT_SIZE,
             font_name=FONT_NAME_PRIMARY,
             width=self.text_width - 2 * self.text_padding,
             multiline=True,
-            anchor_y="bottom"
+            anchor_y="top"
         )
 
     def _load_background(self):
@@ -122,9 +130,9 @@ class ShipView(arcade.View):
             bg_sprite = arcade.Sprite()
             bg_sprite.texture = texture
             bg_sprite.center_x = self.image_section.width / 2
-            bg_sprite.center_y = SCREEN_HEIGHT / 2
+            bg_sprite.center_y = (SCREEN_HEIGHT + EVENT_SECTION_HEIGHT) / 2
             bg_sprite.width = self.image_section.width
-            bg_sprite.height = SCREEN_HEIGHT
+            bg_sprite.height = SCREEN_HEIGHT - EVENT_SECTION_HEIGHT
             self.background_list.append(bg_sprite)
         except Exception as e:
             print(f"Background load failed: {e}")
@@ -179,31 +187,52 @@ class ShipView(arcade.View):
             BACKGROUND_OVERLAY
         )
 
-        # Dividers between right sections (global Y)
+        # Divider between RH image and LH text sections
         divider_color = DIVIDER_COLOR
         arcade.draw_line(
-            self.text_left + 20,
-            self.description_section.bottom,
-            self.text_left + self.text_width - 20,
-            self.description_section.bottom,
-            divider_color,
-            DIVIDER_THICKNESS
-        )
-        arcade.draw_line(
-            self.text_left + 20,
-            self.response_section.bottom,
-            self.text_left + self.text_width - 20,
-            self.response_section.bottom,
+            self.text_left,
+            self.event_section_height,
+            self.text_left,
+            SCREEN_HEIGHT,
             divider_color,
             DIVIDER_THICKNESS
         )
 
-        # Event section background (reserved)
-        arcade.draw_lrbt_rectangle_filled(
-            0, SCREEN_WIDTH,
-            0, self.event_section_height,
-            EVENT_SECTION_BG_COLOR
+        # Divider at bottom of description section
+        divider_color = DIVIDER_COLOR
+        arcade.draw_line(
+            self.text_left,
+            self.description_section.bottom,
+            self.text_left + self.text_width,
+            self.description_section.bottom,
+            divider_color,
+            DIVIDER_THICKNESS
         )
+        # Divider at bottom of response section
+        arcade.draw_line(
+            self.text_left,
+            self.response_section.bottom,
+            self.text_left + self.text_width,
+            self.response_section.bottom,
+            divider_color,
+            DIVIDER_THICKNESS
+        )
+        # divider at top of event section
+        arcade.draw_line(
+            0,
+            60,
+            SCREEN_WIDTH,
+            60,
+            divider_color,
+            DIVIDER_THICKNESS
+        )
+
+        # # Event section background (reserved)
+        # arcade.draw_lrbt_rectangle_filled(
+        #     0, SCREEN_WIDTH,
+        #     0, self.event_section_height,
+        #     EVENT_SECTION_BG_COLOR
+        # )
 
         # Draw all text (global coordinates)
         self.description_title.draw()
