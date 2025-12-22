@@ -1,12 +1,12 @@
 [
   {
-    "id": "quarters",
-    "name": "Your Quarters",
+    "id": "crew quarters",
+    "name": "Crew Quarters",
     "description": [
-      "You awaken in your small, familiar cabin.",
+      "Your personal cabin",
       "The hum of life support fills the air. Dim lights flicker on automatically.",
-      "Your bunk is unmade. Personal effects are scattered — reminders of a life spent in the black.",
-      "A hatch **leads forward to the galley**, humming faintly with activity."
+      "The bunk is unmade. Personal effects are scattered — reminders of a life spent in the black.",
+      "A hatch *leads forward to the galley*, humming faintly with activity."
     ],
     "background": "resources/images/quarters.png",
     "exits": {
@@ -23,12 +23,12 @@
     "description": [
       "A cramped kitchen area. Food synthesizer, water recycler, small table bolted to the floor.",
       "Everything is functional, nothing is luxurious.",
-      "A hatch **leads back to crew quarters** — your bunk calls."
+      "A hatch *leads back to the crew quarters*."
     ],
     "background": "resources/images/galley.png",
     "exits": {
       "quarters": {
-        "target": "quarters",
+        "target": "crew quarters",
         "label": "crew quarters",
         "direction": "back"
       }

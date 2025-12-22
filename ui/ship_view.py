@@ -20,7 +20,7 @@ class ShipView(arcade.View):
         # Section manager
         self.section_manager = arcade.SectionManager(self)
 
-        # Left: Image section (55%)
+        # Left: Image section
         image_width = int(SCREEN_WIDTH * LEFT_PANEL_RATIO)
         self.image_section = arcade.Section(
             left=0,
@@ -187,6 +187,16 @@ class ShipView(arcade.View):
             BACKGROUND_OVERLAY
         )
 
+        # Window border
+        arcade.draw_lrbt_rectangle_outline(
+        0,
+            SCREEN_WIDTH,
+        0,
+            SCREEN_HEIGHT,
+            DIVIDER_COLOR,
+            DIVIDER_THICKNESS
+        )
+
         # Divider between RH image and LH text sections
         divider_color = DIVIDER_COLOR
         arcade.draw_line(
@@ -251,6 +261,13 @@ class ShipView(arcade.View):
 
             if cmd:
                 self.last_response = f"> {cmd}\n"
+
+            # Quit command
+            if cmd in ("quit", "exit"):
+                self.last_response += "Thanks for playing Project Dark Star. Goodbye!\n"
+                self._update_response_display()
+                arcade.exit()
+                return  # Ensure no further processing
 
             response = None
 

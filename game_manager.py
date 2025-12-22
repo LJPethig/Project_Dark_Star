@@ -39,7 +39,7 @@ class GameManager:
         }
 
         # Player always starts in quarters after waking up
-        self.current_location = self.ship["rooms"]["quarters"]
+        self.current_location = self.ship["rooms"]["crew quarters"]
 
     def _load_ship_rooms(self) -> dict:
         """Load ship room data from JSON and return a dict keyed by room ID."""
