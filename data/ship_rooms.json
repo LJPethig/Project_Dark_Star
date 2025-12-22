@@ -27,7 +27,7 @@
     ],
     "background": "resources/images/galley.png",
     "exits": {
-      "quarters": {
+      "crew quarters": {
         "target": "crew quarters",
         "label": "crew quarters",
         "direction": "back"

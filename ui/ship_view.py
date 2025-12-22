@@ -1,5 +1,8 @@
+# ship_view.py
+
 import arcade
 from constants import *
+from command_processor import CommandProcessor
 
 
 class ShipView(arcade.View):
@@ -9,6 +12,8 @@ class ShipView(arcade.View):
         super().__init__()
         self.game_manager = game_manager
         self.current_location = game_manager.get_current_location()
+
+        self.command_processor = CommandProcessor(self)
 
         self.current_input = ""
         self.last_response = ""
@@ -167,6 +172,14 @@ class ShipView(arcade.View):
         cursor = "█" if self.cursor_visible else " "
         self.input_text.text = f"> {self.current_input}{cursor}"
 
+    def change_location(self, new_room_id: str) -> None:
+        """Update the current location and refresh all visual elements."""
+        self.current_location = self.game_manager.ship["rooms"][new_room_id]
+        self._load_background()
+        self._rebuild_description()
+        self.description_title.text = self.current_location["name"]
+        # Future extensions can go here: animations, sound effects, event triggers, etc.
+
     def on_update(self, delta_time: float):
         self.blink_timer += delta_time
         if self.blink_timer >= 0.5:
@@ -253,55 +266,30 @@ class ShipView(arcade.View):
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.ENTER:
-            cmd = self.current_input.strip().lower()
+            cmd = self.current_input.strip()
             self.current_input = ""
+            self._update_input_display()
 
-            self.last_response = ""
-            self._update_response_display()
+            if not cmd:
+                return
 
-            if cmd:
-                self.last_response = f"> {cmd}\n"
+            # Show what the player typed
+            self.last_response = f"> {cmd}\n"
 
-            # Quit command
-            if cmd in ("quit", "exit"):
-                self.last_response += "Thanks for playing Project Dark Star. Goodbye!\n"
+            # Delegate to command processor
+            response = self.command_processor.process(cmd)
+
+            # Handle quit/exit specially (since it calls arcade.exit())
+            if response == "Thanks for playing Project Dark Star. Goodbye!":
+                self.last_response += response + "\n"
                 self._update_response_display()
                 arcade.exit()
-                return  # Ensure no further processing
+                return
 
-            response = None
-
-            # Normalize command for prefixes like "go ", "enter ", etc.
-            normalized_cmd = cmd
-            if normalized_cmd.startswith(("enter ", "go ", "go to ", "head ", "move ")):
-                normalized_cmd = normalized_cmd.split(" ", 2)[-1].strip()
-
-            # Try direct exit name (e.g., "galley")
-            if normalized_cmd in self.current_location["exits"]:
-                exit_data = self.current_location["exits"][normalized_cmd]
-                next_id = exit_data["target"]
-            else:
-                # Try direction (e.g., "forward")
-                next_id = None
-                for exit_key, exit_data in self.current_location["exits"].items():
-                    if "direction" in exit_data and normalized_cmd == exit_data["direction"].lower():
-                        next_id = exit_data["target"]
-                        break
-
-            if next_id:
-                self.current_location = self.game_manager.ship["rooms"][next_id]
-                self._load_background()
-                self._rebuild_description()
-                response = f"You enter the {self.current_location['name']}."
-            else:
-                if cmd:
-                    response = "You can't go that way."
-
+            # Normal response
             if response:
-                self.last_response += response
+                self.last_response += response + "\n"
                 self._update_response_display()
-
-            self._update_input_display()
 
         elif key == arcade.key.BACKSPACE:
             if self.current_input:
