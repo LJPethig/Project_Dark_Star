@@ -54,3 +54,10 @@ class GameManager:
     def get_current_location(self) -> dict:
         """Return the current location data."""
         return self.current_location
+
+    def set_current_location(self, room_id: str) -> None:
+        """Set the current location by room ID. Single source of truth for game state."""
+        if room_id in self.ship["rooms"]:
+            self.current_location = self.ship["rooms"][room_id]
+        else:
+            raise ValueError(f"Invalid room ID: {room_id}")

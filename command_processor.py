@@ -6,7 +6,7 @@ class CommandProcessor:
     def __init__(self, ship_view):
         self.ship_view = ship_view
         self.game_manager = ship_view.game_manager
-        # No self.current_location here — we read live from ship_view
+        # No self.current_location — we query live from GameManager
 
     def process(self, cmd: str) -> str:
         """Process a single command string and return the response."""
@@ -23,8 +23,8 @@ class CommandProcessor:
         if normalized_cmd.startswith(("enter ", "go ", "go to ", "move ")):
             normalized_cmd = normalized_cmd.split(" ", 2)[-1].strip()
 
-        # Get current location live from the view (always up-to-date)
-        current_location = self.ship_view.current_location
+        # Get current location live from GameManager (single source of truth)
+        current_location = self.game_manager.get_current_location()
 
         # Try direct exit name (e.g., "galley")
         next_id = None
@@ -40,8 +40,8 @@ class CommandProcessor:
 
         if next_id:
             self.ship_view.change_location(next_id)
-            # Use live reference for the response
-            return f"You enter the {self.ship_view.current_location['name']}."
+            # Use live location from GameManager for the response
+            return f"You enter the {self.game_manager.get_current_location()['name']}."
 
         # If we got here and it's not quit → movement attempt failed
         if cmd:

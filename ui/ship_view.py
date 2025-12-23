@@ -11,7 +11,7 @@ class ShipView(arcade.View):
     def __init__(self, game_manager):
         super().__init__()
         self.game_manager = game_manager
-        self.current_location = game_manager.get_current_location()
+        # Removed self.current_location - always query game_manager.get_current_location() live
 
         self.command_processor = CommandProcessor(self)
 
@@ -87,8 +87,9 @@ class ShipView(arcade.View):
         self.text_padding = TEXT_PADDING
 
         # --- Description section content (global Y) ---
+        current_location = self.game_manager.get_current_location()  # Query live from GameManager
         self.description_title = arcade.Text(
-            self.current_location["name"],
+            current_location["name"],
             x=self.text_left + self.text_padding,
             y=SCREEN_HEIGHT - TITLE_PADDING,
             color=ACCENT_COLOR,
@@ -129,9 +130,11 @@ class ShipView(arcade.View):
         )
 
     def _load_background(self):
+        """Load background image for the CURRENT location (queried live)."""
         self.background_list = arcade.SpriteList()
+        current_location = self.game_manager.get_current_location()  # Always live
         try:
-            texture = arcade.load_texture(self.current_location["background"])
+            texture = arcade.load_texture(current_location["background"])
             bg_sprite = arcade.Sprite()
             bg_sprite.texture = texture
             bg_sprite.center_x = self.image_section.width / 2
@@ -143,10 +146,12 @@ class ShipView(arcade.View):
             print(f"Background load failed: {e}")
 
     def _rebuild_description(self):
+        """Rebuild description texts for the CURRENT location (queried live)."""
         self.description_texts = []
+        current_location = self.game_manager.get_current_location()  # Always live
         current_y = SCREEN_HEIGHT - TITLE_PADDING - DESCRIPTION_TITLE_FONT_SIZE - SECTION_TITLE_PADDING
 
-        for line in self.current_location["description"]:
+        for line in current_location["description"]:
             if not line.strip():
                 current_y -= LINE_SPACING
                 continue
@@ -173,11 +178,11 @@ class ShipView(arcade.View):
         self.input_text.text = f"> {self.current_input}{cursor}"
 
     def change_location(self, new_room_id: str) -> None:
-        """Update the current location and refresh all visual elements."""
-        self.current_location = self.game_manager.ship["rooms"][new_room_id]
-        self._load_background()
-        self._rebuild_description()
-        self.description_title.text = self.current_location["name"]
+        """Update the current location via GameManager (single source of truth) and refresh all visual elements."""
+        self.game_manager.set_current_location(new_room_id)
+        self._load_background()      # Now uses live location from GameManager
+        self._rebuild_description()  # Now uses live location from GameManager
+        self.description_title.text = self.game_manager.get_current_location()["name"]
         # Future extensions can go here: animations, sound effects, event triggers, etc.
 
     def on_update(self, delta_time: float):
