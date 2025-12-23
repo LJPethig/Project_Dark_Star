@@ -22,6 +22,7 @@
         "type": "portable",
         "name": "Adjustable Wrench",
         "description": "A sturdy tool for zero-G repairs.",
+        "keywords": ["wrench", "adjustable wrench", "tool"],
         "examine_text": "Well-worn but reliable."
       },
       {
@@ -29,6 +30,7 @@
         "type": "fixed",
         "name": "Personal Terminal",
         "description": "Your cabin's control console.",
+        "keywords": ["console", "computer", "terminal"],
         "examine_text": "Screen is locked. Needs credentials."
       }
     ]

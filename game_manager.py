@@ -38,7 +38,8 @@ class GameManager:
 
         self.ship = {
             "name": ship_name,
-            "rooms": self._load_ship_rooms()
+            "rooms": self._load_ship_rooms(),
+            "cargo": []  # NEW: ship cargo hold (list of PortableItems)
         }
 
         # Player always starts in quarters after waking up
@@ -106,3 +107,26 @@ class GameManager:
                 self.player["inventory"].pop(i)
                 return True
         return False
+
+    def add_to_cargo(self, item: PortableItem) -> bool:
+        """Add item to ship cargo hold."""
+        if isinstance(item, PortableItem):
+            self.ship["cargo"].append(item)
+            return True
+        return False
+
+    def remove_from_cargo(self, item_id: str) -> bool:
+        """Remove from ship cargo by ID."""
+        for i, item in enumerate(self.ship["cargo"]):
+            if item.id == item_id:
+                self.ship["cargo"].pop(i)
+                return True
+        return False
+
+    def get_ship_cargo(self) -> list:
+        """Return the ship's cargo list."""
+        return self.ship["cargo"]
+
+    def get_player_inventory(self) -> list:
+        """Return the player's personal inventory list."""
+        return self.player["inventory"]

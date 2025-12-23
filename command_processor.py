@@ -1,4 +1,6 @@
 # command_processor.py
+from ui.inventory_view import InventoryView
+from models.interactable import PortableItem
 
 class CommandProcessor:
     """Command processor that handles player input using a registry pattern."""
@@ -15,10 +17,16 @@ class CommandProcessor:
             "go": self._handle_move,
             "enter": self._handle_move,  # alias
             "move": self._handle_move,   # alias
+            # NEW: Inventory & cargo commands
+            "inventory": self._handle_player_inventory,
+            "i": self._handle_player_inventory,  # shortcut
+            "take": self._handle_take,
+            "store": self._handle_store,
+            "cargo": self._handle_ship_cargo,     # Restricted to terminals
+            "debug_cargo": self._handle_debug_cargo,  # TEMPORARY: for testing without terminal
             # Future commands will be added here, e.g.:
             # "look": self._handle_look,
-            # "inventory": self._handle_inventory,
-            # "take": self._handle_take,
+            # "examine": self._handle_examine,
         }
 
     def process(self, cmd: str) -> str:
@@ -83,3 +91,72 @@ class CommandProcessor:
 
         # Movement attempt failed
         return "You can't go that way."
+
+    # NEW: Player inventory
+    def _handle_player_inventory(self, args: str) -> str:
+        """Show player's personal carried inventory."""
+        inventory_view = InventoryView(self.game_manager, is_player=True)
+        inventory_view.previous_view = self.ship_view
+        self.ship_view.window.show_view(inventory_view)
+        return "Opening personal inventory..."
+
+    # NEW: Ship cargo (restricted)
+    def _handle_ship_cargo(self, args: str) -> str:
+        """Attempt to show ship cargo manifest (normally terminal-only)."""
+        if not self._can_access_ship_cargo():
+            return "Ship cargo manifest is only accessible from a terminal."
+        cargo_view = InventoryView(self.game_manager, is_player=False)
+        cargo_view.previous_view = self.ship_view
+        self.ship_view.window.show_view(cargo_view)
+        return "Opening ship cargo manifest..."
+
+    # TEMPORARY debug command
+    def _handle_debug_cargo(self, args: str) -> str:
+        """TEMP: Force access to ship cargo for testing."""
+        cargo_view = InventoryView(self.game_manager, is_player=False)
+        cargo_view.previous_view = self.ship_view
+        self.ship_view.window.show_view(cargo_view)
+        return "DEBUG: Opening ship cargo manifest (terminal bypass)..."
+
+    # NEW: Take from room → player inventory
+    def _handle_take(self, args: str) -> str:
+        """Take a portable item from the current room to player inventory."""
+        if not args:
+            return "Take what?"
+
+        target_name = args.strip().lower()
+        current_location = self.game_manager.get_current_location()
+        objects = current_location.get("objects", [])
+
+        for obj in objects[:]:  # copy to avoid modification during iteration
+            if obj.matches(target_name) and isinstance(obj, PortableItem):
+                self.game_manager.add_to_inventory(obj)
+                objects.remove(obj)  # Remove from room
+                return f"You take the {obj.name}."
+
+        return f"There's no portable item called '{args}' here."
+
+    # NEW: Store from player → ship cargo
+    def _handle_store(self, args: str) -> str:
+        """Store an item from player inventory to ship cargo."""
+        if not args:
+            return "Store what?"
+
+        target_name = args.strip().lower()
+        inventory = self.game_manager.get_player_inventory()
+
+        for obj in inventory[:]:
+            if obj.matches(target_name) and isinstance(obj, PortableItem):
+                if self.game_manager.add_to_cargo(obj):
+                    inventory.remove(obj)
+                    return f"You store the {obj.name} in the cargo hold."
+                else:
+                    return "Failed to store item (cargo full?)."
+
+        return f"You don't have a '{args}' in your inventory."
+
+    # Helper for access control (expand later with terminal check)
+    def _can_access_ship_cargo(self) -> bool:
+        """Check if player can access ship cargo (for now, always False)."""
+        # Later: check if current room has a terminal or terminal is "unlocked"
+        return False
