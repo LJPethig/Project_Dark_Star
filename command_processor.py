@@ -1,12 +1,25 @@
 # command_processor.py
 
 class CommandProcessor:
-    """Minimal command processor that handles movement and quit/exit."""
+    """Command processor that handles player input using a registry pattern."""
 
     def __init__(self, ship_view):
         self.ship_view = ship_view
         self.game_manager = ship_view.game_manager
-        # No self.current_location — we query live from GameManager
+
+        # Command registry: verb → handler function
+        # Handlers receive the full remaining args (after the verb)
+        self.commands = {
+            "quit": self._handle_quit,
+            "exit": self._handle_quit,  # alias for quit
+            "go": self._handle_move,
+            "enter": self._handle_move,  # alias
+            "move": self._handle_move,   # alias
+            # Future commands will be added here, e.g.:
+            # "look": self._handle_look,
+            # "inventory": self._handle_inventory,
+            # "take": self._handle_take,
+        }
 
     def process(self, cmd: str) -> str:
         """Process a single command string and return the response."""
@@ -14,16 +27,42 @@ class CommandProcessor:
         if not cmd:
             return ""
 
-        # Handle quit/exit first
-        if cmd in ("quit", "exit"):
-            return "Thanks for playing Project Dark Star. Goodbye!"
+        # Split into verb + arguments
+        parts = cmd.split(maxsplit=1)
+        verb = parts[0]
+        args = parts[1] if len(parts) > 1 else ""
 
-        # Normalize for movement prefixes
-        normalized_cmd = cmd
-        if normalized_cmd.startswith(("enter ", "go ", "go to ", "move ")):
-            normalized_cmd = normalized_cmd.split(" ", 2)[-1].strip()
+        # Look up and execute handler
+        handler = self.commands.get(verb)
+        if handler:
+            return handler(args)
 
-        # Get current location live from GameManager (single source of truth)
+        # No matching command → unknown
+        return f"I don't understand '{cmd}'. Try 'help' for available commands."
+
+    def _handle_quit(self, args: str) -> str:
+        """Handle quit/exit commands."""
+        return "Thanks for playing Project Dark Star. Goodbye!"
+
+    def _handle_move(self, args: str) -> str:
+        """Handle movement commands (go, enter, move) with natural language support."""
+        # Get the raw argument string
+        raw_args = args.strip().lower()
+
+        # Remove common prefixes like "to", "the", "to the"
+        # This makes "go to galley", "go to the galley", "enter the galley" all normalize to "galley"
+        prefixes = ["to the ", "to ", "the "]
+        normalized_cmd = raw_args
+        for prefix in prefixes:
+            if normalized_cmd.startswith(prefix):
+                normalized_cmd = normalized_cmd[len(prefix):].strip()
+                break  # Only remove the first matching prefix
+
+        # If nothing left after stripping (e.g., "go to"), treat as invalid
+        if not normalized_cmd:
+            return "Where do you want to go? Try 'go to [place]'."
+
+        # Now use the normalized command for matching
         current_location = self.game_manager.get_current_location()
 
         # Try direct exit name (e.g., "galley")
@@ -40,11 +79,7 @@ class CommandProcessor:
 
         if next_id:
             self.ship_view.change_location(next_id)
-            # Use live location from GameManager for the response
             return f"You enter the {self.game_manager.get_current_location()['name']}."
 
-        # If we got here and it's not quit → movement attempt failed
-        if cmd:
-            return "You can't go that way."
-
-        return ""
+        # Movement attempt failed
+        return "You can't go that way."
