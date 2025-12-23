@@ -15,7 +15,23 @@
         "label": "galley",
         "direction": "forward"
       }
-    }
+    },
+    "objects": [
+      {
+        "id": "wrench",
+        "type": "portable",
+        "name": "Adjustable Wrench",
+        "description": "A sturdy tool for zero-G repairs.",
+        "examine_text": "Well-worn but reliable."
+      },
+      {
+        "id": "terminal1",
+        "type": "fixed",
+        "name": "Personal Terminal",
+        "description": "Your cabin's control console.",
+        "examine_text": "Screen is locked. Needs credentials."
+      }
+    ]
   },
   {
     "id": "galley",
@@ -32,6 +48,7 @@
         "label": "crew quarters",
         "direction": "back"
       }
-    }
+    },
+    "objects": []
   }
 ]
