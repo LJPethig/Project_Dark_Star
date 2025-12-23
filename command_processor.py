@@ -24,6 +24,9 @@ class CommandProcessor:
             "store": self._handle_store,
             "cargo": self._handle_ship_cargo,     # Restricted to terminals
             "debug_cargo": self._handle_debug_cargo,  # TEMPORARY: for testing without terminal
+            # NEW: Examine command
+            "examine": self._handle_examine,
+            "x": self._handle_examine,  # shortcut
             # Future commands will be added here, e.g.:
             # "look": self._handle_look,
             # "examine": self._handle_examine,
@@ -132,6 +135,7 @@ class CommandProcessor:
             if obj.matches(target_name) and isinstance(obj, PortableItem):
                 self.game_manager.add_to_inventory(obj)
                 objects.remove(obj)  # Remove from room
+                self.ship_view._rebuild_description()  # Refresh description immediately
                 return f"You take the {obj.name}."
 
         return f"There's no portable item called '{args}' here."
@@ -149,11 +153,28 @@ class CommandProcessor:
             if obj.matches(target_name) and isinstance(obj, PortableItem):
                 if self.game_manager.add_to_cargo(obj):
                     inventory.remove(obj)
+                    self.ship_view._rebuild_description()  # Refresh description immediately
                     return f"You store the {obj.name} in the cargo hold."
                 else:
                     return "Failed to store item (cargo full?)."
 
         return f"You don't have a '{args}' in your inventory."
+
+    def _handle_examine(self, args: str) -> str:
+        """Examine an object in the current room."""
+        if not args:
+            return "Examine what?"
+
+        target_name = args.strip().lower()
+        current_location = self.game_manager.get_current_location()
+        objects = current_location.get("objects", [])
+
+        for obj in objects:
+            if obj.matches(target_name):
+                # Return the detailed examine text
+                return obj.on_examine()
+
+        return f"There's nothing called '{args}' here to examine."
 
     # Helper for access control (expand later with terminal check)
     def _can_access_ship_cargo(self) -> bool:

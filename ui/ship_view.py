@@ -170,6 +170,42 @@ class ShipView(arcade.View):
             current_y -= txt.content_height + LINE_SPACING
             self.description_texts.append(txt)
 
+        # NEW: Dynamic "You see:" section for objects (names only)
+        objects = current_location.get("objects", [])
+        if objects:
+            # Add spacing before section
+            current_y -= LINE_SPACING * 2
+
+            # "You see:" header
+            see_text = arcade.Text(
+                "You see:",
+                x=self.text_left + self.text_padding,
+                y=current_y,
+                color=ACCENT_COLOR,
+                font_size=DESCRIPTION_FONT_SIZE,
+                font_name=FONT_NAME_PRIMARY,
+                anchor_y="top"
+            )
+            current_y -= see_text.content_height + LINE_SPACING
+            self.description_texts.append(see_text)
+
+            # List each object (just name)
+            for obj in objects:
+                obj_line = f"- {obj.name}"
+                txt = arcade.Text(
+                    obj_line,
+                    x=self.text_left + self.text_padding + 30,  # Indent for bullet effect
+                    y=current_y,
+                    color=TEXT_COLOR,
+                    font_size=DESCRIPTION_FONT_SIZE,
+                    font_name=FONT_NAME_PRIMARY,
+                    width=self.text_width - 2 * self.text_padding - 60,
+                    multiline=True,
+                    anchor_y="top"
+                )
+                current_y -= txt.content_height + LINE_SPACING
+                self.description_texts.append(txt)
+
     def _update_response_display(self):
         self.response_text.text = self.last_response
 

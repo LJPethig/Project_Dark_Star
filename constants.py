@@ -2,7 +2,7 @@
 
 # Window settings
 SCREEN_WIDTH = 1270
-SCREEN_HEIGHT = 740
+SCREEN_HEIGHT = 770
 SCREEN_TITLE = ""
 
 # Background colour
@@ -30,8 +30,8 @@ BACKGROUND_OVERLAY = (0, 0, 0, 100)        # Subtle dark overlay for images
 # Added for complete sectioning of ship_view
 
 # Layout ratios and heights
-LEFT_PANEL_RATIO = 0.50                # Image width ratio
-DESCRIPTION_SECTION_RATIO = 0.50       # Proportion of right text area for description
+LEFT_PANEL_RATIO = 0.45                # Image width ratio
+DESCRIPTION_SECTION_RATIO = 0.55       # Proportion of right text area for description
 EVENT_SECTION_HEIGHT = 60              # Pixels for bottom event section
 
 # Fixed heights
