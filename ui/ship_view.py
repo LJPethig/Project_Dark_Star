@@ -156,19 +156,52 @@ class ShipView(arcade.View):
                 current_y -= LINE_SPACING
                 continue
 
-            txt = arcade.Text(
-                line,
-                x=self.text_left + self.text_padding,
-                y=current_y,
-                color=TEXT_COLOR,
-                font_size=DESCRIPTION_FONT_SIZE,
-                font_name=FONT_NAME_PRIMARY,
-                width=self.text_width - 2 * self.text_padding,
-                multiline=True,
-                anchor_y="top"
-            )
-            current_y -= txt.content_height + LINE_SPACING
-            self.description_texts.append(txt)
+            # Split line into normal text and *highlighted* parts
+            parts = []
+            i = 0
+            while i < len(line):
+                if line[i] == '*':
+                    # Start of highlighted text
+                    j = line.find('*', i + 1)
+                    if j != -1:
+                        highlighted = line[i + 1:j]
+                        parts.append((highlighted, ACCENT_COLOR))  # (text, color)
+                        i = j + 1
+                    else:
+                        parts.append((line[i], TEXT_COLOR))
+                        i += 1
+                else:
+                    # Normal text until next '*'
+                    j = line.find('*', i)
+                    if j == -1:
+                        j = len(line)
+                    normal = line[i:j]
+                    parts.append((normal, TEXT_COLOR))
+                    i = j
+
+            # Create Text objects for each part on the same line
+            x_pos = self.text_left + self.text_padding
+            line_height = 0
+            for text_part, color in parts:
+                if not text_part.strip():
+                    continue
+
+                txt = arcade.Text(
+                    text_part,
+                    x=x_pos,
+                    y=current_y,
+                    color=color,
+                    font_size=DESCRIPTION_FONT_SIZE,
+                    font_name=FONT_NAME_PRIMARY,
+                    width=self.text_width - 2 * self.text_padding,
+                    multiline=True,
+                    anchor_y="top"
+                )
+                x_pos += txt.content_width  # Advance x for next part
+                line_height = max(line_height, txt.content_height)
+                self.description_texts.append(txt)
+
+            current_y -= line_height + LINE_SPACING
 
         # NEW: Dynamic "You see:" section for objects (names only)
         objects = current_location.get("objects", [])

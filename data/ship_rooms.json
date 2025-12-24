@@ -6,13 +6,13 @@
       "Your personal cabin",
       "The hum of life support fills the air. Dim lights flicker on automatically.",
       "The bunk is unmade. Personal effects are scattered — reminders of a life spent in the black.",
-      "A hatch *leads forward to the galley*, humming faintly with activity."
+      "A hatch *leads to the main corridor*."
     ],
     "background": "resources/images/quarters.png",
     "exits": {
-      "galley": {
-        "target": "galley",
-        "label": "galley",
+      "main corridor": {
+        "target": "main corridor",
+        "label": "main corridor",
         "direction": "forward"
       }
     },
@@ -41,14 +41,250 @@
     "description": [
       "A cramped kitchen area. Food synthesizer, water recycler, small table bolted to the floor.",
       "Everything is functional, nothing is luxurious.",
-      "A hatch *leads back to the crew quarters*."
+      "A hatch *leads forward to recreation room*."
     ],
     "background": "resources/images/galley.png",
     "exits": {
+      "recreation room": {
+        "target": "recreation room",
+        "label": "recreation room",
+        "direction": "forward"
+      }
+    },
+    "objects": []
+  },
+  {
+    "id": "recreation room",
+    "name": "Recreation Room",
+    "description": [
+      "The ship's central hub for relaxation and social interaction.",
+      "Comfortable seating, a holovid screen, and game tables fill the space.",
+      "Soft lighting and warm colors create a welcoming atmosphere.",
+      "Corridors and hatches lead out in all directions."
+    ],
+    "background": "resources/images/recreation.png",
+    "exits": {
+      "galley": {
+        "target": "galley",
+        "label": "galley",
+        "direction": "aft"
+      },
+      "bridge": {
+        "target": "bridge",
+        "label": "bridge",
+        "direction": "forward"
+      },
+      "corridor 1": {
+        "target": "corridor 1",
+        "label": "corridor 1",
+        "direction": "aft"
+      }
+    },
+    "objects": []
+  },
+  {
+    "id": "bridge",
+    "name": "Bridge",
+    "description": [
+      "The command center of the ship.",
+      "Pilot's console, navigation charts, and sensor displays dominate the space.",
+      "The viewscreen shows the vastness of space ahead.",
+      "A hatch *leads aft to the recreation room*."
+    ],
+    "background": "resources/images/bridge.png",
+    "exits": {
+      "recreation room": {
+        "target": "recreation room",
+        "label": "recreation room",
+        "direction": "aft"
+      }
+    },
+    "objects": []
+  },
+  {
+    "id": "storage room",
+    "name": "Storage Room",
+    "description": [
+      "A utility room packed with supplies and spare parts.",
+      "Shelves are lined with labeled containers and equipment crates.",
+      "The lighting is harsh and functional.",
+      "A hatch *leads forward to corridor 1*."
+    ],
+    "background": "resources/images/storage.png",
+    "exits": {
+      "corridor 1": {
+        "target": "corridor 1",
+        "label": "corridor 1",
+        "direction": "forward"
+      }
+    },
+    "objects": []
+  },
+  {
+    "id": "med-bay",
+    "name": "Med-Bay",
+    "description": [
+      "A small medical facility with diagnostic equipment and first aid supplies.",
+      "The auto-doc hums quietly in the corner.",
+      "Sterile surfaces reflect the overhead lights.",
+      "A hatch *leads forward to corridor 1*."
+    ],
+    "background": "resources/images/medbay.png",
+    "exits": {
+      "corridor 1": {
+        "target": "corridor 1",
+        "label": "corridor 1",
+        "direction": "forward"
+      }
+    },
+    "objects": []
+  },
+  {
+    "id": "main corridor",
+    "name": "Main Corridor",
+    "description": [
+      "A narrow passageway connecting the main sections of the ship.",
+      "Overhead lights cast a steady glow on the metal deck plates.",
+      "The *recreation room* entrance leads toward the bow",
+      "The *crew quarters* door is starboard",
+      "The *Engineering section* is aft",
+      "and a *sub corridor* leads to port"
+    ],
+    "background": "resources/images/main_corridor.png",
+    "exits": {
+      "recreation room": {
+        "target": "recreation room",
+        "label": "recreation room",
+        "direction": "bow"
+      },
+      "sub corridor": {
+        "target": "sub corridor",
+        "label": "sub corridor",
+        "direction": "port"
+      },
+      "engineering": {
+        "target": "engineering",
+        "label": "engineering",
+        "direction": "aft"
+      },
       "crew quarters": {
         "target": "crew quarters",
         "label": "crew quarters",
-        "direction": "back"
+        "direction": "starboard"
+      }
+    },
+    "objects": []
+  },
+  {
+    "id": "corridor 2",
+    "name": "Corridor 2",
+    "description": [
+      "A secondary corridor running parallel to the main spine.",
+      "Less trafficked, with fewer lights and occasional flickering panels.",
+      "Doors lead to engineering and life support."
+    ],
+    "background": "resources/images/corridor.png",
+    "exits": {
+      "corridor 1": {
+        "target": "corridor 1",
+        "label": "corridor 1",
+        "direction": "forward"
+      },
+      "engineering": {
+        "target": "engineering",
+        "label": "engineering",
+        "direction": "aft"
+      },
+      "life support": {
+        "target": "life support",
+        "label": "life support",
+        "direction": "port"
+      },
+      "cargo bay": {
+        "target": "cargo bay",
+        "label": "cargo bay",
+        "direction": "aft"
+      }
+    },
+    "objects": []
+  },
+  {
+    "id": "engineering",
+    "name": "Engineering",
+    "description": [
+      "The ship's engineering bay, filled with tools and diagnostic equipment.",
+      "The reactor core thrums with contained energy.",
+      "Workbenches are cluttered with parts and schematics.",
+      "A hatch *leads forward to corridor 2*."
+    ],
+    "background": "resources/images/engineering.png",
+    "exits": {
+      "corridor 2": {
+        "target": "corridor 2",
+        "label": "corridor 2",
+        "direction": "forward"
+      }
+    },
+    "objects": []
+  },
+  {
+    "id": "life support",
+    "name": "Life Support",
+    "description": [
+      "The life support systems room, with air recyclers and water purifiers.",
+      "Gauges show oxygen levels and humidity controls.",
+      "The air is fresh and slightly humid.",
+      "A hatch *leads back to corridor 2*."
+    ],
+    "background": "resources/images/life_support.png",
+    "exits": {
+      "corridor 2": {
+        "target": "corridor 2",
+        "label": "corridor 2",
+        "direction": "starboard"
+      }
+    },
+    "objects": []
+  },
+  {
+    "id": "airlock",
+    "name": "Airlock",
+    "description": [
+      "The ship's airlock for spacewalks and docking.",
+      "EVA suits are racked along one wall.",
+      "The outer door seals tightly against the vacuum.",
+      "An inner hatch *leads back to corridor 2*."
+    ],
+    "background": "resources/images/airlock.png",
+    "exits": {
+      "corridor 2": {
+        "target": "corridor 2",
+        "label": "corridor 2",
+        "direction": "aft"
+      }
+    },
+    "objects": []
+  },
+  {
+    "id": "cargo bay",
+    "name": "Cargo Bay",
+    "description": [
+      "The main cargo storage area, stacked with containers and crates.",
+      "Loading ramps and cargo handlers stand idle.",
+      "The bay is spacious but dimly lit to save power.",
+      "Hatches lead to corridor 2 and the airlock."
+    ],
+    "background": "resources/images/cargo_bay.png",
+    "exits": {
+      "corridor 2": {
+        "target": "corridor 2",
+        "label": "corridor 2",
+        "direction": "forward"
+      },
+      "airlock": {
+        "target": "airlock",
+        "label": "airlock",
+        "direction": "starboard"
       }
     },
     "objects": []
