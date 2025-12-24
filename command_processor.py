@@ -27,6 +27,7 @@ class CommandProcessor:
             # NEW: Examine command
             "examine": self._handle_examine,
             "x": self._handle_examine,  # shortcut
+            "drop": self._handle_drop,
             # Future commands will be added here, e.g.:
             # "look": self._handle_look,
             # "examine": self._handle_examine,
@@ -159,6 +160,24 @@ class CommandProcessor:
                     return "Failed to store item (cargo full?)."
 
         return f"You don't have a '{args}' in your inventory."
+
+    def _handle_drop(self, args: str) -> str:
+        """Drop an item from player inventory back to the current room."""
+        if not args:
+            return "Drop what?"
+
+        target_name = args.strip().lower()
+        inventory = self.game_manager.get_player_inventory()
+
+        for obj in inventory[:]:
+            if obj.matches(target_name) and isinstance(obj, PortableItem):
+                self.game_manager.remove_from_inventory(obj.id)
+                current_location = self.game_manager.get_current_location()
+                current_location["objects"].append(obj)  # Add back to room
+                self.ship_view._rebuild_description()  # Refresh description immediately
+                return f"You drop the {obj.name}."
+
+        return f"You don't have a '{args}' in your inventory to drop."
 
     def _handle_examine(self, args: str) -> str:
         """Examine an object in the current room."""
