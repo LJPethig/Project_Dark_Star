@@ -29,7 +29,7 @@ class ShipView(arcade.View):
         image_width = int(SCREEN_WIDTH * LEFT_PANEL_RATIO)
         self.image_section = arcade.Section(
             left=0,
-            bottom= EVENT_SECTION_HEIGHT,
+            bottom=EVENT_SECTION_HEIGHT,
             width=image_width,
             height=SCREEN_HEIGHT
         )
@@ -161,7 +161,6 @@ class ShipView(arcade.View):
             i = 0
             while i < len(line):
                 if line[i] == '*':
-                    # Start of highlighted text
                     j = line.find('*', i + 1)
                     if j != -1:
                         highlighted = line[i + 1:j]
@@ -171,7 +170,6 @@ class ShipView(arcade.View):
                         parts.append((line[i], TEXT_COLOR))
                         i += 1
                 else:
-                    # Normal text until next '*'
                     j = line.find('*', i)
                     if j == -1:
                         j = len(line)
@@ -193,17 +191,18 @@ class ShipView(arcade.View):
                     color=color,
                     font_size=DESCRIPTION_FONT_SIZE,
                     font_name=FONT_NAME_PRIMARY,
-                    width=self.text_width - 2 * self.text_padding,
-                    multiline=True,
-                    anchor_y="top"
+                    width=self.text_width - 2 * self.text_padding,      # Full width → enables wrapping
+                    multiline=True,                                     # Crucial for wrapping inside part
+                    anchor_y="top",
+                    anchor_x="left"
                 )
-                x_pos += txt.content_width  # Advance x for next part
+                x_pos += txt.content_width  # Advance for next part
                 line_height = max(line_height, txt.content_height)
                 self.description_texts.append(txt)
 
             current_y -= line_height + LINE_SPACING
 
-        # NEW: Dynamic "You see:" section for objects (names only)
+        # Dynamic "You see:" section for objects (names only)
         objects = current_location.get("objects", [])
         if objects:
             # Add spacing before section
@@ -276,9 +275,9 @@ class ShipView(arcade.View):
 
         # Window border
         arcade.draw_lrbt_rectangle_outline(
-        0,
+            0,
             SCREEN_WIDTH,
-        0,
+            0,
             SCREEN_HEIGHT,
             DIVIDER_COLOR,
             DIVIDER_THICKNESS
@@ -296,7 +295,6 @@ class ShipView(arcade.View):
         )
 
         # Divider at bottom of description section
-        divider_color = DIVIDER_COLOR
         arcade.draw_line(
             self.text_left,
             self.description_section.bottom,

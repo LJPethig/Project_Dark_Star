@@ -6,14 +6,15 @@
       "Your personal cabin",
       "The hum of life support fills the air. Dim lights flicker on automatically.",
       "The bunk is unmade. Personal effects are scattered — reminders of a life spent in the black.",
-      "A hatch leads to the *main corridor*."
+      "A hatch leads to *main corridor CH-1*."
     ],
     "background": "resources/images/quarters.png",
     "exits": {
       "main corridor": {
         "target": "main corridor",
-        "label": "main corridor",
-        "direction": "forward"
+        "label": "Main Corridor CH-1",
+        "direction": "forward",
+        "shortcuts": ["corridor", "ch-1"]
       }
     },
     "objects": [
@@ -141,11 +142,11 @@
   },
   {
     "id": "main corridor",
-    "name": "Main Corridor",
+    "name": "Main Corridor CH-1",
     "description": [
       "This passageway connects the main sections of the ship.",
       "Overhead lights cast a steady glow on the metal deck plates.",
-      "The *recreation room* entrance leads toward the bow.",
+      "The *recreation room* entrance leads forward towards the bridge.",
       "Opposite your *crew quarters* is *sub corridor CH-2* to cargo hold.",
       "While the *Engineering section* is aft."
     ],
@@ -153,13 +154,15 @@
     "exits": {
       "recreation room": {
         "target": "recreation room",
-        "label": "recreation room",
-        "direction": "bow"
+        "label": "Recreation Room",
+        "direction": "forward",
+        "shortcuts": ["rec room", "rec"]
       },
       "sub corridor": {
         "target": "sub corridor",
         "label": "Sub Corridor CH-2",
-        "direction": "port"
+        "direction": "",
+        "shortcuts": ["sub corridor", "corridor", "CH-2", "corridor CH-2"]
       },
       "engineering": {
         "target": "engineering",
@@ -169,7 +172,8 @@
       "crew quarters": {
         "target": "crew quarters",
         "label": "crew quarters",
-        "direction": "starboard"
+        "direction": "",
+        "shortcuts": ["quarters"]
       }
     },
     "objects": []
@@ -178,26 +182,29 @@
     "id": "sub corridor",
     "name": "Sub Corridor CH-2",
     "description": [
-      "A secondary corridor that branches off the *main corridor*.",
+      "A secondary corridor that branches off *main corridor CH-1*.",
       "Less trafficked, with fewer lights and occasional flickering panels.",
-      "Doors lead to the *cargo bay* and *life support*."
+      "At the end a large door leads to the *cargo bay*,",
+      "while a smaller left side door is labelled *life support*."
     ],
     "background": "resources/images/sub_corridor.png",
     "exits": {
       "main corridor": {
         "target": "main corridor",
-        "label": "main corridor",
-        "direction": "forward"
+        "label": "Main Corridor CH-1",
+        "direction": "",
+        "shortcuts": ["main corridor", "corridor", "CH-1", "corridor CH-1"]
       },
       "life support": {
         "target": "life support",
-        "label": "life support",
-        "direction": "port"
+        "label": "Life Support",
+        "direction": "left"
       },
       "cargo bay": {
         "target": "cargo bay",
         "label": "cargo bay",
-        "direction": "aft"
+        "direction": "forward",
+        "shortcuts": ["cargo", "hold", "cargo hold"]
       }
     },
     "objects": []
