@@ -1,6 +1,7 @@
 # command_processor.py
 from ui.inventory_view import InventoryView
 from models.interactable import PortableItem
+import random
 
 class CommandProcessor:
     """Command processor that handles player input using a registry pattern."""
@@ -137,9 +138,23 @@ class CommandProcessor:
                 self.game_manager.add_to_inventory(obj)
                 objects.remove(obj)  # Remove from room
                 self.ship_view._rebuild_description()  # Refresh description immediately
-                return f"You take the {obj.name}."
-
-        return f"There's no portable item called '{args}' here."
+                success_messages = [
+                    f"You take the {obj.name}.",
+                    f"You grab the {obj.name}.",
+                    f"You pick up the {obj.name}.",
+                    f"The {obj.name} is now in your hands."
+                ]
+                return random.choice(success_messages)
+            else:
+                # Random failure message for non-takeable objects
+                failure_messages = [
+                    f"The {obj.name} is bolted down It's not coming loose.",
+                    f"It's a part of the bulkhead. You have no luck prying it free.",
+                    f"The {obj.name} is an integral part of the ship's systems. Taking it would be a bad idea.",
+                    f"You try to lift it, but it's securely mounted. It's not going anywhere.",
+                    f"It's fixed in place — you can't take it."
+                ]
+                return random.choice(failure_messages)
 
     # NEW: Store from player → ship cargo
     def _handle_store(self, args: str) -> str:
@@ -175,7 +190,13 @@ class CommandProcessor:
                 current_location = self.game_manager.get_current_location()
                 current_location["objects"].append(obj)  # Add back to room
                 self.ship_view._rebuild_description()  # Refresh description immediately
-                return f"You drop the {obj.name}."
+                drop_messages = [
+                    f"You drop the {obj.name}.",
+                    f"You put down the {obj.name}.",
+                    f"You leave the {obj.name}.",
+                    f"The {obj.name} is now on the floor."
+                ]
+                return random.choice(drop_messages)
 
         return f"You don't have a '{args}' in your inventory to drop."
 
