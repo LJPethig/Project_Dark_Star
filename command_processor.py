@@ -80,19 +80,33 @@ class CommandProcessor:
 
         # Try direct exit name (e.g., "galley")
         next_id = None
+        exit_label = None  # NEW: to store the label for the response
         if normalized_cmd in current_location["exits"]:
             exit_data = current_location["exits"][normalized_cmd]
             next_id = exit_data["target"]
+            exit_label = exit_data.get("label", current_location["name"])  # Use label if present
         else:
             # Try direction alias (e.g., "forward")
             for exit_key, exit_data in current_location["exits"].items():
                 if "direction" in exit_data and normalized_cmd == exit_data["direction"].lower():
                     next_id = exit_data["target"]
+                    exit_label = exit_data.get("label", current_location["name"])  # Use label if present
                     break
+
+            # NEW: Try shortcuts (e.g., "H2", "sub corridor")
+            if next_id is None:
+                for exit_key, exit_data in current_location["exits"].items():
+                    if "shortcuts" in exit_data:
+                        if normalized_cmd in [s.lower() for s in exit_data["shortcuts"]]:
+                            next_id = exit_data["target"]
+                            exit_label = exit_data.get("label", current_location["name"])
+                            break
 
         if next_id:
             self.ship_view.change_location(next_id)
-            return f"You enter the {self.game_manager.get_current_location()['name']}."
+            # NEW: Use label for immersive response (fallback to room name if no label)
+            display_name = exit_label if exit_label else self.game_manager.get_current_location()["name"]
+            return f"You enter {display_name}."
 
         # Movement attempt failed
         return "You can't go that way."

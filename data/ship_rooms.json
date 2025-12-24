@@ -146,7 +146,7 @@
       "This passageway connects the main sections of the ship.",
       "Overhead lights cast a steady glow on the metal deck plates.",
       "The *recreation room* entrance leads toward the bow.",
-      "Opposite the *crew quarters* is a *sub corridor* leading to the cargo hold.",
+      "Opposite your *crew quarters* is *sub corridor CH-2* to cargo hold.",
       "While the *Engineering section* is aft."
     ],
     "background": "resources/images/main_corridor.png",
@@ -158,7 +158,7 @@
       },
       "sub corridor": {
         "target": "sub corridor",
-        "label": "sub corridor",
+        "label": "Sub Corridor CH-2",
         "direction": "port"
       },
       "engineering": {
@@ -176,7 +176,7 @@
   },
   {
     "id": "sub corridor",
-    "name": "Sub Corridor",
+    "name": "Sub Corridor CH-2",
     "description": [
       "A secondary corridor that branches off the *main corridor*.",
       "Less trafficked, with fewer lights and occasional flickering panels.",
@@ -266,14 +266,15 @@
       "The main cargo storage area, stacked with containers and crates.",
       "Loading ramps and cargo handlers stand idle.",
       "The bay is spacious but dimly lit to save power.",
-      "Hatches lead to corridor 2 and the airlock."
+      "Hatches lead to *sub corridor CH-2* and the *airlock*."
     ],
     "background": "resources/images/cargo_bay.png",
     "exits": {
-      "corridor 2": {
-        "target": "corridor 2",
-        "label": "corridor 2",
-        "direction": "forward"
+      "sub corridor": {
+        "target": "sub corridor",
+        "label": "Sub Corridor CH-2",
+        "direction": "forward",
+        "shortcuts": ["sub corridor", "corridor", "CH2", "corridor CH2"]
       },
       "airlock": {
         "target": "airlock",
