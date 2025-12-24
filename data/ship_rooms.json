@@ -6,7 +6,7 @@
       "Your personal cabin",
       "The hum of life support fills the air. Dim lights flicker on automatically.",
       "The bunk is unmade. Personal effects are scattered — reminders of a life spent in the black.",
-      "A hatch *leads to the main corridor*."
+      "A hatch leads to the *main corridor*."
     ],
     "background": "resources/images/quarters.png",
     "exits": {
@@ -143,12 +143,11 @@
     "id": "main corridor",
     "name": "Main Corridor",
     "description": [
-      "A narrow passageway connecting the main sections of the ship.",
+      "This passageway connects the main sections of the ship.",
       "Overhead lights cast a steady glow on the metal deck plates.",
-      "The *recreation room* entrance leads toward the bow",
-      "The *crew quarters* door is starboard",
-      "The *Engineering section* is aft",
-      "and a *sub corridor* leads to port"
+      "The *recreation room* entrance leads toward the bow.",
+      "Opposite the *crew quarters* is a *sub corridor* leading to the cargo hold.",
+      "While the *Engineering section* is aft."
     ],
     "background": "resources/images/main_corridor.png",
     "exits": {
@@ -176,24 +175,19 @@
     "objects": []
   },
   {
-    "id": "corridor 2",
-    "name": "Corridor 2",
+    "id": "sub corridor",
+    "name": "Sub Corridor",
     "description": [
-      "A secondary corridor running parallel to the main spine.",
+      "A secondary corridor that branches off the *main corridor*.",
       "Less trafficked, with fewer lights and occasional flickering panels.",
-      "Doors lead to engineering and life support."
+      "Doors lead to the *cargo bay* and *life support*."
     ],
-    "background": "resources/images/corridor.png",
+    "background": "resources/images/sub_corridor.png",
     "exits": {
-      "corridor 1": {
-        "target": "corridor 1",
-        "label": "corridor 1",
+      "main corridor": {
+        "target": "main corridor",
+        "label": "main corridor",
         "direction": "forward"
-      },
-      "engineering": {
-        "target": "engineering",
-        "label": "engineering",
-        "direction": "aft"
       },
       "life support": {
         "target": "life support",

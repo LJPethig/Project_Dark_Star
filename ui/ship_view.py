@@ -214,7 +214,7 @@ class ShipView(arcade.View):
                 "You see:",
                 x=self.text_left + self.text_padding,
                 y=current_y,
-                color=ACCENT_COLOR,
+                color=TEXT_COLOR,
                 font_size=DESCRIPTION_FONT_SIZE,
                 font_name=FONT_NAME_PRIMARY,
                 anchor_y="top"
@@ -227,9 +227,9 @@ class ShipView(arcade.View):
                 obj_line = f"- {obj.name}"
                 txt = arcade.Text(
                     obj_line,
-                    x=self.text_left + self.text_padding + 30,  # Indent for bullet effect
+                    x=self.text_left + self.text_padding,
                     y=current_y,
-                    color=TEXT_COLOR,
+                    color=OBJECT_COLOR,
                     font_size=DESCRIPTION_FONT_SIZE,
                     font_name=FONT_NAME_PRIMARY,
                     width=self.text_width - 2 * self.text_padding - 60,

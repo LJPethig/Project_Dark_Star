@@ -21,6 +21,7 @@ FONT_SIZE_SMALL = 12
 # Colours (RGBA tuples)
 TEXT_COLOR = (200, 200, 200, 255)         # Light grey
 ACCENT_COLOR = (0, 220, 220, 255)         # Cyan
+OBJECT_COLOR = (140, 0, 200, 255)         # Deep purple
 ALERT_COLOR = (255, 140, 0, 255)          # Dark orange
 CURSOR_COLOR = (0, 255, 0, 255)           # Green
 PANEL_OVERLAY = (0, 0, 0, 200)            # Semi-transparent black panel
