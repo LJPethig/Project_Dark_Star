@@ -4,6 +4,7 @@ import arcade
 from constants import *
 from command_processor import CommandProcessor
 from ui.layout_manager import LayoutManager  # Import the new layout manager
+from ui.drawing import DrawingManager
 
 class ShipView(arcade.View):
     """Main view with correct section-based layout."""
@@ -43,9 +44,9 @@ class ShipView(arcade.View):
         self.text_width = self.layout.get_text_width()
         self.event_section_height = self.layout.get_event_section_height()
 
-        # Load background
-        self.background_list = arcade.SpriteList()
-        self._load_background()
+        # Drawing manager
+        self.drawing = DrawingManager(self)
+        self.drawing.load_background()
 
         # Text padding
         self.text_padding = TEXT_PADDING
@@ -92,50 +93,6 @@ class ShipView(arcade.View):
             multiline=True,
             anchor_y="top"
         )
-
-    def _load_background(self):
-        """Load and scale background image to fit the image section while preserving aspect ratio."""
-        self.background_list = arcade.SpriteList()
-        current_location = self.game_manager.get_current_location()
-
-        try:
-            texture = arcade.load_texture(current_location["background"])
-            if not texture:
-                print("Failed to load background texture.")
-                return
-
-            # Get target dimensions (the image section area)
-            target_width = self.image_section.width
-            target_height = SCREEN_HEIGHT - EVENT_SECTION_HEIGHT  # or self.image_section.height if you adjust it
-
-            # Original image dimensions
-            orig_width = texture.width
-            orig_height = texture.height
-            if orig_width == 0 or orig_height == 0:
-                return
-
-            # Calculate scaling factor to fit (letterbox style)
-            scale_w = target_width / orig_width
-            scale_h = target_height / orig_height
-            scale = min(scale_w, scale_h)  # Use the smaller one to avoid cropping
-
-            # New scaled size (preserves aspect ratio)
-            new_width = int(orig_width * scale)
-            new_height = int(orig_height * scale)
-
-            # Create sprite with scaled size
-            bg_sprite = arcade.Sprite()
-            bg_sprite.texture = texture
-            bg_sprite.scale = scale  # Arcade will apply this uniformly
-
-            # Center it in the section
-            bg_sprite.center_x = self.image_section.left + target_width / 2
-            bg_sprite.center_y = self.image_section.bottom + target_height / 2
-
-            self.background_list.append(bg_sprite)
-
-        except Exception as e:
-            print(f"Background load failed: {e}")
 
     def _rebuild_description(self):
         """Rebuild description texts for the CURRENT location (queried live)."""
@@ -239,12 +196,10 @@ class ShipView(arcade.View):
         self.input_text.text = f"> {self.current_input}{cursor}"
 
     def change_location(self, new_room_id: str) -> None:
-        """Update the current location via GameManager (single source of truth) and refresh all visual elements."""
         self.game_manager.set_current_location(new_room_id)
-        self._load_background()      # Now uses live location from GameManager
-        self._rebuild_description()  # Now uses live location from GameManager
+        self.drawing.load_background()  # Refresh background
+        self._rebuild_description()
         self.description_title.text = self.game_manager.get_current_location()["name"]
-        # Future extensions can go here: animations, sound effects, event triggers, etc.
 
     def on_update(self, delta_time: float):
         self.blink_timer += delta_time
@@ -257,77 +212,19 @@ class ShipView(arcade.View):
         self.clear()
 
         # Draw background image
-        self.background_list.draw()
+        self.drawing.draw_background()
 
         # Overlay on image section
-        arcade.draw_lrbt_rectangle_filled(
-            self.image_section.left, self.image_section.right,
-            self.image_section.bottom, self.image_section.top,
-            BACKGROUND_OVERLAY
-        )
+        self.drawing.draw_overlay()
 
         # Window border
-        arcade.draw_lrbt_rectangle_outline(
-            0,
-            SCREEN_WIDTH,
-            0,
-            SCREEN_HEIGHT,
-            DIVIDER_COLOR,
-            DIVIDER_THICKNESS
-        )
+        self.drawing.draw_window_border()
 
-        # Divider between RH image and LH text sections
-        divider_color = DIVIDER_COLOR
-        arcade.draw_line(
-            self.text_left,
-            self.event_section_height,
-            self.text_left,
-            SCREEN_HEIGHT,
-            divider_color,
-            DIVIDER_THICKNESS
-        )
-
-        # Divider at bottom of description section
-        arcade.draw_line(
-            self.text_left,
-            self.description_section.bottom,
-            self.text_left + self.text_width,
-            self.description_section.bottom,
-            divider_color,
-            DIVIDER_THICKNESS
-        )
-        # Divider at bottom of response section
-        arcade.draw_line(
-            self.text_left,
-            self.response_section.bottom,
-            self.text_left + self.text_width,
-            self.response_section.bottom,
-            divider_color,
-            DIVIDER_THICKNESS
-        )
-        # divider at top of event section
-        arcade.draw_line(
-            0,
-            60,
-            SCREEN_WIDTH,
-            60,
-            divider_color,
-            DIVIDER_THICKNESS
-        )
-
-        # # Event section background (reserved)
-        # arcade.draw_lrbt_rectangle_filled(
-        #     0, SCREEN_WIDTH,
-        #     0, self.event_section_height,
-        #     EVENT_SECTION_BG_COLOR
-        # )
+        # Dividers
+        self.drawing.draw_dividers()
 
         # Draw all text (global coordinates)
-        self.description_title.draw()
-        for txt in self.description_texts:
-            txt.draw()
-        self.response_text.draw()
-        self.input_text.draw()
+        self.drawing.draw_text_elements()
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.ENTER:
