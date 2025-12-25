@@ -14,7 +14,7 @@
         "target": "main corridor",
         "label": "Main Corridor CH-1",
         "direction": "forward",
-        "shortcuts": ["corridor", "ch-1"]
+        "shortcuts": ["corridor CH-1", "corridor", "CH-1", "main corridor CH-1"]
       }
     },
     "objects": [
@@ -156,13 +156,13 @@
         "target": "recreation room",
         "label": "Recreation Room",
         "direction": "forward",
-        "shortcuts": ["rec room", "rec"]
+        "shortcuts": ["rec room", "rec-room","rec"]
       },
       "sub corridor": {
         "target": "sub corridor",
         "label": "Sub Corridor CH-2",
         "direction": "",
-        "shortcuts": ["sub corridor", "corridor", "CH-2", "corridor CH-2"]
+        "shortcuts": ["corridor CH-2", "corridor", "CH-2", "sub corridor CH-2"]
       },
       "engineering": {
         "target": "engineering",
@@ -192,7 +192,7 @@
         "target": "main corridor",
         "label": "Main Corridor CH-1",
         "direction": "",
-        "shortcuts": ["main corridor", "corridor", "CH-1", "corridor CH-1"]
+        "shortcuts": ["corridor CH-1", "corridor", "CH-1", "main corridor CH-1"]
       },
       "cargo bay": {
         "target": "cargo bay",
@@ -219,7 +219,7 @@
         "target": "main corridor",
         "label": "Main Corridor CH-1",
         "direction": "back",
-        "shortcuts": ["main corridor", "corridor", "CH-1", "corridor CH-1"]
+        "shortcuts": ["corridor CH-1", "corridor", "CH-1", "main corridor CH-1"]
       },
       "life support": {
         "target": "life support",
@@ -255,14 +255,14 @@
       "The ship's airlock for spacewalks and docking.",
       "EVA suits are racked along one wall.",
       "The outer door seals tightly against the vacuum.",
-      "An inner hatch *leads back to corridor 2*."
+      "An inner hatch leads back to the *cargo bay*."
     ],
     "background": "resources/images/airlock.png",
     "exits": {
-      "corridor 2": {
-        "target": "corridor 2",
-        "label": "corridor 2",
-        "direction": "aft"
+      "cargo bay": {
+        "target": "cargo bay",
+        "label": "Cargo Bay",
+        "direction": "back"
       }
     },
     "objects": []
@@ -274,20 +274,22 @@
       "The main cargo storage area, stacked with containers and crates.",
       "Loading ramps and cargo handlers stand idle.",
       "The bay is spacious but dimly lit to save power.",
-      "Hatches lead to *sub corridor CH-2* and the *airlock*."
+      "A large door leads back to *sub corridor CH-2*,",
+      "an access hatch to the *airlock* is on the left wall.",
+      "At the opposite end is a hydraulically operated *external door*"
     ],
     "background": "resources/images/cargo_bay.png",
     "exits": {
       "sub corridor": {
         "target": "sub corridor",
         "label": "Sub Corridor CH-2",
-        "direction": "forward",
+        "direction": "back",
         "shortcuts": ["sub corridor", "corridor", "CH2", "corridor CH2"]
       },
       "airlock": {
         "target": "airlock",
         "label": "airlock",
-        "direction": "starboard"
+        "direction": "left"
       }
     },
     "objects": []
