@@ -22,7 +22,7 @@ class CommandProcessor:
             "inventory": self._handle_player_inventory,
             "i": self._handle_player_inventory,  # shortcut
             "take": self._handle_take,
-            "pick up": self._handle_take,   # alias
+            "pick_up": self._handle_take,   # alias, spaces are stripped
             "store": self._handle_store,
             "cargo": self._handle_ship_cargo,     # Restricted to terminals
             "debug_cargo": self._handle_debug_cargo,  # TEMPORARY: for testing without terminal

@@ -3,7 +3,7 @@
 import arcade
 from constants import *
 from command_processor import CommandProcessor
-
+from ui.layout_manager import LayoutManager  # Import the new layout manager
 
 class ShipView(arcade.View):
     """Main view with correct section-based layout."""
@@ -25,59 +25,23 @@ class ShipView(arcade.View):
         # Section manager
         self.section_manager = arcade.SectionManager(self)
 
-        # Left: Image section
-        image_width = int(SCREEN_WIDTH * LEFT_PANEL_RATIO)
-        self.image_section = arcade.Section(
-            left=0,
-            bottom=EVENT_SECTION_HEIGHT,
-            width=image_width,
-            height=SCREEN_HEIGHT
-        )
-        self.section_manager.add_section(self.image_section)
+        # NEW: Use LayoutManager to handle section creation and positioning
+        self.layout = LayoutManager(self)
+        sections = self.layout.setup_sections()
+        for section in sections:
+            self.section_manager.add_section(section)
 
-        # Right text panel starts above event section
-        self.text_left = image_width
-        self.text_width = SCREEN_WIDTH - image_width
+        # ADD THESE 5 LINES HERE:
+        self.image_section = self.layout.image_section
+        self.description_section = self.layout.description_section
+        self.response_section = self.layout.response_section
+        self.input_section = self.layout.input_section
+        self.event_section = self.layout.event_section
 
-        # Event section height (full width, bottom)
-        self.event_section_height = EVENT_SECTION_HEIGHT
-        self.event_section_width = SCREEN_WIDTH
-
-        # Calculate heights for right-side sections
-        right_text_height = SCREEN_HEIGHT - self.event_section_height
-        self.description_section_height = int(right_text_height * DESCRIPTION_SECTION_RATIO)
-        self.input_section_height = INPUT_SECTION_HEIGHT
-        self.response_section_height = right_text_height - self.description_section_height - self.input_section_height
-
-        # Create sections
-        self.description_section = arcade.Section(
-            left=self.text_left,
-            bottom=self.event_section_height + self.input_section_height + self.response_section_height,
-            width=self.text_width,
-            height=self.description_section_height
-        )
-        self.response_section = arcade.Section(
-            left=self.text_left,
-            bottom=self.event_section_height + self.input_section_height,
-            width=self.text_width,
-            height=self.response_section_height
-        )
-        self.input_section = arcade.Section(
-            left=self.text_left,
-            bottom=self.event_section_height,
-            width=self.text_width,
-            height=self.input_section_height
-        )
-        self.event_section = arcade.Section(
-            left=0,
-            bottom=0,
-            width=self.text_width,
-            height=self.event_section_height
-        )
-        self.section_manager.add_section(self.description_section)
-        self.section_manager.add_section(self.response_section)
-        self.section_manager.add_section(self.input_section)
-        self.section_manager.add_section(self.event_section)
+        # Store layout values for use in other methods
+        self.text_left = self.layout.get_text_left()
+        self.text_width = self.layout.get_text_width()
+        self.event_section_height = self.layout.get_event_section_height()
 
         # Load background
         self.background_list = arcade.SpriteList()
