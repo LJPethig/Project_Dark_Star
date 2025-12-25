@@ -149,21 +149,33 @@ class CommandProcessor:
         object_instances = current_location.get("objects", [])
 
         for obj in object_instances[:]:  # copy to avoid modification during iteration
-            if obj.matches(target_name) and isinstance(obj, PortableItem):
-                item_id = obj.id  # Use the item's ID
-                success, message = self.game_manager.add_to_inventory(item_id)
-                if success:
-                    object_instances.remove(obj)  # Remove from room
-                    self.ship_view._rebuild_description()  # Refresh description immediately
-                    success_messages = [
-                        f"You take the {obj.name}.",
-                        f"You grab the {obj.name}.",
-                        f"You pick up the {obj.name}.",
-                        f"The {obj.name} is now in your hands."
-                    ]
-                    return random.choice(success_messages)
+            if obj.matches(target_name):
+                if isinstance(obj, PortableItem):
+                    item_id = obj.id
+                    success, message = self.game_manager.add_to_inventory(item_id)
+                    if success:
+                        object_instances.remove(obj)  # Remove from room
+                        self.ship_view.description_renderer.rebuild_description()
+                        self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+                        success_messages = [
+                            f"You take the {obj.name}.",
+                            f"You grab the {obj.name}.",
+                            f"You pick up the {obj.name}.",
+                            f"The {obj.name} is now in your hands."
+                        ]
+                        return random.choice(success_messages)
+                    else:
+                        return message  # e.g., "Too heavy!"
                 else:
-                    return message  # e.g., "Too heavy!"
+                    # Fixed object - random failure message
+                    failure_messages = [
+                        f"The {obj.name} is bolted down. It's not coming loose.",
+                        f"It's a part of the bulkhead. You have no luck prying it free.",
+                        f"The {obj.name} is an integral part of the ship's systems. Taking it would be a bad idea.",
+                        f"You try to lift it, but it's securely mounted. It's not going anywhere.",
+                        f"It's fixed in place — you can't take it."
+                    ]
+                    return random.choice(failure_messages)
 
         return "There's nothing like that here to take."
 
@@ -180,7 +192,8 @@ class CommandProcessor:
             if obj.matches(target_name) and isinstance(obj, PortableItem):
                 if self.game_manager.add_to_cargo(obj):
                     inventory.remove(obj)
-                    self.ship_view._rebuild_description()  # Refresh description immediately
+                    self.ship_view.description_renderer.rebuild_description()
+                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()  # Sync UI
                     return f"You store the {obj.name} in the cargo hold."
                 else:
                     return "Failed to store item (cargo full?)."
@@ -208,7 +221,8 @@ class CommandProcessor:
                     else:
                         obj = FixedObject(**obj_kwargs)
                     current_location["objects"].append(obj)
-                    self.ship_view._rebuild_description()  # Refresh immediately
+                    self.ship_view.description_renderer.rebuild_description()  # Refresh immediately
+                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()  # NEW: Sync UI texts
                     drop_messages = [
                         f"You drop the {obj_data['name']}.",
                         f"You put down the {obj_data['name']}.",

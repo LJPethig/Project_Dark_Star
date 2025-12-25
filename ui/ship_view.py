@@ -5,6 +5,7 @@ from constants import *
 from command_processor import CommandProcessor
 from ui.layout_manager import LayoutManager  # Import the new layout manager
 from ui.drawing import DrawingManager
+from ui.description_renderer import DescriptionRenderer
 
 class ShipView(arcade.View):
     """Main view with correct section-based layout."""
@@ -65,8 +66,10 @@ class ShipView(arcade.View):
             anchor_y="top"
         )
 
-        self.description_texts = []
-        self._rebuild_description()
+        # Description renderer
+        self.description_renderer = DescriptionRenderer(self)
+        self.description_renderer.rebuild_description()
+        self.description_texts = self.description_renderer.get_description_texts()
 
         # --- Response section content (global Y) ---
         self.response_text = arcade.Text(
@@ -94,99 +97,6 @@ class ShipView(arcade.View):
             anchor_y="top"
         )
 
-    def _rebuild_description(self):
-        """Rebuild description texts for the CURRENT location (queried live)."""
-        self.description_texts = []
-        current_location = self.game_manager.get_current_location()  # Always live
-        current_y = SCREEN_HEIGHT - TITLE_PADDING - DESCRIPTION_TITLE_FONT_SIZE - SECTION_TITLE_PADDING
-
-        for line in current_location["description"]:
-            if not line.strip():
-                current_y -= LINE_SPACING
-                continue
-
-            # Split line into normal text and *highlighted* parts
-            parts = []
-            i = 0
-            while i < len(line):
-                if line[i] == '*':
-                    j = line.find('*', i + 1)
-                    if j != -1:
-                        highlighted = line[i + 1:j]
-                        parts.append((highlighted, ACCENT_COLOR))  # (text, color)
-                        i = j + 1
-                    else:
-                        parts.append((line[i], TEXT_COLOR))
-                        i += 1
-                else:
-                    j = line.find('*', i)
-                    if j == -1:
-                        j = len(line)
-                    normal = line[i:j]
-                    parts.append((normal, TEXT_COLOR))
-                    i = j
-
-            # Create Text objects for each part on the same line
-            x_pos = self.text_left + self.text_padding
-            line_height = 0
-            for text_part, color in parts:
-                if not text_part.strip():
-                    continue
-
-                txt = arcade.Text(
-                    text_part,
-                    x=x_pos,
-                    y=current_y,
-                    color=color,
-                    font_size=DESCRIPTION_FONT_SIZE,
-                    font_name=FONT_NAME_PRIMARY,
-                    width=self.text_width - 2 * self.text_padding,      # Full width → enables wrapping
-                    multiline=True,                                     # Crucial for wrapping inside part
-                    anchor_y="top",
-                    anchor_x="left"
-                )
-                x_pos += txt.content_width  # Advance for next part
-                line_height = max(line_height, txt.content_height)
-                self.description_texts.append(txt)
-
-            current_y -= line_height + LINE_SPACING
-
-        # Dynamic "You see:" section for objects (names only)
-        objects = current_location.get("objects", [])
-        if objects:
-            # Add spacing before section
-            current_y -= LINE_SPACING * 2
-
-            # "You see:" header
-            see_text = arcade.Text(
-                "You see:",
-                x=self.text_left + self.text_padding,
-                y=current_y,
-                color=TEXT_COLOR,
-                font_size=DESCRIPTION_FONT_SIZE,
-                font_name=FONT_NAME_PRIMARY,
-                anchor_y="top"
-            )
-            current_y -= see_text.content_height + LINE_SPACING
-            self.description_texts.append(see_text)
-
-            # List each object (just name)
-            for obj in objects:
-                obj_name = obj.name if hasattr(obj, 'name') else "Unknown"
-                obj_line = f"- {obj_name}"
-                txt = arcade.Text(
-                    obj_line,
-                    x=self.text_left + self.text_padding,
-                    y=current_y,
-                    color=OBJECT_COLOR,
-                    font_size=DESCRIPTION_FONT_SIZE,
-                    font_name=FONT_NAME_PRIMARY,
-                    width=self.text_width - 2 * self.text_padding - 60,
-                    multiline=True,
-                    anchor_y="top"
-                )
-                current_y -= txt.content_height + LINE_SPACING
-                self.description_texts.append(txt)
 
     def _update_response_display(self):
         self.response_text.text = self.last_response
@@ -198,7 +108,8 @@ class ShipView(arcade.View):
     def change_location(self, new_room_id: str) -> None:
         self.game_manager.set_current_location(new_room_id)
         self.drawing.load_background()  # Refresh background
-        self._rebuild_description()
+        self.description_renderer.rebuild_description()  # Refresh description
+        self.description_texts = self.description_renderer.get_description_texts()  # NEW: Sync ShipView's texts
         self.description_title.text = self.game_manager.get_current_location()["name"]
 
     def on_update(self, delta_time: float):
@@ -222,6 +133,9 @@ class ShipView(arcade.View):
 
         # Dividers
         self.drawing.draw_dividers()
+
+        # Ensure latest description texts before drawing
+        self.description_texts = self.description_renderer.get_description_texts()  # NEW: Always fresh
 
         # Draw all text (global coordinates)
         self.drawing.draw_text_elements()
