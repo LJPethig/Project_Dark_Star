@@ -201,15 +201,22 @@ class CommandProcessor:
             return "Store what?"
 
         target_name = args.strip().lower()
-        inventory = self.game_manager.get_player_inventory()
+        inventory_ids = self.game_manager.get_player_inventory()  # list of item IDs (strings)
 
-        for obj in inventory[:]:
-            if obj.matches(target_name) and isinstance(obj, PortableItem):
+        for item_id in inventory_ids[:]:
+            obj_data = self.game_manager.items.get(item_id)  # lookup full data by ID
+            if obj_data and obj_data["type"] == "portable" and (
+                target_name == obj_data["name"].lower() or target_name in obj_data.get("keywords", [])
+            ):
+                # Re-create PortableItem object for cargo (since cargo still expects objects)
+                obj_kwargs = {k: v for k, v in obj_data.items() if k != "type"}
+                obj = PortableItem(**obj_kwargs)
+
                 if self.game_manager.add_to_cargo(obj):
-                    inventory.remove(obj)
+                    inventory_ids.remove(item_id)
                     self.ship_view.description_renderer.rebuild_description()
-                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()  # Sync UI
-                    return f"You store the {obj.name} in the cargo hold."
+                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+                    return f"You store the {obj_data['name']} in the cargo hold."
                 else:
                     return "Failed to store item (cargo full?)."
 
