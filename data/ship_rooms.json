@@ -42,14 +42,15 @@
     "description": [
       "A cramped kitchen area. Food synthesizer, water recycler, small table bolted to the floor.",
       "Everything is functional, nothing is luxurious.",
-      "A hatch *leads forward to recreation room*."
+      "A hatch leads back to the *recreation room*."
     ],
     "background": "resources/images/galley.png",
     "exits": {
       "recreation room": {
         "target": "recreation room",
         "label": "recreation room",
-        "direction": "forward"
+        "direction": "back",
+        "shortcuts": ["rec room", "rec-room","rec"]
       }
     },
     "objects": []
@@ -59,45 +60,62 @@
     "name": "Recreation Room",
     "description": [
       "The ship's central hub for relaxation and social interaction.",
-      "Comfortable seating, a holovid screen, and game tables fill the space.",
       "Soft lighting and warm colors create a welcoming atmosphere.",
-      "Corridors and hatches lead out in all directions."
+      "The *main corridor CH-1* leads back towards your quarters.",
+      "Forward access to the *cockpit* is via a solid door.",
+      "The *galley* entrance is on the right side wall, while a",
+      "small *storage room* and *med-bay* access are opposite."
     ],
     "background": "resources/images/recreation.png",
     "exits": {
       "galley": {
         "target": "galley",
-        "label": "galley",
-        "direction": "aft"
+        "label": "Galley",
+        "direction": "right",
+        "shortcuts": "kitchen"
       },
-      "bridge": {
-        "target": "bridge",
-        "label": "bridge",
+      "cockpit": {
+        "target": "cockpit",
+        "label": "Cockpit",
         "direction": "forward"
       },
-      "corridor 1": {
-        "target": "corridor 1",
-        "label": "corridor 1",
-        "direction": "aft"
+      "main corridor": {
+        "target": "main corridor",
+        "label": "Main Corridor CH-1",
+        "direction": "back",
+        "shortcuts": ["corridor CH-1", "corridor", "CH-1", "main corridor CH-1"]
+      },
+      "med-bay": {
+        "target": "med-bay",
+        "label": "Med-Bay",
+        "direction": "",
+        "shortcuts": ["medbay", "med bay", "medical"]
+      },
+      "storage room": {
+        "target": "storage room",
+        "label": "Storage Room",
+        "direction": "",
+        "shortcuts": ["storage"]
       }
     },
     "objects": []
   },
   {
-    "id": "bridge",
-    "name": "Bridge",
+    "id": "cockpit",
+    "name": "Cockpit",
     "description": [
       "The command center of the ship.",
       "Pilot's console, navigation charts, and sensor displays dominate the space.",
       "The viewscreen shows the vastness of space ahead.",
-      "A hatch *leads aft to the recreation room*."
+      "A solid door leads back to the *recreation room*."
     ],
-    "background": "resources/images/bridge.png",
+    "background": "resources/images/cockpit.png",
     "exits": {
       "recreation room": {
         "target": "recreation room",
-        "label": "recreation room",
-        "direction": "aft"
+        "label": "Recreation Room",
+        "direction": "back",
+        "shortcuts": ["rec room", "rec-room","rec"]
       }
     },
     "objects": []
@@ -109,14 +127,34 @@
       "A utility room packed with supplies and spare parts.",
       "Shelves are lined with labeled containers and equipment crates.",
       "The lighting is harsh and functional.",
-      "A hatch *leads forward to corridor 1*."
+      "A hatch leads back to the *recreation room*."
     ],
     "background": "resources/images/storage.png",
     "exits": {
-      "corridor 1": {
-        "target": "corridor 1",
-        "label": "corridor 1",
-        "direction": "forward"
+      "recreation room": {
+        "target": "recreation room",
+        "label": "Recreation Room",
+        "direction": "back",
+        "shortcuts": ["rec room", "rec-room","rec"]
+      }
+    },
+    "objects": []
+  },
+  {
+    "id": "hyper-sleep chamber",
+    "name": "Hyper-sleep Chamber",
+    "description": [
+      "A cramped room with dual stasis pods and various life support equipment.",
+      "A vital system to survive the month long journeys between worlds.",
+      "An archway leads back to the *med-bay*."
+    ],
+    "background": "resources/images/hypersleep.png",
+    "exits": {
+      "med-bay": {
+        "target": "med-bay",
+        "label": "Med-Bay",
+        "direction": "back",
+        "shortcuts": ["medbay", "med bay", "medical"]
       }
     },
     "objects": []
@@ -128,14 +166,22 @@
       "A small medical facility with diagnostic equipment and first aid supplies.",
       "The auto-doc hums quietly in the corner.",
       "Sterile surfaces reflect the overhead lights.",
-      "A hatch *leads forward to corridor 1*."
+      "A hatch leads back to the *recreation room*.",
+      "On the left is an archway leading to the *stasis chamber*."
     ],
-    "background": "resources/images/medbay.png",
+    "background": "resources/images/med_bay.png",
     "exits": {
-      "corridor 1": {
-        "target": "corridor 1",
-        "label": "corridor 1",
-        "direction": "forward"
+      "recreation room": {
+        "target": "recreation room",
+        "label": "Recreation Room",
+        "direction": "back",
+        "shortcuts": ["rec room", "rec-room","rec"]
+      },
+      "hyper-sleep chamber": {
+        "target": "hyper-sleep chamber",
+        "label": "Hyper-sleep Chamber",
+        "direction": "left",
+        "shortcuts": ["stasis room", "hypersleep chamber", "stasis chamber"]
       }
     },
     "objects": []
