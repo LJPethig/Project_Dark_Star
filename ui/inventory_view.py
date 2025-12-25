@@ -27,7 +27,13 @@ class InventoryView(arcade.View):
             font_name=FONT_NAME_PRIMARY
         )
 
-        items = self.game_manager.get_player_inventory() if self.is_player else self.game_manager.get_ship_cargo()
+        # Get items: list of IDs for player, list of objects for cargo
+        if self.is_player:
+            item_ids = self.game_manager.get_player_inventory()
+            items = [self.game_manager.items.get(item_id) for item_id in item_ids if item_id in self.game_manager.items]
+        else:
+            items = self.game_manager.get_ship_cargo()  # Still objects
+
         if not items:
             arcade.draw_text(
                 "Empty",
@@ -43,9 +49,11 @@ class InventoryView(arcade.View):
             current_y = SCREEN_HEIGHT - TITLE_PADDING - DESCRIPTION_TITLE_FONT_SIZE - SECTION_TITLE_PADDING
 
             for item in items:
-                # Item name
+                # Item name (now safe: item is dict for player, object for cargo)
+                item_name = item["name"] if isinstance(item, dict) else item.name
+
                 arcade.draw_text(
-                    item.name,
+                    item_name,
                     TEXT_PADDING,
                     current_y,
                     ACCENT_COLOR,
@@ -54,7 +62,8 @@ class InventoryView(arcade.View):
                 )
 
                 # Item description (truncated if too long)
-                desc = item.description[:100] + "..." if len(item.description) > 100 else item.description
+                desc = item["description"] if isinstance(item, dict) else item.description
+                desc = desc[:100] + "..." if len(desc) > 100 else desc
                 arcade.draw_text(
                     desc,
                     TEXT_PADDING + 20,  # Slight indent

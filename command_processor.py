@@ -145,30 +145,26 @@ class CommandProcessor:
 
         target_name = args.strip().lower()
         current_location = self.game_manager.get_current_location()
-        objects = current_location.get("objects", [])
+        object_instances = current_location.get("objects", [])
 
-        for obj in objects[:]:  # copy to avoid modification during iteration
+        for obj in object_instances[:]:  # copy to avoid modification during iteration
             if obj.matches(target_name) and isinstance(obj, PortableItem):
-                self.game_manager.add_to_inventory(obj)
-                objects.remove(obj)  # Remove from room
-                self.ship_view._rebuild_description()  # Refresh description immediately
-                success_messages = [
-                    f"You take the {obj.name}.",
-                    f"You grab the {obj.name}.",
-                    f"You pick up the {obj.name}.",
-                    f"The {obj.name} is now in your hands."
-                ]
-                return random.choice(success_messages)
-            else:
-                # Random failure message for non-takeable objects
-                failure_messages = [
-                    f"The {obj.name} is bolted down It's not coming loose.",
-                    f"It's a part of the bulkhead. You have no luck prying it free.",
-                    f"The {obj.name} is an integral part of the ship's systems. Taking it would be a bad idea.",
-                    f"You try to lift it, but it's securely mounted. It's not going anywhere.",
-                    f"It's fixed in place — you can't take it."
-                ]
-                return random.choice(failure_messages)
+                item_id = obj.id  # Use the item's ID
+                success, message = self.game_manager.add_to_inventory(item_id)
+                if success:
+                    object_instances.remove(obj)  # Remove from room
+                    self.ship_view._rebuild_description()  # Refresh description immediately
+                    success_messages = [
+                        f"You take the {obj.name}.",
+                        f"You grab the {obj.name}.",
+                        f"You pick up the {obj.name}.",
+                        f"The {obj.name} is now in your hands."
+                    ]
+                    return random.choice(success_messages)
+                else:
+                    return message  # e.g., "Too heavy!"
+
+        return "There's nothing like that here to take."
 
     # NEW: Store from player → ship cargo
     def _handle_store(self, args: str) -> str:
@@ -196,37 +192,51 @@ class CommandProcessor:
             return "Drop what?"
 
         target_name = args.strip().lower()
-        inventory = self.game_manager.get_player_inventory()
+        inventory_ids = self.game_manager.get_player_inventory()
 
-        for obj in inventory[:]:
-            if obj.matches(target_name) and isinstance(obj, PortableItem):
-                self.game_manager.remove_from_inventory(obj.id)
-                current_location = self.game_manager.get_current_location()
-                current_location["objects"].append(obj)  # Add back to room
-                self.ship_view._rebuild_description()  # Refresh description immediately
-                drop_messages = [
-                    f"You drop the {obj.name}.",
-                    f"You put down the {obj.name}.",
-                    f"You leave the {obj.name}.",
-                    f"The {obj.name} is now on the floor."
-                ]
-                return random.choice(drop_messages)
-
-        return f"You don't have a '{args}' in your inventory to drop."
+        for item_id in inventory_ids[:]:
+            obj_data = self.game_manager.items.get(item_id)
+            if obj_data and (target_name == obj_data["name"].lower() or target_name in obj_data.get("keywords", [])):
+                if self.game_manager.remove_from_inventory(item_id):
+                    current_location = self.game_manager.get_current_location()
+                    # Re-instantiate the object for the room
+                    obj_type = obj_data["type"]
+                    obj_kwargs = {k: v for k, v in obj_data.items() if k != "type"}
+                    if obj_type == "portable":
+                        obj = PortableItem(**obj_kwargs)
+                    else:
+                        obj = FixedObject(**obj_kwargs)
+                    current_location["objects"].append(obj)
+                    self.ship_view._rebuild_description()  # Refresh immediately
+                    drop_messages = [
+                        f"You drop the {obj_data['name']}.",
+                        f"You put down the {obj_data['name']}.",
+                        f"You leave the {obj_data['name']}.",
+                        f"The {obj_data['name']} is now on the floor."
+                    ]
+                    return random.choice(drop_messages)
+        return f"You don't have a '{args}' to drop."
 
     def _handle_examine(self, args: str) -> str:
-        """Examine an object in the current room."""
+        """Examine an object in the current room or inventory."""
         if not args:
             return "Examine what?"
 
         target_name = args.strip().lower()
         current_location = self.game_manager.get_current_location()
-        objects = current_location.get("objects", [])
+        object_instances = current_location.get("objects", [])
 
-        for obj in objects:
+        # Check room objects
+        for obj in object_instances:
             if obj.matches(target_name):
-                # Return the detailed examine text
-                return obj.on_examine()
+                return obj.on_examine() if hasattr(obj,
+                                                   "on_examine") else f"You see nothing special about the {obj.name}."
+
+        # Check player inventory
+        for item_id in self.game_manager.get_player_inventory_ids():
+            obj_data = self.game_manager.items.get(item_id)
+            if obj_data and (target_name == obj_data["name"].lower() or target_name in obj_data.get("keywords", [])):
+                return obj_data.get("examine_text", f"You see nothing special about the {obj_data['name']}.")
 
         return f"There's nothing called '{args}' here to examine."
 

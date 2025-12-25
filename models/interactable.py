@@ -1,6 +1,6 @@
-# models/interactable.py
 from dataclasses import dataclass
 from typing import List, Optional
+
 
 @dataclass
 class Interactable:
@@ -20,15 +20,6 @@ class Interactable:
         """Check if player input matches this object's keywords."""
         return word.lower() in self.keywords
 
-    # not needed as JSON file is now using explicit keywords for each object
-    # def matches(self, word: str) -> bool:
-    #     """Check if player input matches this object's keywords (partial match)."""
-    #     word_lower = word.lower()
-    #     for keyword in self.keywords:
-    #         if word_lower in keyword.lower():
-    #             return True
-    #     return False
-
     def on_examine(self) -> str:
         """Default examine behavior (can be overridden)."""
         return self.examine_text or self.description or "No detailed description."
@@ -42,6 +33,7 @@ class Interactable:
 class PortableItem(Interactable):
     """Items that can be taken and carried in inventory."""
     takeable: bool = True
+    mass: float = 0.0  # NEW: Added this field for mass-based inventory limit
 
 
 @dataclass

@@ -251,7 +251,8 @@ class ShipView(arcade.View):
 
             # List each object (just name)
             for obj in objects:
-                obj_line = f"- {obj.name}"
+                obj_name = obj.name if hasattr(obj, 'name') else "Unknown"
+                obj_line = f"- {obj_name}"
                 txt = arcade.Text(
                     obj_line,
                     x=self.text_left + self.text_padding,
