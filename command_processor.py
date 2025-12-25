@@ -30,6 +30,7 @@ class CommandProcessor:
             "examine": self._handle_examine,
             "x": self._handle_examine,  # shortcut
             "drop": self._handle_drop,
+            "retrieve": self._handle_retrieve,
             # Future commands will be added here, e.g.:
             # "look": self._handle_look,
             # "examine": self._handle_examine,
@@ -222,6 +223,33 @@ class CommandProcessor:
 
         return f"You don't have a '{args}' in your inventory."
 
+    def _handle_retrieve(self, args: str) -> str:
+        """Retrieve an item from ship cargo to player inventory."""
+        if not args:
+            return "Retrieve what?"
+
+        target_name = args.strip().lower()
+        cargo_items = self.game_manager.get_ship_cargo()  # list of PortableItem objects
+
+        for obj in cargo_items[:]:
+            if obj.matches(target_name) and isinstance(obj, PortableItem):
+                item_id = obj.id
+                success, message = self.game_manager.add_to_inventory(item_id)
+                if success:
+                    self.game_manager.remove_from_cargo(item_id)  # Remove from cargo
+                    self.ship_view.description_renderer.rebuild_description()
+                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+                    success_messages = [
+                        f"You retrieve the {obj.name} from cargo.",
+                        f"You take the {obj.name} from the cargo hold.",
+                        f"You pick up the {obj.name} from storage.",
+                        f"The {obj.name} is now in your hands."
+                    ]
+                    return random.choice(success_messages)
+                else:
+                    return message  # e.g., "Too heavy!"
+
+        return f"There's nothing like '{args}' in the cargo hold."
     def _handle_drop(self, args: str) -> str:
         """Drop an item from player inventory back to the current room."""
         if not args:
