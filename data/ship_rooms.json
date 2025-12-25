@@ -148,7 +148,7 @@
       "Overhead lights cast a steady glow on the metal deck plates.",
       "The *recreation room* entrance leads forward towards the bridge.",
       "Opposite your *crew quarters* is *sub corridor CH-2* to cargo hold.",
-      "While the *Engineering section* is aft."
+      "While the *engineering* section is aft."
     ],
     "background": "resources/images/main_corridor.png",
     "exits": {
@@ -184,8 +184,7 @@
     "description": [
       "A secondary corridor that branches off *main corridor CH-1*.",
       "Less trafficked, with fewer lights and occasional flickering panels.",
-      "At the end a large door leads to the *cargo bay*,",
-      "while a smaller left side door is labelled *life support*."
+      "At the end a large door leads to the *cargo bay*"
     ],
     "background": "resources/images/sub_corridor.png",
     "exits": {
@@ -194,11 +193,6 @@
         "label": "Main Corridor CH-1",
         "direction": "",
         "shortcuts": ["main corridor", "corridor", "CH-1", "corridor CH-1"]
-      },
-      "life support": {
-        "target": "life support",
-        "label": "Life Support",
-        "direction": "left"
       },
       "cargo bay": {
         "target": "cargo bay",
@@ -215,15 +209,22 @@
     "description": [
       "The ship's engineering bay, filled with tools and diagnostic equipment.",
       "The reactor core thrums with contained energy.",
-      "Workbenches are cluttered with parts and schematics.",
-      "A hatch *leads forward to corridor 2*."
+      "Workbenches are cluttered with spare parts.",
+      "A solid door leads back towards *main corridor CH-1*, ",
+      "on the left wall a small hatch is labelled *life support*"
     ],
     "background": "resources/images/engineering.png",
     "exits": {
-      "corridor 2": {
-        "target": "corridor 2",
-        "label": "corridor 2",
-        "direction": "forward"
+      "main corridor": {
+        "target": "main corridor",
+        "label": "Main Corridor CH-1",
+        "direction": "back",
+        "shortcuts": ["main corridor", "corridor", "CH-1", "corridor CH-1"]
+      },
+      "life support": {
+        "target": "life support",
+        "label": "Life Support",
+        "direction": "left"
       }
     },
     "objects": []
@@ -235,14 +236,14 @@
       "The life support systems room, with air recyclers and water purifiers.",
       "Gauges show oxygen levels and humidity controls.",
       "The air is fresh and slightly humid.",
-      "A hatch *leads back to corridor 2*."
+      "A small hatch leads back to *engineering*."
     ],
     "background": "resources/images/life_support.png",
     "exits": {
-      "corridor 2": {
-        "target": "corridor 2",
-        "label": "corridor 2",
-        "direction": "starboard"
+      "engineering": {
+        "target": "engineering",
+        "label": "Engineering",
+        "direction": "back"
       }
     },
     "objects": []
