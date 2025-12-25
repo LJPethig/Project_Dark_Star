@@ -201,6 +201,12 @@ class CommandProcessor:
         if not args:
             return "Store what?"
 
+        # NEW: Check if in a valid storage room
+        current_location = self.game_manager.get_current_location()
+        room_id = current_location["id"]
+        if room_id not in ["storage room", "cargo bay"]:
+            return "You can only store items in the storage room or cargo bay."
+
         target_name = args.strip().lower()
         inventory_ids = self.game_manager.get_player_inventory()  # list of item IDs (strings)
 
@@ -227,6 +233,12 @@ class CommandProcessor:
         """Retrieve an item from ship cargo to player inventory."""
         if not args:
             return "Retrieve what?"
+
+        # NEW: Check if in a valid storage room
+        current_location = self.game_manager.get_current_location()
+        room_id = current_location["id"]
+        if room_id not in ["storage room", "cargo bay"]:
+            return "You can only retrieve items in the storage room or cargo bay."
 
         target_name = args.strip().lower()
         cargo_items = self.game_manager.get_ship_cargo()  # list of PortableItem objects
