@@ -130,18 +130,46 @@ class ShipView(arcade.View):
         )
 
     def _load_background(self):
-        """Load background image for the CURRENT location (queried live)."""
+        """Load and scale background image to fit the image section while preserving aspect ratio."""
         self.background_list = arcade.SpriteList()
-        current_location = self.game_manager.get_current_location()  # Always live
+        current_location = self.game_manager.get_current_location()
+
         try:
             texture = arcade.load_texture(current_location["background"])
+            if not texture:
+                print("Failed to load background texture.")
+                return
+
+            # Get target dimensions (the image section area)
+            target_width = self.image_section.width
+            target_height = SCREEN_HEIGHT - EVENT_SECTION_HEIGHT  # or self.image_section.height if you adjust it
+
+            # Original image dimensions
+            orig_width = texture.width
+            orig_height = texture.height
+            if orig_width == 0 or orig_height == 0:
+                return
+
+            # Calculate scaling factor to fit (letterbox style)
+            scale_w = target_width / orig_width
+            scale_h = target_height / orig_height
+            scale = min(scale_w, scale_h)  # Use the smaller one to avoid cropping
+
+            # New scaled size (preserves aspect ratio)
+            new_width = int(orig_width * scale)
+            new_height = int(orig_height * scale)
+
+            # Create sprite with scaled size
             bg_sprite = arcade.Sprite()
             bg_sprite.texture = texture
-            bg_sprite.center_x = self.image_section.width / 2
-            bg_sprite.center_y = (SCREEN_HEIGHT + EVENT_SECTION_HEIGHT) / 2
-            bg_sprite.width = self.image_section.width
-            bg_sprite.height = SCREEN_HEIGHT - EVENT_SECTION_HEIGHT
+            bg_sprite.scale = scale  # Arcade will apply this uniformly
+
+            # Center it in the section
+            bg_sprite.center_x = self.image_section.left + target_width / 2
+            bg_sprite.center_y = self.image_section.bottom + target_height / 2
+
             self.background_list.append(bg_sprite)
+
         except Exception as e:
             print(f"Background load failed: {e}")
 
