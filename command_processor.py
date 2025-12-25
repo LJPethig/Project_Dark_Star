@@ -22,10 +22,10 @@ class CommandProcessor:
             "inventory": self._handle_player_inventory,
             "i": self._handle_player_inventory,  # shortcut
             "take": self._handle_take,
-            "pick_up": self._handle_take,   # alias, spaces are stripped
+            "pick up": self._handle_take,   # alias, spaces are stripped
             "store": self._handle_store,
             "cargo": self._handle_ship_cargo,     # Restricted to terminals
-            "debug_cargo": self._handle_debug_cargo,  # TEMPORARY: for testing without terminal
+            "debug cargo": self._handle_debug_cargo,  # TEMPORARY: for testing without terminal
             # NEW: Examine command
             "examine": self._handle_examine,
             "x": self._handle_examine,  # shortcut
@@ -41,10 +41,25 @@ class CommandProcessor:
         if not cmd:
             return ""
 
-        # Split into verb + arguments
-        parts = cmd.split(maxsplit=1)
-        verb = parts[0]
-        args = parts[1] if len(parts) > 1 else ""
+        # Split into words
+        words = cmd.split()
+
+        # Check for two-word verbs first (e.g., "pick up")
+        if len(words) >= 2:
+            two_word_verb = f"{words[0]} {words[1]}"
+            if two_word_verb in self.commands:
+                # Use the two-word verb as key, args = rest of command
+                verb = two_word_verb
+                args = " ".join(words[2:]) if len(words) > 2 else ""
+            else:
+                verb = words[0]
+                args = " ".join(words[1:]) if len(words) > 1 else ""
+        else:
+            verb = words[0] if words else ""
+            args = ""
+
+        print(f"cmd is {cmd}")
+        print(f"verb is {verb} : args is {args}")
 
         # Look up and execute handler
         handler = self.commands.get(verb)
