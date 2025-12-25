@@ -13,7 +13,7 @@
     "type": "portable",
     "name": "Crew ID Card",
     "description": "A chipped security card for restricted areas.",
-    "keywords": ["id card", "security card", "card"],
+    "keywords": ["id card", "security card", "card", "id"],
     "examine_text": "The card has a faded photo and a security chip.",
     "mass": 0.0
   },
