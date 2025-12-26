@@ -31,6 +31,8 @@ class CommandProcessor:
             "x": self._handle_examine,  # shortcut
             "drop": self._handle_drop,
             "retrieve": self._handle_retrieve,
+            "use": self._handle_use_panel,
+            "access": self._handle_use_panel,  # alias
             # Future commands will be added here, e.g.:
             # "look": self._handle_look,
             # "examine": self._handle_examine,
@@ -339,3 +341,66 @@ class CommandProcessor:
         """Check if player can access ship cargo (for now, always False)."""
         # Later: check if current room has a terminal or terminal is "unlocked"
         return False
+
+    def _handle_use_panel(self, args: str) -> str:
+        """Use a security panel to unlock a door."""
+        if not args:
+            return "Use what? Try 'use panel [door]' or 'access panel [door]'."
+
+        target = args.strip().lower()
+        current_location = self.game_manager.get_current_location()
+        current_room_id = current_location["id"]
+
+        # Find the target door from exits
+        next_id = None
+        exit_label = None
+        exit_data = None
+        for exit_key, ed in current_location["exits"].items():
+            if target == exit_key.lower() or target in [s.lower() for s in ed.get("shortcuts", [])]:
+                exit_data = ed
+                next_id = ed["target"]
+                exit_label = ed.get("label", current_location["name"])
+                break
+
+        if not next_id:
+            return "There's no door or panel for that here."
+
+        # Find the matching door connection in door_status.json
+        matching_door = None
+        for door in self.game_manager.door_status:
+            if set(door["rooms"]) == {current_room_id, next_id}:
+                matching_door = door
+                break
+
+        if not matching_door:
+            return "No matching door found."
+
+        # Find the panel for the current side
+        panel_id = None
+        for panel_data in matching_door.get("panel_ids", []):
+            if panel_data["side"] == current_room_id:
+                panel_id = panel_data["id"]
+                break
+
+        if not panel_id:
+            return "No panel on this side of the door."
+
+        panel = self.game_manager.security_panels.get(panel_id)
+        if not panel:
+            return "Panel not found."
+
+        # Attempt unlock (PIN will be prompted later if needed)
+        success, message = panel.attempt_unlock(self.game_manager.get_player_inventory())
+
+        if success:
+            # Unlock the door (update door_status.json)
+            matching_door["locked"] = False
+            # TODO: Save door_status.json to disk (if persistent)
+            # For now, just in-memory
+
+            # Move to the target room
+            self.ship_view.change_location(next_id)
+            display_name = exit_label if exit_label else self.game_manager.get_current_location()["name"]
+            return f"{message} You enter {display_name}."
+        else:
+            return message

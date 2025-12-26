@@ -2,6 +2,7 @@
 import json
 from constants import STARTING_ROOM, PLAYER_NAME, SHIP_NAME
 from models.interactable import PortableItem, FixedObject  # Import the new interactable classes
+from models.security_panel import SecurityPanel  # NEW: Import the SecurityPanel class
 
 
 class GameManager:
@@ -22,6 +23,9 @@ class GameManager:
         # Mass tracking for player inventory
         self.player_carry_mass = 0.0
         self.player_max_carry_mass = 10.0
+
+        self.security_panels = {}  # NEW: panel_id -> SecurityPanel
+        self._load_security_panels()  # NEW: Load panels at startup
 
     def _load_items(self):
         """Load all item definitions from objects.json into self.items."""
@@ -113,6 +117,36 @@ class GameManager:
         except Exception as e:
             print(f"Failed to load door_status.json: {e}")
             self.door_status = []
+
+    def _load_security_panels(self):
+        """Load and instantiate SecurityPanel instances from door_status.json."""
+        self.security_panels = {}  # panel_id -> SecurityPanel instance
+
+        try:
+            with open("data/door_status.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+                connections = data["connections"]
+
+            for door in connections:
+                door_id = door["id"]
+                panel_ids = door.get("panel_ids", [])
+
+                for panel_data in panel_ids:
+                    panel_id = panel_data["id"]
+                    side = panel_data["side"]
+                    security_level = door["security_level"]  # From door connection
+
+                    panel = SecurityPanel(
+                        panel_id=panel_id,
+                        door_id=door_id,
+                        security_level=security_level,
+                        side=side
+                    )
+                    self.security_panels[panel_id] = panel
+
+        except Exception as e:
+            print(f"Failed to load security panels: {e}")
+            self.security_panels = {}
 
     def get_current_location(self) -> dict:
         """Return the current location data."""
