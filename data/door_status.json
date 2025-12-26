@@ -4,7 +4,7 @@
       "id": "crew_quarters_main_corridor",
       "rooms": ["crew quarters", "main corridor"],
       "locked": false,
-      "locked_description": "The hatch to the main corridor is locked."
+      "locked_description": "The hatch is locked."
     },
     {
       "id": "galley_recreation_room",
@@ -64,7 +64,8 @@
       "id": "sub_corridor_cargo_bay",
       "rooms": ["sub corridor", "cargo bay"],
       "locked": true,
-      "locked_description": "The door to the cargo bay is locked."
+      "locked_description": "The cargo bay door is locked.",
+      "locked_image": "resources/images/locked_cargo_door.png"
     },
     {
       "id": "engineering_life_support",

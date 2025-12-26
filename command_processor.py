@@ -120,8 +120,11 @@ class CommandProcessor:
         for door in self.game_manager.door_status:
             if set(door["rooms"]) == {current_room_id, next_id}:
                 if door["locked"]:
+                    # NEW: Show locked door image
+                    image_path = door.get("locked_image", "resources/images/locked_door_default.png")
+                    self.ship_view.drawing.set_background_image(image_path)
                     return door["locked_description"]
-                break  # Door found and not locked, proceed
+                break # door found and not locked, proceed
 
         # Move normally
         self.ship_view.change_location(next_id)

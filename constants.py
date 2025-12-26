@@ -1,7 +1,7 @@
 # constants.py
 
 # Game starting room
-STARTING_ROOM = "cargo bay"  # The room the player wakes up in
+STARTING_ROOM = "crew quarters"  # The room the player wakes up in
 PLAYER_NAME = "Jack Harrow"
 SHIP_NAME = "Tempus Fugit"
 

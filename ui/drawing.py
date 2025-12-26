@@ -115,3 +115,40 @@ class DrawingManager:
             txt.draw()
         self.view.response_text.draw()
         self.view.input_text.draw()
+
+    def set_background_image(self, image_path: str):
+        """Load and display a new background image (e.g., locked door)."""
+        self.background_list = arcade.SpriteList()
+
+        try:
+            texture = arcade.load_texture(image_path)
+            if not texture:
+                print(f"Failed to load image: {image_path}")
+                return
+
+            target_width = self.view.image_section.width
+            target_height = SCREEN_HEIGHT - EVENT_SECTION_HEIGHT
+
+            orig_width = texture.width
+            orig_height = texture.height
+            if orig_width == 0 or orig_height == 0:
+                return
+
+            scale_w = target_width / orig_width
+            scale_h = target_height / orig_height
+            scale = min(scale_w, scale_h)
+
+            new_width = int(orig_width * scale)
+            new_height = int(orig_height * scale)
+
+            bg_sprite = arcade.Sprite()
+            bg_sprite.texture = texture
+            bg_sprite.scale = scale
+
+            bg_sprite.center_x = self.view.image_section.left + target_width / 2
+            bg_sprite.center_y = self.view.image_section.bottom + target_height / 2
+
+            self.background_list.append(bg_sprite)
+
+        except Exception as e:
+            print(f"Background load failed: {e}")
