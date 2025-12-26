@@ -146,13 +146,22 @@ class CommandProcessor:
         self.ship_view.window.show_view(cargo_view)
         return "Opening ship cargo manifest..."
 
-    # TEMPORARY debug command
     def _handle_debug_cargo(self, args: str) -> str:
         """TEMP: Force access to ship cargo for testing."""
+        current_location = self.game_manager.get_current_location()
+        room_id = current_location["id"]
+
+        # Get cargo for the current room
+        cargo_items = self.game_manager.get_cargo_for_room(room_id)
+
+        # The rest stays the same - open the view
         cargo_view = InventoryView(self.game_manager, is_player=False)
         cargo_view.previous_view = self.ship_view
         self.ship_view.window.show_view(cargo_view)
-        return "DEBUG: Opening ship cargo manifest (terminal bypass)..."
+
+        # Optional: Show room-specific info in the response
+        room_name = current_location["name"]
+        return f"DEBUG: Opening {room_name} cargo manifest (terminal bypass)...\nItems: {len(cargo_items)}"
 
     # NEW: Take from room → player inventory
     def _handle_take(self, args: str) -> str:
@@ -201,13 +210,14 @@ class CommandProcessor:
         if not args:
             return "Store what?"
 
-        # NEW: Check if in a valid storage room
+        target_name = args.strip().lower()
+
+        # NEW: Get current room and check if valid for storage
         current_location = self.game_manager.get_current_location()
         room_id = current_location["id"]
         if room_id not in ["storage room", "cargo bay"]:
             return "You can only store items in the storage room or cargo bay."
 
-        target_name = args.strip().lower()
         inventory_ids = self.game_manager.get_player_inventory()  # list of item IDs (strings)
 
         for item_id in inventory_ids[:]:
@@ -219,11 +229,14 @@ class CommandProcessor:
                 obj_kwargs = {k: v for k, v in obj_data.items() if k != "type"}
                 obj = PortableItem(**obj_kwargs)
 
-                if self.game_manager.add_to_cargo(obj):
+                # NEW: Pass room_id to add_to_cargo
+                if self.game_manager.add_to_cargo(obj, room_id):
                     inventory_ids.remove(item_id)
                     self.ship_view.description_renderer.rebuild_description()
                     self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
-                    return f"You store the {obj_data['name']} in the cargo hold."
+                    current_location = self.game_manager.get_current_location()
+                    room_name = current_location["name"].lower()  # e.g., "storage room" or "cargo bay"
+                    return f"You store the {obj_data['name']} in the {room_name}."
                 else:
                     return "Failed to store item (cargo full?)."
 
@@ -241,27 +254,28 @@ class CommandProcessor:
             return "You can only retrieve items in the storage room or cargo bay."
 
         target_name = args.strip().lower()
-        cargo_items = self.game_manager.get_ship_cargo()  # list of PortableItem objects
+        cargo_items = self.game_manager.get_cargo_for_room(room_id)
 
         for obj in cargo_items[:]:
             if obj.matches(target_name) and isinstance(obj, PortableItem):
                 item_id = obj.id
                 success, message = self.game_manager.add_to_inventory(item_id)
                 if success:
-                    self.game_manager.remove_from_cargo(item_id)  # Remove from cargo
+                    self.game_manager.remove_from_cargo(item_id, room_id)  # Remove from cargo
                     self.ship_view.description_renderer.rebuild_description()
                     self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
                     success_messages = [
-                        f"You retrieve the {obj.name} from cargo.",
-                        f"You take the {obj.name} from the cargo hold.",
-                        f"You pick up the {obj.name} from storage.",
+                        f"You retrieve the {obj.name} from the {current_location['name'].lower()}.",
+                        f"You take the {obj.name} from the {current_location['name'].lower()}.",
+                        f"You pick up the {obj.name} from the {current_location['name'].lower()}.",
                         f"The {obj.name} is now in your hands."
                     ]
                     return random.choice(success_messages)
                 else:
                     return message  # e.g., "Too heavy!"
 
-        return f"There's nothing like '{args}' in the cargo hold."
+        return f"There's nothing like '{args}' in the {current_location['name'].lower()}."
+
     def _handle_drop(self, args: str) -> str:
         """Drop an item from player inventory back to the current room."""
         if not args:

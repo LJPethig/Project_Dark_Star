@@ -56,7 +56,10 @@ class GameManager:
         self.ship = {
             "name": ship_name,
             "rooms": self._load_ship_rooms(),
-            "cargo": []  # NEW: ship cargo hold (list of PortableItems)
+            "cargo_by_room": {  # NEW
+                "storage room": [],  # Personal/small storage
+                "cargo bay": []  # Large/trade cargo
+            }
         }
 
         # Player always starts in quarters after waking up
@@ -135,24 +138,26 @@ class GameManager:
             return True
         return False
 
-    def add_to_cargo(self, item: PortableItem) -> bool:
-        """Add item to ship cargo hold."""
-        if isinstance(item, PortableItem):
-            self.ship["cargo"].append(item)
+    def add_to_cargo(self, item: PortableItem, room_id: str) -> bool:
+        """Add item to the cargo list for the specified room."""
+        if isinstance(item, PortableItem) and room_id in self.ship["cargo_by_room"]:
+            self.ship["cargo_by_room"][room_id].append(item)
             return True
         return False
 
-    def remove_from_cargo(self, item_id: str) -> bool:
-        """Remove from ship cargo by ID."""
-        for i, item in enumerate(self.ship["cargo"]):
-            if item.id == item_id:
-                self.ship["cargo"].pop(i)
-                return True
+    def remove_from_cargo(self, item_id: str, room_id: str) -> bool:
+        """Remove item from the cargo list for the specified room by ID."""
+        if room_id in self.ship["cargo_by_room"]:
+            cargo_list = self.ship["cargo_by_room"][room_id]
+            for i, item in enumerate(cargo_list):
+                if item.id == item_id:
+                    cargo_list.pop(i)
+                    return True
         return False
 
-    def get_ship_cargo(self) -> list:
-        """Return the ship's cargo list."""
-        return self.ship["cargo"]
+    def get_cargo_for_room(self, room_id: str) -> list:
+        """Get cargo list for a specific room."""
+        return self.ship["cargo_by_room"].get(room_id, [])
 
     def get_player_inventory(self) -> list:
         """Return the player's personal inventory list (of item IDs)."""

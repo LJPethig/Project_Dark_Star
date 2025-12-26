@@ -16,7 +16,12 @@ class InventoryView(arcade.View):
         arcade.set_background_color(BACKGROUND_COLOR)  # From constants
 
         # Title
-        title = "YOUR GEAR" if self.is_player else "SHIP CARGO HOLD"
+        if self.is_player:
+            title = "YOUR INVENTORY"
+        else:
+            current_location = self.game_manager.get_current_location()
+            room_name = current_location["name"]
+            title = f"{room_name.upper()} INVENTORY"
         arcade.draw_text(
             title,
             SCREEN_WIDTH / 2,
@@ -32,7 +37,10 @@ class InventoryView(arcade.View):
             item_ids = self.game_manager.get_player_inventory()
             items = [self.game_manager.items.get(item_id) for item_id in item_ids if item_id in self.game_manager.items]
         else:
-            items = self.game_manager.get_ship_cargo()  # Still objects
+            # Get room-specific cargo
+            current_location = self.game_manager.get_current_location()
+            room_id = current_location["id"]
+            items = self.game_manager.get_cargo_for_room(room_id)
 
         if not items:
             arcade.draw_text(
