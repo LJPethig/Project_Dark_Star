@@ -18,11 +18,19 @@
     "mass": 0.0
   },
   {
-    "id": "terminal1",
+    "id": "terminal_personal",
     "type": "fixed",
     "name": "Personal Terminal",
     "description": "Your cabin's control console.",
     "keywords": ["console", "computer", "terminal", "personal terminal"],
+    "examine_text": "Screen is locked. Needs credentials."
+  },
+  {
+    "id": "terminal_storage",
+    "type": "fixed",
+    "name": "Storage Terminal",
+    "description": "An inventory management terminal.",
+    "keywords": ["console", "computer", "terminal", "storage terminal", "inventory terminal"],
     "examine_text": "Screen is locked. Needs credentials."
   },
   {
