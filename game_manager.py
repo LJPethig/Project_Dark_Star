@@ -1,5 +1,6 @@
 # game_manager.py
 import json
+from constants import STARTING_ROOM, PLAYER_NAME, SHIP_NAME
 from models.interactable import PortableItem, FixedObject  # Import the new interactable classes
 
 
@@ -16,6 +17,7 @@ class GameManager:
         self.items = {}  # id -> full item dict from objects.json
 
         self._load_items()  # Load global item registry
+        self._load_door_status()  # NEW: Load door status
 
         # Mass tracking for player inventory
         self.player_carry_mass = 0.0
@@ -31,7 +33,7 @@ class GameManager:
             print(f"Failed to load objects.json: {e}")
             self.items = {}
 
-    def create_new_game(self, player_name="Jack Harrow", ship_name="Tempus Fugit", skills=None):
+    def create_new_game(self, player_name=PLAYER_NAME, ship_name=SHIP_NAME, skills=None):
         """
         Loads ship rooms from JSON and places the player in their quarters.
         'skills' parameter is included for future background selection.
@@ -63,7 +65,7 @@ class GameManager:
         }
 
         # Player always starts in quarters after waking up
-        self.current_location = self.ship["rooms"]["crew quarters"]
+        self.current_location = self.ship["rooms"][STARTING_ROOM]
 
     def _load_ship_rooms(self) -> dict:
         """Load ship room data from JSON and instantiate objects from self.items."""
@@ -101,6 +103,16 @@ class GameManager:
             rooms[room_id] = room_data
 
         return rooms
+
+    def _load_door_status(self):
+        """Load door status from door_status.json."""
+        try:
+            with open("data/door_status.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+                self.door_status = data["connections"]
+        except Exception as e:
+            print(f"Failed to load door_status.json: {e}")
+            self.door_status = []
 
     def get_current_location(self) -> dict:
         """Return the current location data."""

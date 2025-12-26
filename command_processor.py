@@ -80,53 +80,53 @@ class CommandProcessor:
         raw_args = args.strip().lower()
 
         # Remove common prefixes like "to", "the", "to the"
-        # This makes "go to galley", "go to the galley", "enter the galley" all normalize to "galley"
         prefixes = ["to the ", "to ", "the "]
         normalized_cmd = raw_args
         for prefix in prefixes:
             if normalized_cmd.startswith(prefix):
                 normalized_cmd = normalized_cmd[len(prefix):].strip()
-                break  # Only remove the first matching prefix
+                break
 
-        # If nothing left after stripping (e.g., "go to"), treat as invalid
         if not normalized_cmd:
             return "Where do you want to go? Try 'go to [place]'."
 
-        # Now use the normalized command for matching
         current_location = self.game_manager.get_current_location()
 
-        # Try direct exit name (e.g., "galley")
+        # Find the exit
         next_id = None
-        exit_label = None  # NEW: to store the label for the response
+        exit_label = None
         if normalized_cmd in current_location["exits"]:
             exit_data = current_location["exits"][normalized_cmd]
             next_id = exit_data["target"]
-            exit_label = exit_data.get("label", current_location["name"])  # Use label if present
+            exit_label = exit_data.get("label", current_location["name"])
         else:
-            # Try direction alias (e.g., "forward")
-            for exit_key, exit_data in current_location["exits"].items():
-                if "direction" in exit_data and normalized_cmd == exit_data["direction"].lower():
-                    next_id = exit_data["target"]
-                    exit_label = exit_data.get("label", current_location["name"])  # Use label if present
+            for exit_key, ed in current_location["exits"].items():
+                if "direction" in ed and normalized_cmd == ed["direction"].lower():
+                    exit_data = ed
+                    next_id = ed["target"]
+                    exit_label = ed.get("label", current_location["name"])
+                    break
+                if "shortcuts" in ed and normalized_cmd in [s.lower() for s in ed["shortcuts"]]:
+                    exit_data = ed
+                    next_id = ed["target"]
+                    exit_label = ed.get("label", current_location["name"])
                     break
 
-            # NEW: Try shortcuts (e.g., "H2", "sub corridor")
-            if next_id is None:
-                for exit_key, exit_data in current_location["exits"].items():
-                    if "shortcuts" in exit_data:
-                        if normalized_cmd in [s.lower() for s in exit_data["shortcuts"]]:
-                            next_id = exit_data["target"]
-                            exit_label = exit_data.get("label", current_location["name"])
-                            break
+        if not next_id:
+            return "You can't go that way."
 
-        if next_id:
-            self.ship_view.change_location(next_id)
-            # NEW: Use label for immersive response (fallback to room name if no label)
-            display_name = exit_label if exit_label else self.game_manager.get_current_location()["name"]
-            return f"You enter {display_name}."
+        # NEW: Check door status from door_status.json
+        current_room_id = current_location["id"]
+        for door in self.game_manager.door_status:
+            if set(door["rooms"]) == {current_room_id, next_id}:
+                if door["locked"]:
+                    return door["locked_description"]
+                break  # Door found and not locked, proceed
 
-        # Movement attempt failed
-        return "You can't go that way."
+        # Move normally
+        self.ship_view.change_location(next_id)
+        display_name = exit_label if exit_label else self.game_manager.get_current_location()["name"]
+        return f"You enter {display_name}."
 
     # NEW: Player inventory
     def _handle_player_inventory(self, args: str) -> str:

@@ -318,7 +318,7 @@
         "target": "sub corridor",
         "label": "Sub Corridor CH-2",
         "direction": "back",
-        "shortcuts": ["sub corridor", "corridor", "CH2", "corridor CH2"]
+        "shortcuts": ["sub corridor", "corridor", "CH-2", "corridor CH-2"]
       },
       "airlock": {
         "target": "airlock",
