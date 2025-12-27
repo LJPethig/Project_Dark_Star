@@ -9,7 +9,7 @@
     "mass": 1.5
   },
   {
-    "id": "id_card_crew",
+    "id": "id_card",
     "type": "portable",
     "name": "Crew ID Card",
     "description": "A chipped security card for restricted areas.",

@@ -20,7 +20,7 @@
     "objects": [
       "wrench",
       "terminal_personal",
-      "id_card_crew"
+      "id_card"
     ]
   },
   {
@@ -326,6 +326,7 @@
         "direction": "left"
       }
     },
-    "objects": ["terminal_storage"]
+    "objects": ["terminal_storage",
+    "id_card"]
   }
 ]

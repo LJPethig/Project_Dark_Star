@@ -122,11 +122,31 @@ class CommandProcessor:
         for door in self.game_manager.door_status:
             if set(door["rooms"]) == {current_room_id, next_id}:
                 if door["locked"]:
-                    # NEW: Show locked door image
+                    # Show locked door image
                     image_path = door.get("locked_image", "resources/images/locked_door_default.png")
                     self.ship_view.drawing.set_background_image(image_path)
+
+                    # Find the correct panel ID for this side
+                    panel_id = None
+                    for panel_data in door.get("panel_ids", []):
+                        if panel_data["side"] == current_room_id:
+                            panel_id = panel_data["id"]
+                            break
+
+                    if panel_id:
+                        # Store in persistent dict ONLY if not already stored for this room
+                        if current_room_id not in self.game_manager.remembered_panels_by_room:
+                            self.game_manager.remembered_panels_by_room[current_room_id] = panel_id
+                            print(f"DEBUG: Stored panel ID: {panel_id} for room {current_room_id} (door {door['id']})")
+
+                        # Set as active immediately so use panel works right now
+                        self.game_manager.last_attempted_panel_id = panel_id
+                        self.game_manager.last_attempted_door_id = door["id"]
+                    else:
+                        print("DEBUG: No panel found for current side — this shouldn't happen")
+
                     return door["locked_description"]
-                break # door found and not locked, proceed
+                break  # door found and not locked, proceed
 
         # Move normally
         self.ship_view.change_location(next_id)
@@ -343,68 +363,44 @@ class CommandProcessor:
         return False
 
     def _handle_use_panel(self, args: str) -> str:
-        """Use a security panel to unlock a door."""
-        if not args:
-            return "Use what? Try 'use panel [door]' or 'access panel [door]'."
-
-        target = args.strip().lower()
-        current_location = self.game_manager.get_current_location()
-        current_room_id = current_location["id"]
-        print(f"DEBUG: target = '{target}'")
-        print(f"DEBUG: current_room_id = '{current_room_id}'")
-        print(f"DEBUG: exits keys = {list(current_location['exits'].keys())}")
-        print(f"DEBUG: shortcuts for cargo bay = {current_location['exits'].get('cargo bay', {}).get('shortcuts', [])}")
-
-        # Find the target door from exits
-        next_id = None
-        exit_label = None
-        exit_data = None
-        for exit_key, ed in current_location["exits"].items():
-            if target == exit_key.lower() or target in [s.lower() for s in ed.get("shortcuts", [])]:
-                exit_data = ed
-                next_id = ed["target"]
-                exit_label = ed.get("label", current_location["name"])
-                break
-
-        if not next_id:
-            return "There's no door or panel for that here."
-
-        # Find the matching door connection in door_status.json
-        matching_door = None
-        for door in self.game_manager.door_status:
-            if set(door["rooms"]) == {current_room_id, next_id}:
-                matching_door = door
-                break
-
-        if not matching_door:
-            return "No matching door found."
-
-        # Find the panel for the current side
-        panel_id = None
-        for panel_data in matching_door.get("panel_ids", []):
-            if panel_data["side"] == current_room_id:
-                panel_id = panel_data["id"]
-                break
+        """Use the security panel from the most recent locked door attempt.
+        Ignores any arguments — always uses the remembered panel.
+        """
+        # No need to process args at all
+        panel_id = self.game_manager.last_attempted_panel_id
 
         if not panel_id:
-            return "No panel on this side of the door."
+            return "You haven't tried to open a locked door recently. Try 'go [direction]' first."
 
         panel = self.game_manager.security_panels.get(panel_id)
         if not panel:
-            return "Panel not found."
+            # This should be rare — add debug if needed
+            return f"Panel '{panel_id}' not found. Something went wrong with panel loading."
 
-        # Attempt unlock (PIN will be prompted later if needed)
+        # Find the matching door from the panel's door_id
+        matching_door = next(
+            (d for d in self.game_manager.door_status if d["id"] == panel.door_id),
+            None
+        )
+        if not matching_door:
+            return "No matching door found for this panel."
+
+        # Attempt to unlock
         success, message = panel.attempt_unlock(self.game_manager.get_player_inventory())
 
         if success:
-            # Unlock the door (update door_status.json)
+            # Unlock the door
             matching_door["locked"] = False
-            # TODO: Save door_status.json to disk (if persistent)
-            # For now, just in-memory
+            # TODO: Save door_status.json if persistent (in-memory for now)
 
-            # Move to the target room
-            self.ship_view.change_location(next_id)
-            display_name = exit_label if exit_label else self.game_manager.get_current_location()["name"]
-            return f"{message} You enter {display_name}."
+            # Clear the remembered panel after success
+            self.game_manager.last_attempted_panel_id = None
+            self.game_manager.last_attempted_door_id = None
+
+            # Remove from persistent dict since door is now unlocked
+            current_room_id = self.game_manager.get_current_location()["id"]
+            self.game_manager.remembered_panels_by_room.pop(current_room_id, None)
+
+            return f"{message} The hatch is now unlocked. You can go through now."
         else:
             return message

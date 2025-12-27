@@ -207,8 +207,8 @@
       "locked_description": "The door to the cargo bay is locked.",
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
-      "security_level": 2,
-      "panel_image": "resources/images/panel_level2_swipe_pin.png",
+      "security_level": 1,
+      "panel_image": "resources/images/panel_level1_swipe.png",
       "panel_ids": [
         {
           "id": "sub_corridor_cargo_bay_panel_sub",
