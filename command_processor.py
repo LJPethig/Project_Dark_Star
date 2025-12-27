@@ -350,6 +350,10 @@ class CommandProcessor:
         target = args.strip().lower()
         current_location = self.game_manager.get_current_location()
         current_room_id = current_location["id"]
+        print(f"DEBUG: target = '{target}'")
+        print(f"DEBUG: current_room_id = '{current_room_id}'")
+        print(f"DEBUG: exits keys = {list(current_location['exits'].keys())}")
+        print(f"DEBUG: shortcuts for cargo bay = {current_location['exits'].get('cargo bay', {}).get('shortcuts', [])}")
 
         # Find the target door from exits
         next_id = None
