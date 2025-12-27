@@ -27,9 +27,6 @@ class GameManager:
         self.security_panels = {}  # NEW: panel_id -> SecurityPanel
         self._load_security_panels()  # NEW: Load panels at startup
 
-        self.last_attempted_panel_id = None  # NEW: Stores panel_id from last locked door attempt
-        self.last_attempted_door_id = None  # Optional: for future debugging/feedback
-        self.remembered_panels_by_room = {}  # room_id → panel_id (persistent for re-entry)
 
     def _load_items(self):
         """Load all item definitions from objects.json into self.items."""
@@ -158,18 +155,8 @@ class GameManager:
 
     def set_current_location(self, room_id: str) -> None:
         """Set the current location by room ID. Single source of truth for game state."""
-        if self.current_location:
-            # Clear active memory when leaving the current room
-            self.last_attempted_panel_id = None
-            self.last_attempted_door_id = None
-
         if room_id in self.ship["rooms"]:
             self.current_location = self.ship["rooms"][room_id]
-
-            # Restore remembered panel if this room had one
-            self.last_attempted_panel_id = self.remembered_panels_by_room.get(room_id)
-            # Optionally restore door_id if needed later
-            # self.last_attempted_door_id = ... (not currently stored)
         else:
             raise ValueError(f"Invalid room ID: {room_id}")
 

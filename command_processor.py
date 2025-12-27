@@ -31,8 +31,8 @@ class CommandProcessor:
             "x": self._handle_examine,  # shortcut
             "drop": self._handle_drop,
             "retrieve": self._handle_retrieve,
-            "use": self._handle_use_panel,
-            "access": self._handle_use_panel,  # alias
+            "lock": self._handle_lock,
+            "unlock": self._handle_unlock,
             # Future commands will be added here, e.g.:
             # "look": self._handle_look,
             # "examine": self._handle_examine,
@@ -134,11 +134,6 @@ class CommandProcessor:
                             break
 
                     if panel_id:
-                        # Store in persistent dict ONLY if not already stored for this room
-                        if current_room_id not in self.game_manager.remembered_panels_by_room:
-                            self.game_manager.remembered_panels_by_room[current_room_id] = panel_id
-                            print(f"DEBUG: Stored panel ID: {panel_id} for room {current_room_id} (door {door['id']})")
-
                         # Set as active immediately so use panel works right now
                         self.game_manager.last_attempted_panel_id = panel_id
                         self.game_manager.last_attempted_door_id = door["id"]
@@ -362,28 +357,57 @@ class CommandProcessor:
         # Later: check if current room has a terminal or terminal is "unlocked"
         return False
 
-    def _handle_use_panel(self, args: str) -> str:
-        """Use the security panel from the most recent locked door attempt.
-        Ignores any arguments — always uses the remembered panel.
+    def _handle_unlock(self, args: str) -> str:
+        """Unlock a door by targeting the room or direction it leads to.
+        Example: 'unlock cargo bay' or 'unlock cargo'.
         """
-        # No need to process args at all
-        panel_id = self.game_manager.last_attempted_panel_id
+        if not args:
+            return "Unlock what? Try 'unlock cargo bay' or 'unlock [direction]'."
+
+        target = args.strip().lower()
+        current_location = self.game_manager.get_current_location()
+        current_room_id = current_location["id"]
+
+        # Find the target exit/door
+        next_id = None
+        exit_label = None
+        exit_data = None
+        for exit_key, ed in current_location["exits"].items():
+            if target == exit_key.lower() or target in [s.lower() for s in ed.get("shortcuts", [])]:
+                exit_data = ed
+                next_id = ed["target"]
+                exit_label = ed.get("label", current_location["name"])
+                break
+
+        if not next_id:
+            return f"No door leads to '{target}'. Try a valid room or direction."
+
+        # Find the matching door connection
+        matching_door = None
+        for door in self.game_manager.door_status:
+            if set(door["rooms"]) == {current_room_id, next_id}:
+                matching_door = door
+                break
+
+        if not matching_door:
+            return "No matching door found."
+
+        if not matching_door["locked"]:
+            return "That hatch is already unlocked."
+
+        # Find the panel on the current side
+        panel_id = None
+        for panel_data in matching_door.get("panel_ids", []):
+            if panel_data["side"] == current_room_id:
+                panel_id = panel_data["id"]
+                break
 
         if not panel_id:
-            return "You haven't tried to open a locked door recently. Try 'go [direction]' first."
+            return "No panel on this side of the door."
 
         panel = self.game_manager.security_panels.get(panel_id)
         if not panel:
-            # This should be rare — add debug if needed
-            return f"Panel '{panel_id}' not found. Something went wrong with panel loading."
-
-        # Find the matching door from the panel's door_id
-        matching_door = next(
-            (d for d in self.game_manager.door_status if d["id"] == panel.door_id),
-            None
-        )
-        if not matching_door:
-            return "No matching door found for this panel."
+            return f"Panel '{panel_id}' not found."
 
         # Attempt to unlock
         success, message = panel.attempt_unlock(self.game_manager.get_player_inventory())
@@ -391,16 +415,78 @@ class CommandProcessor:
         if success:
             # Unlock the door
             matching_door["locked"] = False
+            # Show open hatch image
+            image_path = matching_door.get("open_image", "resources/images/open_hatch.png")
+            self.ship_view.drawing.set_background_image(image_path)
             # TODO: Save door_status.json if persistent (in-memory for now)
 
-            # Clear the remembered panel after success
-            self.game_manager.last_attempted_panel_id = None
-            self.game_manager.last_attempted_door_id = None
+            return f"{message} The hatch to {exit_label or next_id} is now unlocked."
+        else:
+            return message
 
-            # Remove from persistent dict since door is now unlocked
-            current_room_id = self.game_manager.get_current_location()["id"]
-            self.game_manager.remembered_panels_by_room.pop(current_room_id, None)
+    def _handle_lock(self, args: str) -> str:
+        """Lock a door by targeting the room or direction it leads to.
+        Example: 'lock cargo bay' or 'lock cargo'.
+        """
+        if not args:
+            return "Lock what? Try 'lock cargo bay' or 'lock [direction]'."
 
-            return f"{message} The hatch is now unlocked. You can go through now."
+        target = args.strip().lower()
+        current_location = self.game_manager.get_current_location()
+        current_room_id = current_location["id"]
+
+        # Find the target exit/door
+        next_id = None
+        exit_label = None
+        exit_data = None
+        for exit_key, ed in current_location["exits"].items():
+            if target == exit_key.lower() or target in [s.lower() for s in ed.get("shortcuts", [])]:
+                exit_data = ed
+                next_id = ed["target"]
+                exit_label = ed.get("label", current_location["name"])
+                break
+
+        if not next_id:
+            return f"No door leads to '{target}'. Try a valid room or direction."
+
+        # Find the matching door connection
+        matching_door = None
+        for door in self.game_manager.door_status:
+            if set(door["rooms"]) == {current_room_id, next_id}:
+                matching_door = door
+                break
+
+        if not matching_door:
+            return "No matching door found."
+
+        if matching_door["locked"]:
+            return "That hatch is already locked."
+
+        # Find the panel on the current side
+        panel_id = None
+        for panel_data in matching_door.get("panel_ids", []):
+            if panel_data["side"] == current_room_id:
+                panel_id = panel_data["id"]
+                break
+
+        if not panel_id:
+            return "No panel on this side of the door."
+
+        panel = self.game_manager.security_panels.get(panel_id)
+        if not panel:
+            return f"Panel '{panel_id}' not found."
+
+        # Attempt to lock (same security check as unlock for now)
+        success, message = panel.attempt_lock(self.game_manager.get_player_inventory())
+
+        if success:
+            # Lock the door
+            matching_door["locked"] = True
+            # Show locked hatch image
+            image_path = matching_door.get("locked_image", "resources/images/closed_hatch.png")
+            self.ship_view.drawing.set_background_image(image_path)
+            # TODO: Save door_status.json if persistent (in-memory for now)
+
+            return f"{message} The hatch to {exit_label or next_id} is now locked."
         else:
             return message

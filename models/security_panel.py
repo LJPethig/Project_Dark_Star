@@ -35,6 +35,19 @@ class SecurityPanel:
         # (We'll add the actual door unlock call in GameManager later)
         return True, "Access granted. The door unlocks."
 
+    def attempt_lock(self, player_inventory: list[str]) -> tuple[bool, str]:
+        """Attempt to lock the door using this panel."""
+        if self.is_broken:
+            return False, f"The panel on this side is damaged."
+
+        # Same check as unlock for now (ID card required)
+        required_keycard = self.security_level in [SecurityLevel.KEYCARD_ONLY, SecurityLevel.KEYCARD_PIN, SecurityLevel.BIOMETRIC_PIN]
+        if required_keycard and "id_card" not in player_inventory:
+            return False, "You need a valid ID card to swipe."
+
+        # Success - lock the door
+        return True, "Access granted. The door locks."
+
     def damage(self, amount: float = 1.0):
         """Damage the panel (for future events)."""
         self.is_broken = True
