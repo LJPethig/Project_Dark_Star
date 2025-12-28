@@ -47,13 +47,12 @@ class CommandProcessor:
 
         # Special handling for PIN prompt (check first, before normal commands)
         print(f"Response text : {self.ship_view.response_text.text}")
-        if self.ship_view.response_text.text.startswith("Enter PIN to "):
+        if self.ship_view.response_text.text.startswith("Enter PIN to ") or \
+           self.ship_view.response_text.text.startswith("Incorrect PIN."):
             pin = cmd  # Use the entire input as PIN
             if hasattr(self.ship_view, 'pending_pin_callback'):
                 self.ship_view.pending_pin_callback(pin)
-                # Clean up
-                if hasattr(self.ship_view, 'pending_pin_callback'):
-                    del self.ship_view.pending_pin_callback
+                # Clean up only happens inside callback
             else:
                 return "PIN entry cancelled - please start over."
             return ""
@@ -367,29 +366,67 @@ class CommandProcessor:
         # Later: check if current room has a terminal or terminal is "unlocked"
         return False
 
-    def _finish_unlock_with_pin(self, pin: str, door, exit_label):
+    def _start_pin_prompt(self, action: str, door, exit_label):
+        """Initiate PIN entry phase with attempt tracking."""
+        self.ship_view.pin_attempts = 0
+        self.ship_view.pin_max_attempts = 3
+        prompt = f"Enter PIN to {action} the door to {exit_label} ({self.ship_view.pin_attempts}/{self.ship_view.pin_max_attempts} attempts)"
+        self.ship_view.response_text.text = prompt
+
+    def _handle_pin_input(self, pin: str, action: str, door, exit_label, finish_callback):
+        """Shared PIN processing logic with retries."""
+        self.ship_view.pin_attempts += 1
         success, message = self.ship_view.last_panel.attempt_pin(pin, self.game_manager.get_player_inventory())
+
         if success:
-            door["locked"] = False
-            open_image = door.get("open_image", "resources/images/open_hatch.png")
-            self.ship_view.drawing.set_background_image(open_image)
-            self.ship_view.response_text.text = f"PIN accepted. Door unlocked. The hatch to {exit_label} is now open."
+            # Success: apply the action
+            finish_callback(pin, door, exit_label)
+            # Clean up state
+            if hasattr(self.ship_view, 'pin_attempts'):
+                del self.ship_view.pin_attempts
+            if hasattr(self.ship_view, 'pin_max_attempts'):
+                del self.ship_view.pin_max_attempts
+            if hasattr(self.ship_view, 'pending_pin_callback'):
+                del self.ship_view.pending_pin_callback
         else:
-            locked_image = door.get("locked_image")
-            self.ship_view.drawing.set_background_image(locked_image)
-            self.ship_view.response_text.text = message
+            # Failure: check attempts
+            attempts_left = self.ship_view.pin_max_attempts - self.ship_view.pin_attempts
+            if attempts_left > 0:
+                # Re-prompt with updated message
+                prompt = f"{message} Attempts left: {attempts_left}/{self.ship_view.pin_max_attempts}"
+                self.ship_view.response_text.text = prompt
+                # Keep the same callback
+                self.ship_view.pending_pin_callback = lambda p: self._handle_pin_input(
+                    p, action, door, exit_label, finish_callback
+                )
+            else:
+                # All attempts used: deny access
+                image_key = "open_image" if not door["locked"] else "locked_image"
+                final_image = door.get(image_key, "resources/images/closed_hatch.png")  # fallback is incorrect
+                self.ship_view.drawing.set_background_image(final_image)
+                self.ship_view.response_text.text = "Access denied after 3 incorrect PIN attempts. Process terminated."
+                # TODO: Later add consequences here (e.g. alert security, lock out panel, etc.)
+                # Clean up state
+                if hasattr(self.ship_view, 'pin_attempts'):
+                    del self.ship_view.pin_attempts
+                if hasattr(self.ship_view, 'pin_max_attempts'):
+                    del self.ship_view.pin_max_attempts
+                if hasattr(self.ship_view, 'pending_pin_callback'):
+                    del self.ship_view.pending_pin_callback
+
+    def _finish_unlock_with_pin(self, pin: str, door, exit_label):
+        """Called only on successful PIN for unlock."""
+        door["locked"] = False
+        open_image = door.get("open_image", "resources/images/open_hatch.png")
+        self.ship_view.drawing.set_background_image(open_image)
+        self.ship_view.response_text.text = f"PIN accepted. Door unlocked. The hatch to {exit_label} is now open."
 
     def _finish_lock_with_pin(self, pin: str, door, exit_label):
-        success, message = self.ship_view.last_panel.attempt_pin(pin, self.game_manager.get_player_inventory())
-        if success:
-            door["locked"] = True
-            locked_image = door.get("locked_image", "resources/images/closed_hatch.png")
-            self.ship_view.drawing.set_background_image(locked_image)
-            self.ship_view.response_text.text = f"PIN accepted. Door locked. The hatch to {exit_label} is now closed."
-        else:
-            open_image = door.get("open_image")
-            self.ship_view.drawing.set_background_image(open_image)
-            self.ship_view.response_text.text = message
+        """Called only on successful PIN for lock."""
+        door["locked"] = True
+        locked_image = door.get("locked_image", "resources/images/closed_hatch.png")
+        self.ship_view.drawing.set_background_image(locked_image)
+        self.ship_view.response_text.text = f"PIN accepted. Door locked. The hatch to {exit_label} is now closed."
 
     def _handle_unlock(self, args: str) -> str:
         """Unlock a door by targeting the room or direction it leads to."""
@@ -468,9 +505,11 @@ class CommandProcessor:
 
             if success:
                 if panel.security_level == SecurityLevel.KEYCARD_HIGH_PIN:
-                    self.ship_view.response_text.text = f"Enter PIN to unlock the door to {exit_label}"
-                    # Store callback for PIN success/failure
-                    self.ship_view.pending_pin_callback = lambda p: self._finish_unlock_with_pin(p, matching_door, exit_label)
+                    self._start_pin_prompt("unlock", matching_door, exit_label)
+                    # Store callback using shared handler
+                    self.ship_view.pending_pin_callback = lambda p: self._handle_pin_input(
+                        p, "unlock", matching_door, exit_label, self._finish_unlock_with_pin
+                    )
                 else:
                     matching_door["locked"] = False
                     open_image = matching_door.get("open_image", "resources/images/open_hatch.png")
@@ -562,9 +601,11 @@ class CommandProcessor:
 
             if success:
                 if panel.security_level == SecurityLevel.KEYCARD_HIGH_PIN:
-                    self.ship_view.response_text.text = f"Enter PIN to lock the door to {exit_label}"
-                    # Store callback for PIN success/failure
-                    self.ship_view.pending_pin_callback = lambda p: self._finish_lock_with_pin(p, matching_door, exit_label)
+                    self._start_pin_prompt("lock", matching_door, exit_label)
+                    # Store callback using shared handler
+                    self.ship_view.pending_pin_callback = lambda p: self._handle_pin_input(
+                        p, "lock", matching_door, exit_label, self._finish_lock_with_pin
+                    )
                 else:
                     matching_door["locked"] = True
                     locked_image = matching_door.get("locked_image", "resources/images/closed_hatch.png")
