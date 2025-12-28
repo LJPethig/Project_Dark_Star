@@ -3,9 +3,9 @@ from enum import Enum
 
 class SecurityLevel(Enum):
     NONE = 0
-    KEYCARD_ONLY = 1
-    KEYCARD_PIN = 2
-    BIOMETRIC_PIN = 3
+    LOW_SEC_KEYCARD_ONLY = 1
+    HIGH_SEC_KEYCARD_ONLY = 2
+    HIGH_SEC_KEYCARD_PIN = 3
 
 class SecurityPanel:
     def __init__(self, panel_id: str, door_id: str, security_level: int, side: str):
@@ -22,18 +22,23 @@ class SecurityPanel:
             return False, f"The panel on this side is damaged."
 
         # Check required items
-        required_keycard = self.security_level in [SecurityLevel.KEYCARD_ONLY, SecurityLevel.KEYCARD_PIN, SecurityLevel.BIOMETRIC_PIN]
-        if required_keycard and "id_card" not in player_inventory:
-            return False, "You need a valid ID card to swipe."
+        required_keycard = self.security_level in [SecurityLevel.LOW_SEC_KEYCARD_ONLY, SecurityLevel.HIGH_SEC_KEYCARD_ONLY, SecurityLevel.HIGH_SEC_KEYCARD_PIN]
+        if required_keycard and not any(card in player_inventory for card in ["id_card_low_sec", "id_card_high_sec"]):
+            return False, "You need an ID card to swipe."
 
         # Check PIN if required
-        required_pin = self.security_level in [SecurityLevel.KEYCARD_PIN, SecurityLevel.BIOMETRIC_PIN]
+        required_pin = self.security_level in [SecurityLevel.HIGH_SEC_KEYCARD_PIN]
         if required_pin and pin_input != "1234":  # Placeholder PIN - replace with actual logic
             return False, "Incorrect PIN."
 
-        # Success - unlock the door
-        # (We'll add the actual door unlock call in GameManager later)
-        return True, "Access granted. The door unlocks."
+        # Check for Success - unlock the door
+        if self.security_level == SecurityLevel.LOW_SEC_KEYCARD_ONLY:
+            return True, "Access granted. The door unlocks."
+        elif self.security_level == SecurityLevel.HIGH_SEC_KEYCARD_ONLY:
+            if "id_card_high_sec" in player_inventory:
+                return True, "Access granted. The door unlocks."
+            else:
+                return False, "Access denied. Incorrect security card"
 
     def attempt_lock(self, player_inventory: list[str]) -> tuple[bool, str]:
         """Attempt to lock the door using this panel."""
@@ -41,12 +46,18 @@ class SecurityPanel:
             return False, f"The panel on this side is damaged."
 
         # Same check as unlock for now (ID card required)
-        required_keycard = self.security_level in [SecurityLevel.KEYCARD_ONLY, SecurityLevel.KEYCARD_PIN, SecurityLevel.BIOMETRIC_PIN]
-        if required_keycard and "id_card" not in player_inventory:
+        required_keycard = self.security_level in [SecurityLevel.LOW_SEC_KEYCARD_ONLY, SecurityLevel.HIGH_SEC_KEYCARD_ONLY, SecurityLevel.HIGH_SEC_KEYCARD_PIN]
+        if required_keycard and not any(card in player_inventory for card in ["id_card_low_sec", "id_card_high_sec"]):
             return False, "You need a valid ID card to swipe."
 
-        # Success - lock the door
-        return True, "Access granted. The door locks."
+        # Check for Success - lock the door
+        if self.security_level == SecurityLevel.LOW_SEC_KEYCARD_ONLY:
+            return True, "Access granted. The door locks."
+        elif self.security_level == SecurityLevel.HIGH_SEC_KEYCARD_ONLY:
+            if "id_card_high_sec" in player_inventory:
+                return True, "Access granted. The door locks."
+            else:
+                return False, "Access denied. Incorrect security card"
 
     def damage(self, amount: float = 1.0):
         """Damage the panel (for future events)."""

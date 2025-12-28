@@ -9,10 +9,19 @@
     "mass": 1.5
   },
   {
-    "id": "id_card",
+    "id": "id_card_low_sec",
     "type": "portable",
-    "name": "Crew ID Card",
-    "description": "A chipped security card for restricted areas.",
+    "name": "Basic level ID Card",
+    "description": "A chipped security card for low security areas.",
+    "keywords": ["id card", "security card", "card", "id"],
+    "examine_text": "The card has a faded photo and a security chip.",
+    "mass": 0.0
+  },
+  {
+    "id": "id_card_high_sec",
+    "type": "portable",
+    "name": "High level ID Card",
+    "description": "A chipped security card for high security areas.",
     "keywords": ["id card", "security card", "card", "id"],
     "examine_text": "The card has a faded photo and a security chip.",
     "mass": 0.0

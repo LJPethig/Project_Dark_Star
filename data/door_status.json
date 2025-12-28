@@ -48,7 +48,7 @@
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 2,
-      "panel_image": "resources/images/panel_level2_swipe_pin.png",
+      "panel_image": "resources/images/panel_level2_swipe.png",
       "panel_ids": [
         {
           "id": "recreation_room_cockpit_panel_rec",
@@ -163,12 +163,12 @@
     {
       "id": "main_corridor_engineering",
       "rooms": ["main corridor", "engineering"],
-      "locked": false,
+      "locked": true,
       "locked_description": "The engineering door is locked.",
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 2,
-      "panel_image": "resources/images/panel_level2_swipe_pin.png",
+      "panel_image": "resources/images/panel_level2_swipe.png",
       "panel_ids": [
         {
           "id": "main_corridor_engineering_panel_main",
@@ -228,7 +228,7 @@
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 3,
-      "panel_image": "resources/images/panel_level3_biometric_pin.png",
+      "panel_image": "resources/images/panel_level3_swipe_pin.png",
       "panel_ids": [
         {
           "id": "engineering_life_support_panel_eng",

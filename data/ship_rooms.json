@@ -20,7 +20,7 @@
     "objects": [
       "wrench",
       "terminal_personal",
-      "id_card"
+      "id_card_low_sec"
     ]
   },
   {
@@ -327,6 +327,6 @@
       }
     },
     "objects": ["terminal_storage",
-    "id_card"]
+    "id_card_high_sec"]
   }
 ]

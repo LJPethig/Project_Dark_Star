@@ -370,7 +370,7 @@ class CommandProcessor:
 
         current_name_normalized = current_location["name"].lower()
         if target == current_room_id.lower() or target == current_name_normalized:
-            return "Specify the room you're locking the door to."
+            return "Specify the room you're unlocking the door to."
 
         # Find matching door connection (bidirectional)
         matching_door = None
@@ -379,17 +379,14 @@ class CommandProcessor:
 
         for door in self.game_manager.door_status:
             if current_room_id in door["rooms"]:
-                # Get the other room (the target side)
                 other_room = next(r for r in door["rooms"] if r != current_room_id)
 
-                # Check if target matches the other room or any of its shortcuts/exit keys
                 if target == other_room.lower():
                     matching_door = door
                     next_room_id = other_room
                     exit_label = other_room
                     break
 
-                # Optional: also check if target is a shortcut or exit key from current room
                 for exit_key, ed in current_location["exits"].items():
                     if target == exit_key.lower() or target in [s.lower() for s in ed.get("shortcuts", [])]:
                         if ed["target"] == other_room:
@@ -420,25 +417,37 @@ class CommandProcessor:
         if not panel:
             return f"Panel '{panel_id}' not found."
 
-        # Attempt to unlock
-        success, message = panel.attempt_unlock(self.game_manager.get_player_inventory())
+        # Check if player has ANY ID card
+        player_inv = self.game_manager.get_player_inventory()
+        has_any_card = "id_card_low_sec" in player_inv or "id_card_high_sec" in player_inv
 
-        if success:
-            matching_door["locked"] = False
-            open_image = matching_door.get("open_image", "resources/images/open_hatch.png")
-            panel_image = matching_door.get("panel_image", "resources/images/panel_default.png")
+        if not has_any_card:
+            return "You need an ID card to swipe."
 
-            # Start the non-blocking panel sequence
-            self.ship_view._show_panel_sequence(
-                panel_image=panel_image,
-                final_image=open_image,
-                success_message=f"ID accepted, {exit_label} door is now unlocked."
-            )
+        # Has any card → show panel + initial message
+        panel_image = matching_door.get("panel_image", "resources/images/panel_default.png")
+        self.ship_view.drawing.set_background_image(panel_image)
+        self.ship_view.response_text.text = "Accessing door panel, checking card ID..."
 
-            # Return initial message immediately
-            return "Accessing door panel, checking card ID"
-        else:
-            return message
+        # Non-blocking 5s delay + full check
+        def on_delay_complete():
+            success, message = panel.attempt_unlock(self.game_manager.get_player_inventory())
+
+            if success:
+                matching_door["locked"] = False
+                open_image = matching_door.get("open_image", "resources/images/open_hatch.png")
+                self.ship_view.drawing.set_background_image(open_image)
+                self.ship_view.response_text.text = f"ID accepted, door unlocked. The hatch to {exit_label} is now open."
+            else:
+                # Failure: revert to locked door
+                locked_image = matching_door.get("locked_image")
+                self.ship_view.drawing.set_background_image(locked_image)
+                self.ship_view.response_text.text = message
+
+        self.ship_view.schedule_delayed_action(5.0, on_delay_complete)
+
+        # Return initial message immediately
+        return "Accessing door panel, checking card ID..."
 
     def _handle_lock(self, args: str) -> str:
         """Lock a door by targeting the room or direction it leads to.
@@ -462,17 +471,14 @@ class CommandProcessor:
 
         for door in self.game_manager.door_status:
             if current_room_id in door["rooms"]:
-                # Get the other room (the target side)
                 other_room = next(r for r in door["rooms"] if r != current_room_id)
 
-                # Check if target matches the other room name
                 if target == other_room.lower():
                     matching_door = door
                     next_room_id = other_room
                     exit_label = other_room
                     break
 
-                # Also check if target matches any exit key or shortcut from current room
                 for exit_key, ed in current_location["exits"].items():
                     if target == exit_key.lower() or target in [s.lower() for s in ed.get("shortcuts", [])]:
                         if ed["target"] == other_room:
@@ -503,22 +509,33 @@ class CommandProcessor:
         if not panel:
             return f"Panel '{panel_id}' not found."
 
-        # Attempt to lock (using attempt_lock if you added it, otherwise reuse attempt_unlock for now)
-        success, message = panel.attempt_lock(self.game_manager.get_player_inventory())  # TODO: Replace with attempt_lock() later
+        # Check if player has ANY ID card
+        player_inv = self.game_manager.get_player_inventory()
+        has_any_card = "id_card_low_sec" in player_inv or "id_card_high_sec" in player_inv
 
-        if success:
-            matching_door["locked"] = True
-            locked_image = matching_door.get("locked_image", "resources/images/closed_hatch.png")
-            panel_image = matching_door.get("panel_image", "resources/images/panel_default.png")
+        if not has_any_card:
+            return "You need an ID card to swipe."
 
-            # Start the non-blocking panel sequence
-            self.ship_view._show_panel_sequence(
-                panel_image=panel_image,
-                final_image=locked_image,
-                success_message=f"ID accepted, {exit_label} door is now locked."
-            )
+        # Has any card → show panel + initial message
+        panel_image = matching_door.get("panel_image", "resources/images/panel_default.png")
+        self.ship_view.drawing.set_background_image(panel_image)
+        self.ship_view.response_text.text = "Accessing door panel, checking card ID..."
 
-            # Return initial message immediately
-            return "Accessing door panel, checking card ID"
-        else:
-            return message
+        # Non-blocking 5s delay + full check
+        def on_delay_complete():
+            success, message = panel.attempt_lock(self.game_manager.get_player_inventory())
+
+            if success:
+                matching_door["locked"] = True
+                locked_image = matching_door.get("locked_image", "resources/images/closed_hatch.png")
+                self.ship_view.drawing.set_background_image(locked_image)
+                self.ship_view.response_text.text = f"ID accepted, door locked. The hatch to {exit_label} is now closed."
+            else:
+                unlocked_image = matching_door.get("open_image")
+                self.ship_view.drawing.set_background_image(unlocked_image)
+                self.ship_view.response_text.text = message
+
+        self.ship_view.schedule_delayed_action(5.0, on_delay_complete)
+
+        return "Accessing door panel, checking card ID..."
+

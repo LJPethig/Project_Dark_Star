@@ -191,3 +191,10 @@ class ShipView(arcade.View):
             arcade.unschedule(step2)
 
         arcade.schedule(step2, 5.0)
+
+    def schedule_delayed_action(self, delay_seconds: float, callback):
+        def _delayed(delta_time):
+            callback()
+            arcade.unschedule(_delayed)
+
+        arcade.schedule(_delayed, delay_seconds)
