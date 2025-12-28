@@ -1,4 +1,3 @@
-# models/security_panel.py
 from enum import Enum
 
 class SecurityLevel(Enum):
@@ -64,6 +63,26 @@ class SecurityPanel:
             return False, msg
 
         return True, "Access granted. The door locks."
+
+    def attempt_pin(self, pin: str, player_inventory: list[str]) -> tuple[bool, str]:
+        """
+        Validate the PIN for level 3 panels.
+        Returns (success, message).
+        """
+        if self.is_broken:
+            return False, "The panel on this side is damaged."
+
+        # Quick double-check that we have high-sec clearance (defense in depth)
+        has_card, msg = self._check_keycard(player_inventory)
+        if not has_card:
+            return False, msg
+
+        # Perform PIN check
+        success, pin_msg = self._check_pin(pin)
+        if not success:
+            return False, pin_msg
+
+        return True, "PIN accepted."
 
     def damage(self, amount: float = 1.0):
         """Damage the panel (for future events)."""

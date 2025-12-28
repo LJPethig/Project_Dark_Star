@@ -1,9 +1,8 @@
-# command_processor.py
 from ui.inventory_view import InventoryView
 from models.interactable import PortableItem, FixedObject
 from models.security_panel import SecurityLevel  # For checking HIGH_SEC_KEYCARD_PIN
 import random
-import arcade # For schedule and unschedule (used in on_pin_check)
+import arcade  # For schedule and unschedule (used in on_pin_check)
 
 class CommandProcessor:
     """Command processor that handles player input using a registry pattern."""
@@ -48,22 +47,16 @@ class CommandProcessor:
 
         # Special handling for PIN prompt (check first, before normal commands)
         print(f"Response text : {self.ship_view.response_text.text}")
-        if self.ship_view.response_text.text == "Enter PIN to complete":
-            pin = cmd  # Use the entire input as PIN (no splitting needed)
-            # Use last panel/door stored in ship_view
-            success, message = self.ship_view.last_panel.attempt_unlock(self.game_manager.get_player_inventory())  # or attempt_lock
-
-            if success:
-                self.ship_view.last_door["locked"] = False  # True for lock
-                final_image = self.ship_view.last_door.get(
-                    "open_image" if not self.ship_view.last_door["locked"] else "locked_image")
-                self.ship_view.drawing.set_background_image(final_image)
-                self.ship_view.response_text.text = "PIN accepted. Door unlocked/locked."
+        if self.ship_view.response_text.text.startswith("Enter PIN to "):
+            pin = cmd  # Use the entire input as PIN
+            if hasattr(self.ship_view, 'pending_pin_callback'):
+                self.ship_view.pending_pin_callback(pin)
+                # Clean up
+                if hasattr(self.ship_view, 'pending_pin_callback'):
+                    del self.ship_view.pending_pin_callback
             else:
-                self.ship_view.drawing.set_background_image(self.ship_view.last_door.get("locked_image"))
-                self.ship_view.response_text.text = message
-
-            return ""  # Clear input or show nothing extra
+                return "PIN entry cancelled - please start over."
+            return ""
 
         # Split into words
         words = cmd.split()
@@ -169,7 +162,6 @@ class CommandProcessor:
         display_name = exit_label if exit_label else self.game_manager.get_current_location()["name"]
         return f"You enter {display_name}."
 
-    # NEW: Player inventory
     def _handle_player_inventory(self, args: str) -> str:
         """Show player's personal carried inventory."""
         inventory_view = InventoryView(self.game_manager, is_player=True)
@@ -177,7 +169,6 @@ class CommandProcessor:
         self.ship_view.window.show_view(inventory_view)
         return "Opening personal inventory..."
 
-    # NEW: Ship cargo (restricted)
     def _handle_ship_cargo(self, args: str) -> str:
         """Attempt to show ship cargo manifest (normally terminal-only)."""
         if not self._can_access_ship_cargo():
@@ -204,7 +195,6 @@ class CommandProcessor:
         room_name = current_location["name"]
         return f"DEBUG: Opening {room_name} cargo manifest (terminal bypass)...\nItems: {len(cargo_items)}"
 
-    # NEW: Take from room → player inventory
     def _handle_take(self, args: str) -> str:
         """Take a portable item from the current room to player inventory."""
         if not args:
@@ -245,7 +235,6 @@ class CommandProcessor:
 
         return "There's nothing like that here to take."
 
-    # NEW: Store from player → ship cargo
     def _handle_store(self, args: str) -> str:
         """Store an item from player inventory to ship cargo."""
         if not args:
@@ -378,10 +367,32 @@ class CommandProcessor:
         # Later: check if current room has a terminal or terminal is "unlocked"
         return False
 
+    def _finish_unlock_with_pin(self, pin: str, door, exit_label):
+        success, message = self.ship_view.last_panel.attempt_pin(pin, self.game_manager.get_player_inventory())
+        if success:
+            door["locked"] = False
+            open_image = door.get("open_image", "resources/images/open_hatch.png")
+            self.ship_view.drawing.set_background_image(open_image)
+            self.ship_view.response_text.text = f"PIN accepted. Door unlocked. The hatch to {exit_label} is now open."
+        else:
+            locked_image = door.get("locked_image")
+            self.ship_view.drawing.set_background_image(locked_image)
+            self.ship_view.response_text.text = message
+
+    def _finish_lock_with_pin(self, pin: str, door, exit_label):
+        success, message = self.ship_view.last_panel.attempt_pin(pin, self.game_manager.get_player_inventory())
+        if success:
+            door["locked"] = True
+            locked_image = door.get("locked_image", "resources/images/closed_hatch.png")
+            self.ship_view.drawing.set_background_image(locked_image)
+            self.ship_view.response_text.text = f"PIN accepted. Door locked. The hatch to {exit_label} is now closed."
+        else:
+            open_image = door.get("open_image")
+            self.ship_view.drawing.set_background_image(open_image)
+            self.ship_view.response_text.text = message
+
     def _handle_unlock(self, args: str) -> str:
-        """Unlock a door by targeting the room or direction it leads to.
-        Works from either side: 'unlock cargo bay' works in sub corridor or cargo bay.
-        """
+        """Unlock a door by targeting the room or direction it leads to."""
         if not args:
             return "Unlock what?"
 
@@ -450,28 +461,22 @@ class CommandProcessor:
         self.ship_view.drawing.set_background_image(panel_image)
         self.ship_view.response_text.text = "Accessing door panel, checking card ID..."
 
-        # Non-blocking 5s delay + full check
         def on_delay_complete():
             self.ship_view.last_panel = panel
             self.ship_view.last_door = matching_door
             success, message = panel.attempt_unlock(self.game_manager.get_player_inventory())
 
             if success:
-                # Level 3: prompt for PIN
                 if panel.security_level == SecurityLevel.KEYCARD_HIGH_PIN:
-                    self.ship_view.response_text.text = "Enter PIN to complete"
-                    # 1s delay for PIN check (player types PIN next)
-                    def on_pin_check(delta_time):
-                        # This will be handled in on_key_press (see below)
-                        arcade.unschedule(on_pin_check)
-                    arcade.schedule(on_pin_check, 1.0)
+                    self.ship_view.response_text.text = f"Enter PIN to unlock the door to {exit_label}"
+                    # Store callback for PIN success/failure
+                    self.ship_view.pending_pin_callback = lambda p: self._finish_unlock_with_pin(p, matching_door, exit_label)
                 else:
                     matching_door["locked"] = False
                     open_image = matching_door.get("open_image", "resources/images/open_hatch.png")
                     self.ship_view.drawing.set_background_image(open_image)
                     self.ship_view.response_text.text = f"ID accepted, door unlocked. The hatch to {exit_label} is now open."
             else:
-                # Failure: revert to locked door
                 locked_image = matching_door.get("locked_image")
                 self.ship_view.drawing.set_background_image(locked_image)
                 self.ship_view.response_text.text = message
@@ -481,9 +486,7 @@ class CommandProcessor:
         return "Accessing door panel, checking card ID..."
 
     def _handle_lock(self, args: str) -> str:
-        """Lock a door by targeting the room or direction it leads to.
-        Works from either side: 'lock cargo bay' works in sub corridor or cargo bay.
-        """
+        """Lock a door by targeting the room or direction it leads to."""
         if not args:
             return "Lock what?"
 
@@ -552,21 +555,16 @@ class CommandProcessor:
         self.ship_view.drawing.set_background_image(panel_image)
         self.ship_view.response_text.text = "Accessing door panel, checking card ID..."
 
-        # Non-blocking 5s delay + full check
         def on_delay_complete():
             self.ship_view.last_panel = panel
             self.ship_view.last_door = matching_door
             success, message = panel.attempt_lock(self.game_manager.get_player_inventory())
 
             if success:
-                # Level 3: prompt for PIN
                 if panel.security_level == SecurityLevel.KEYCARD_HIGH_PIN:
-                    self.ship_view.response_text.text = "Enter PIN to complete"
-                    # 1s delay for PIN check (player types PIN next)
-                    def on_pin_check(delta_time):
-                        # This will be handled in on_key_press (see below)
-                        arcade.unschedule(on_pin_check)
-                    arcade.schedule(on_pin_check, 1.0)
+                    self.ship_view.response_text.text = f"Enter PIN to lock the door to {exit_label}"
+                    # Store callback for PIN success/failure
+                    self.ship_view.pending_pin_callback = lambda p: self._finish_lock_with_pin(p, matching_door, exit_label)
                 else:
                     matching_door["locked"] = True
                     locked_image = matching_door.get("locked_image", "resources/images/closed_hatch.png")
@@ -580,4 +578,3 @@ class CommandProcessor:
         self.ship_view.schedule_delayed_action(5.0, on_delay_complete)
 
         return "Accessing door panel, checking card ID..."
-
