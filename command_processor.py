@@ -359,38 +359,49 @@ class CommandProcessor:
 
     def _handle_unlock(self, args: str) -> str:
         """Unlock a door by targeting the room or direction it leads to.
-        Example: 'unlock cargo bay' or 'unlock cargo'.
+        Works from either side: 'unlock cargo bay' works in sub corridor or cargo bay.
         """
         if not args:
-            return "Unlock what? Try 'unlock cargo bay' or 'unlock [direction]'."
+            return "Unlock what?"
 
         target = args.strip().lower()
         current_location = self.game_manager.get_current_location()
         current_room_id = current_location["id"]
 
-        # Find the target exit/door
-        next_id = None
-        exit_label = None
-        exit_data = None
-        for exit_key, ed in current_location["exits"].items():
-            if target == exit_key.lower() or target in [s.lower() for s in ed.get("shortcuts", [])]:
-                exit_data = ed
-                next_id = ed["target"]
-                exit_label = ed.get("label", current_location["name"])
-                break
+        current_name_normalized = current_location["name"].lower()
+        if target == current_room_id.lower() or target == current_name_normalized:
+            return "Specify the room you're locking the door to."
 
-        if not next_id:
-            return f"No door leads to '{target}'. Try a valid room or direction."
-
-        # Find the matching door connection
+        # Find matching door connection (bidirectional)
         matching_door = None
+        next_room_id = None
+        exit_label = None
+
         for door in self.game_manager.door_status:
-            if set(door["rooms"]) == {current_room_id, next_id}:
-                matching_door = door
-                break
+            if current_room_id in door["rooms"]:
+                # Get the other room (the target side)
+                other_room = next(r for r in door["rooms"] if r != current_room_id)
+
+                # Check if target matches the other room or any of its shortcuts/exit keys
+                if target == other_room.lower():
+                    matching_door = door
+                    next_room_id = other_room
+                    exit_label = other_room
+                    break
+
+                # Optional: also check if target is a shortcut or exit key from current room
+                for exit_key, ed in current_location["exits"].items():
+                    if target == exit_key.lower() or target in [s.lower() for s in ed.get("shortcuts", [])]:
+                        if ed["target"] == other_room:
+                            matching_door = door
+                            next_room_id = other_room
+                            exit_label = ed.get("label", other_room)
+                            break
+                if matching_door:
+                    break
 
         if not matching_door:
-            return "No matching door found."
+            return f"No door connected to '{target}'. Try a valid room or direction."
 
         if not matching_door["locked"]:
             return "That hatch is already unlocked."
@@ -413,51 +424,67 @@ class CommandProcessor:
         success, message = panel.attempt_unlock(self.game_manager.get_player_inventory())
 
         if success:
-            # Unlock the door
             matching_door["locked"] = False
-            # Show open hatch image
-            image_path = matching_door.get("open_image", "resources/images/open_hatch.png")
-            self.ship_view.drawing.set_background_image(image_path)
-            # TODO: Save door_status.json if persistent (in-memory for now)
+            open_image = matching_door.get("open_image", "resources/images/open_hatch.png")
+            panel_image = matching_door.get("panel_image", "resources/images/panel_default.png")
 
-            return f"{message} The hatch to {exit_label or next_id} is now unlocked."
+            # Start the non-blocking panel sequence
+            self.ship_view._show_panel_sequence(
+                panel_image=panel_image,
+                final_image=open_image,
+                success_message=f"ID accepted, {exit_label} door is now unlocked."
+            )
+
+            # Return initial message immediately
+            return "Accessing door panel, checking card ID"
         else:
             return message
 
     def _handle_lock(self, args: str) -> str:
         """Lock a door by targeting the room or direction it leads to.
-        Example: 'lock cargo bay' or 'lock cargo'.
+        Works from either side: 'lock cargo bay' works in sub corridor or cargo bay.
         """
         if not args:
-            return "Lock what? Try 'lock cargo bay' or 'lock [direction]'."
+            return "Lock what?"
 
         target = args.strip().lower()
         current_location = self.game_manager.get_current_location()
         current_room_id = current_location["id"]
 
-        # Find the target exit/door
-        next_id = None
-        exit_label = None
-        exit_data = None
-        for exit_key, ed in current_location["exits"].items():
-            if target == exit_key.lower() or target in [s.lower() for s in ed.get("shortcuts", [])]:
-                exit_data = ed
-                next_id = ed["target"]
-                exit_label = ed.get("label", current_location["name"])
-                break
+        current_name_normalized = current_location["name"].lower()
+        if target == current_room_id.lower() or target == current_name_normalized:
+            return "Specify the room you're locking the door to."
 
-        if not next_id:
-            return f"No door leads to '{target}'. Try a valid room or direction."
-
-        # Find the matching door connection
+        # Find matching door connection (bidirectional)
         matching_door = None
+        next_room_id = None
+        exit_label = None
+
         for door in self.game_manager.door_status:
-            if set(door["rooms"]) == {current_room_id, next_id}:
-                matching_door = door
-                break
+            if current_room_id in door["rooms"]:
+                # Get the other room (the target side)
+                other_room = next(r for r in door["rooms"] if r != current_room_id)
+
+                # Check if target matches the other room name
+                if target == other_room.lower():
+                    matching_door = door
+                    next_room_id = other_room
+                    exit_label = other_room
+                    break
+
+                # Also check if target matches any exit key or shortcut from current room
+                for exit_key, ed in current_location["exits"].items():
+                    if target == exit_key.lower() or target in [s.lower() for s in ed.get("shortcuts", [])]:
+                        if ed["target"] == other_room:
+                            matching_door = door
+                            next_room_id = other_room
+                            exit_label = ed.get("label", other_room)
+                            break
+                if matching_door:
+                    break
 
         if not matching_door:
-            return "No matching door found."
+            return f"No door connected to '{target}'. Try a valid room or direction."
 
         if matching_door["locked"]:
             return "That hatch is already locked."
@@ -476,17 +503,22 @@ class CommandProcessor:
         if not panel:
             return f"Panel '{panel_id}' not found."
 
-        # Attempt to lock (same security check as unlock for now)
-        success, message = panel.attempt_lock(self.game_manager.get_player_inventory())
+        # Attempt to lock (using attempt_lock if you added it, otherwise reuse attempt_unlock for now)
+        success, message = panel.attempt_lock(self.game_manager.get_player_inventory())  # TODO: Replace with attempt_lock() later
 
         if success:
-            # Lock the door
             matching_door["locked"] = True
-            # Show locked hatch image
-            image_path = matching_door.get("locked_image", "resources/images/closed_hatch.png")
-            self.ship_view.drawing.set_background_image(image_path)
-            # TODO: Save door_status.json if persistent (in-memory for now)
+            locked_image = matching_door.get("locked_image", "resources/images/closed_hatch.png")
+            panel_image = matching_door.get("panel_image", "resources/images/panel_default.png")
 
-            return f"{message} The hatch to {exit_label or next_id} is now locked."
+            # Start the non-blocking panel sequence
+            self.ship_view._show_panel_sequence(
+                panel_image=panel_image,
+                final_image=locked_image,
+                success_message=f"ID accepted, {exit_label} door is now locked."
+            )
+
+            # Return initial message immediately
+            return "Accessing door panel, checking card ID"
         else:
             return message
