@@ -210,7 +210,7 @@
         "shortcuts": ["quarters"]
       }
     },
-    "objects": []
+    "objects": ["id_card_high_sec"]
   },
   {
     "id": "sub corridor",

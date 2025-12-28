@@ -52,6 +52,10 @@ class ShipView(arcade.View):
         # Text padding
         self.text_padding = TEXT_PADDING
 
+        # For security PIN logic
+        self.last_panel = None
+        self.last_door = None
+
         # --- Description section content (global Y) ---
         current_location = self.game_manager.get_current_location()  # Query live from GameManager
         self.description_title = arcade.Text(

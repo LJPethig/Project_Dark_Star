@@ -1,7 +1,9 @@
 # command_processor.py
 from ui.inventory_view import InventoryView
 from models.interactable import PortableItem, FixedObject
+from models.security_panel import SecurityLevel  # For checking HIGH_SEC_KEYCARD_PIN
 import random
+import arcade # For schedule and unschedule (used in on_pin_check)
 
 class CommandProcessor:
     """Command processor that handles player input using a registry pattern."""
@@ -43,6 +45,25 @@ class CommandProcessor:
         cmd = cmd.strip().lower()
         if not cmd:
             return ""
+
+        # Special handling for PIN prompt (check first, before normal commands)
+        print(f"Response text : {self.ship_view.response_text.text}")
+        if self.ship_view.response_text.text == "Enter PIN to complete":
+            pin = cmd  # Use the entire input as PIN (no splitting needed)
+            # Use last panel/door stored in ship_view
+            success, message = self.ship_view.last_panel.attempt_unlock(self.game_manager.get_player_inventory())  # or attempt_lock
+
+            if success:
+                self.ship_view.last_door["locked"] = False  # True for lock
+                final_image = self.ship_view.last_door.get(
+                    "open_image" if not self.ship_view.last_door["locked"] else "locked_image")
+                self.ship_view.drawing.set_background_image(final_image)
+                self.ship_view.response_text.text = "PIN accepted. Door unlocked/locked."
+            else:
+                self.ship_view.drawing.set_background_image(self.ship_view.last_door.get("locked_image"))
+                self.ship_view.response_text.text = message
+
+            return ""  # Clear input or show nothing extra
 
         # Split into words
         words = cmd.split()
@@ -431,13 +452,24 @@ class CommandProcessor:
 
         # Non-blocking 5s delay + full check
         def on_delay_complete():
+            self.ship_view.last_panel = panel
+            self.ship_view.last_door = matching_door
             success, message = panel.attempt_unlock(self.game_manager.get_player_inventory())
 
             if success:
-                matching_door["locked"] = False
-                open_image = matching_door.get("open_image", "resources/images/open_hatch.png")
-                self.ship_view.drawing.set_background_image(open_image)
-                self.ship_view.response_text.text = f"ID accepted, door unlocked. The hatch to {exit_label} is now open."
+                # Level 3: prompt for PIN
+                if panel.security_level == SecurityLevel.KEYCARD_HIGH_PIN:
+                    self.ship_view.response_text.text = "Enter PIN to complete"
+                    # 1s delay for PIN check (player types PIN next)
+                    def on_pin_check(delta_time):
+                        # This will be handled in on_key_press (see below)
+                        arcade.unschedule(on_pin_check)
+                    arcade.schedule(on_pin_check, 1.0)
+                else:
+                    matching_door["locked"] = False
+                    open_image = matching_door.get("open_image", "resources/images/open_hatch.png")
+                    self.ship_view.drawing.set_background_image(open_image)
+                    self.ship_view.response_text.text = f"ID accepted, door unlocked. The hatch to {exit_label} is now open."
             else:
                 # Failure: revert to locked door
                 locked_image = matching_door.get("locked_image")
@@ -446,7 +478,6 @@ class CommandProcessor:
 
         self.ship_view.schedule_delayed_action(5.0, on_delay_complete)
 
-        # Return initial message immediately
         return "Accessing door panel, checking card ID..."
 
     def _handle_lock(self, args: str) -> str:
@@ -523,13 +554,24 @@ class CommandProcessor:
 
         # Non-blocking 5s delay + full check
         def on_delay_complete():
+            self.ship_view.last_panel = panel
+            self.ship_view.last_door = matching_door
             success, message = panel.attempt_lock(self.game_manager.get_player_inventory())
 
             if success:
-                matching_door["locked"] = True
-                locked_image = matching_door.get("locked_image", "resources/images/closed_hatch.png")
-                self.ship_view.drawing.set_background_image(locked_image)
-                self.ship_view.response_text.text = f"ID accepted, door locked. The hatch to {exit_label} is now closed."
+                # Level 3: prompt for PIN
+                if panel.security_level == SecurityLevel.KEYCARD_HIGH_PIN:
+                    self.ship_view.response_text.text = "Enter PIN to complete"
+                    # 1s delay for PIN check (player types PIN next)
+                    def on_pin_check(delta_time):
+                        # This will be handled in on_key_press (see below)
+                        arcade.unschedule(on_pin_check)
+                    arcade.schedule(on_pin_check, 1.0)
+                else:
+                    matching_door["locked"] = True
+                    locked_image = matching_door.get("locked_image", "resources/images/closed_hatch.png")
+                    self.ship_view.drawing.set_background_image(locked_image)
+                    self.ship_view.response_text.text = f"ID accepted, door locked. The hatch to {exit_label} is now closed."
             else:
                 unlocked_image = matching_door.get("open_image")
                 self.ship_view.drawing.set_background_image(unlocked_image)

@@ -43,37 +43,25 @@ class SecurityPanel:
             return False, "Incorrect PIN."
         return True, ""
 
-    def attempt_unlock(self, player_inventory: list[str], pin_input: str | None = None) -> tuple[bool, str]:
-        """Attempt to unlock the door using this panel."""
+    def attempt_unlock(self, player_inventory: list[str]) -> tuple[bool, str]:
+        """Attempt to unlock the door using this panel (card check only)."""
         if self.is_broken:
             return False, "The panel on this side is damaged."
 
-        # Check keycard
         has_card, msg = self._check_keycard(player_inventory)
         if not has_card:
             return False, msg
-
-        # Check PIN
-        has_pin, pin_msg = self._check_pin(pin_input)
-        if not has_pin:
-            return False, pin_msg
 
         return True, "Access granted. The door unlocks."
 
-    def attempt_lock(self, player_inventory: list[str], pin_input: str | None = None) -> tuple[bool, str]:
-        """Attempt to lock the door using this panel."""
+    def attempt_lock(self, player_inventory: list[str]) -> tuple[bool, str]:
+        """Attempt to lock the door using this panel (card check only)."""
         if self.is_broken:
             return False, "The panel on this side is damaged."
 
-        # Check keycard
         has_card, msg = self._check_keycard(player_inventory)
         if not has_card:
             return False, msg
-
-        # Check PIN
-        has_pin, pin_msg = self._check_pin(pin_input)
-        if not has_pin:
-            return False, pin_msg
 
         return True, "Access granted. The door locks."
 

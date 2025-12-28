@@ -223,7 +223,7 @@
     {
       "id": "engineering_life_support",
       "rooms": ["engineering", "life support"],
-      "locked": false,
+      "locked": true,
       "locked_description": "The life support hatch is locked.",
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
