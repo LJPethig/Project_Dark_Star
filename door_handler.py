@@ -6,7 +6,6 @@ and extensibility (e.g., future repair, hack, override commands).
 """
 
 from models.security_panel import SecurityLevel
-# import arcade  # For scheduling delays (used in panel swipe sequences)
 
 
 class DoorHandler:
@@ -134,14 +133,14 @@ class DoorHandler:
 
         return matching_door, panel_id, exit_label, None
 
-    def _start_pin_prompt(self, action: str, matching_door: dict, exit_label: str):
+    def _start_pin_prompt(self, action: str, matching_door: dict, exit_label: str) -> None:
         """Initiate PIN entry phase with attempt tracking."""
         self.ship_view.pin_attempts = 0
         self.ship_view.pin_max_attempts = 3
         prompt = f"Enter PIN to {action} the door to {exit_label} ({self.ship_view.pin_attempts}/{self.ship_view.pin_max_attempts} attempts)"
         self.ship_view.response_text.text = prompt
 
-    def _handle_pin_input(self, pin: str, action: str, matching_door: dict, exit_label: str, finish_callback):
+    def _handle_pin_input(self, pin: str, action: str, matching_door: dict, exit_label: str, finish_callback) -> None:
         """Shared PIN processing logic with retries."""
         self.ship_view.pin_attempts += 1
         success, message = self.ship_view.last_panel.attempt_pin(pin, self.game_manager.get_player_inventory())
@@ -149,13 +148,7 @@ class DoorHandler:
         if success:
             # Success: apply the action
             finish_callback(pin, matching_door, exit_label)
-            # Clean up state
-            if hasattr(self.ship_view, 'pin_attempts'):
-                del self.ship_view.pin_attempts
-            if hasattr(self.ship_view, 'pin_max_attempts'):
-                del self.ship_view.pin_max_attempts
-            if hasattr(self.ship_view, 'pending_pin_callback'):
-                del self.ship_view.pending_pin_callback
+            self._cleanup_pin_state()
         else:
             # Failure: check attempts
             attempts_left = self.ship_view.pin_max_attempts - self.ship_view.pin_attempts
@@ -194,22 +187,22 @@ class DoorHandler:
                     # Safety fallback (shouldn't happen)
                     print("DEBUG: No high-sec card found during PIN failure")
 
-                # Clean up state
-                if hasattr(self.ship_view, 'pin_attempts'):
-                    del self.ship_view.pin_attempts
-                if hasattr(self.ship_view, 'pin_max_attempts'):
-                    del self.ship_view.pin_max_attempts
-                if hasattr(self.ship_view, 'pending_pin_callback'):
-                    del self.ship_view.pending_pin_callback
+                self._cleanup_pin_state()
 
-    def _finish_unlock_with_pin(self, pin: str, matching_door: dict, exit_label: str):
+    def _cleanup_pin_state(self) -> None:
+        """Centralized cleanup of PIN-related state on ShipView."""
+        for attr in ['pin_attempts', 'pin_max_attempts', 'pending_pin_callback']:
+            if hasattr(self.ship_view, attr):
+                delattr(self.ship_view, attr)
+
+    def _finish_unlock_with_pin(self, pin: str, matching_door: dict, exit_label: str) -> None:
         """Called only on successful PIN for unlock."""
         matching_door["locked"] = False
         open_image = matching_door.get("open_image", "resources/images/open_hatch.png")
         self.ship_view.drawing.set_background_image(open_image)
         self.ship_view.response_text.text = f"PIN accepted. Door unlocked. The hatch to {exit_label} is now open."
 
-    def _finish_lock_with_pin(self, pin: str, matching_door: dict, exit_label: str):
+    def _finish_lock_with_pin(self, pin: str, matching_door: dict, exit_label: str) -> None:
         """Called only on successful PIN for lock."""
         matching_door["locked"] = True
         locked_image = matching_door.get("locked_image", "resources/images/closed_hatch.png")
