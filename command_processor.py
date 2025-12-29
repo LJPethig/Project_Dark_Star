@@ -12,25 +12,31 @@ class CommandProcessor:
         self.game_manager = ship_view.game_manager
 
         # Command registry: verb → handler function
+        # Handlers receive the full remaining args (after the verb)
         self.commands = {
             "quit": self._handle_quit,
-            "exit": self._handle_quit,
+            "exit": self._handle_quit,  # alias for quit
             "go": self._handle_move,
-            "enter": self._handle_move,
-            "move": self._handle_move,
+            "enter": self._handle_move,  # alias
+            "move": self._handle_move,   # alias
+            # NEW: Inventory & cargo commands
             "inventory": self._handle_player_inventory,
-            "i": self._handle_player_inventory,
+            "i": self._handle_player_inventory,  # shortcut
             "take": self._handle_take,
-            "pick up": self._handle_take,
+            "pick up": self._handle_take,   # alias, spaces are stripped
             "store": self._handle_store,
-            "cargo": self._handle_ship_cargo,
-            "debug cargo": self._handle_debug_cargo,
+            "cargo": self._handle_ship_cargo,     # Restricted to terminals
+            "debug cargo": self._handle_debug_cargo,  # TEMPORARY: for testing without terminal
+            # NEW: Examine command
             "examine": self._handle_examine,
-            "x": self._handle_examine,
+            "x": self._handle_examine,  # shortcut
             "drop": self._handle_drop,
             "retrieve": self._handle_retrieve,
-            "lock": self._handle_lock,
-            "unlock": self._handle_unlock,
+            "lock": lambda args: self._handle_door_action("lock", args),
+            "unlock": lambda args: self._handle_door_action("unlock", args),
+            # Future commands will be added here, e.g.:
+            # "look": self._handle_look,
+            # "examine": self._handle_examine,
         }
 
     def process(self, cmd: str) -> str:
@@ -39,18 +45,22 @@ class CommandProcessor:
         if not cmd:
             return ""
 
-        # Special handling for PIN prompt
+        # Special handling for PIN prompt (check first, before normal commands)
         print(f"Response text : {self.ship_view.response_text.text}")
         if self.ship_view.response_text.text.startswith("Enter PIN to ") or \
            self.ship_view.response_text.text.startswith("Incorrect PIN."):
-            pin = cmd
+            pin = cmd  # Use the entire input as PIN
             if hasattr(self.ship_view, 'pending_pin_callback'):
                 self.ship_view.pending_pin_callback(pin)
+                # Clean up only happens inside callback
             else:
                 return "PIN entry cancelled - please start over."
             return ""
 
+        # Split into words
         words = cmd.split()
+
+        # Check for two-word verbs first (e.g., "pick up")
         if len(words) >= 2:
             two_word_verb = f"{words[0]} {words[1]}"
             if two_word_verb in self.commands:
@@ -66,17 +76,24 @@ class CommandProcessor:
         print(f"cmd is {cmd}")
         print(f"verb is {verb} : args is {args}")
 
+        # Look up and execute handler
         handler = self.commands.get(verb)
         if handler:
             return handler(args)
 
+        # No matching command → unknown
         return f"I don't understand '{cmd}'. Try 'help' for available commands."
 
     def _handle_quit(self, args: str) -> str:
+        """Handle quit/exit commands."""
         return "Thanks for playing Project Dark Star. Goodbye!"
 
     def _handle_move(self, args: str) -> str:
+        """Handle movement commands (go, enter, move) with natural language support."""
+        # Get the raw argument string
         raw_args = args.strip().lower()
+
+        # Remove common prefixes like "to", "the", "to the"
         prefixes = ["to the ", "to ", "the "]
         normalized_cmd = raw_args
         for prefix in prefixes:
@@ -88,6 +105,8 @@ class CommandProcessor:
             return "Where do you want to go? Try 'go to [place]'."
 
         current_location = self.game_manager.get_current_location()
+
+        # Find the exit
         next_id = None
         exit_label = None
         if normalized_cmd in current_location["exits"]:
@@ -110,13 +129,16 @@ class CommandProcessor:
         if not next_id:
             return "You can't go that way."
 
+        # NEW: Check door status from door_status.json
         current_room_id = current_location["id"]
         for door in self.game_manager.door_status:
             if set(door["rooms"]) == {current_room_id, next_id}:
                 if door["locked"]:
+                    # Show locked door image
                     image_path = door.get("locked_image", "resources/images/locked_door_default.png")
                     self.ship_view.drawing.set_background_image(image_path)
 
+                    # Find the correct panel ID for this side
                     panel_id = None
                     for panel_data in door.get("panel_ids", []):
                         if panel_data["side"] == current_room_id:
@@ -124,25 +146,29 @@ class CommandProcessor:
                             break
 
                     if panel_id:
+                        # Set as active immediately so use panel works right now
                         self.game_manager.last_attempted_panel_id = panel_id
                         self.game_manager.last_attempted_door_id = door["id"]
                     else:
                         print("DEBUG: No panel found for current side — this shouldn't happen")
 
                     return door["locked_description"]
-                break
+                break  # door found and not locked, proceed
 
+        # Move normally
         self.ship_view.change_location(next_id)
         display_name = exit_label if exit_label else self.game_manager.get_current_location()["name"]
         return f"You enter {display_name}."
 
     def _handle_player_inventory(self, args: str) -> str:
+        """Show player's personal carried inventory."""
         inventory_view = InventoryView(self.game_manager, is_player=True)
         inventory_view.previous_view = self.ship_view
         self.ship_view.window.show_view(inventory_view)
         return "Opening personal inventory..."
 
     def _handle_ship_cargo(self, args: str) -> str:
+        """Attempt to show ship cargo manifest (normally terminal-only)."""
         if not self._can_access_ship_cargo():
             return "Ship cargo manifest is only accessible from a terminal."
         cargo_view = InventoryView(self.game_manager, is_player=False)
@@ -151,16 +177,24 @@ class CommandProcessor:
         return "Opening ship cargo manifest..."
 
     def _handle_debug_cargo(self, args: str) -> str:
+        """TEMP: Force access to ship cargo for testing."""
         current_location = self.game_manager.get_current_location()
         room_id = current_location["id"]
+
+        # Get cargo for the current room
         cargo_items = self.game_manager.get_cargo_for_room(room_id)
+
+        # The rest stays the same - open the view
         cargo_view = InventoryView(self.game_manager, is_player=False)
         cargo_view.previous_view = self.ship_view
         self.ship_view.window.show_view(cargo_view)
+
+        # Optional: Show room-specific info in the response
         room_name = current_location["name"]
         return f"DEBUG: Opening {room_name} cargo manifest (terminal bypass)...\nItems: {len(cargo_items)}"
 
     def _handle_take(self, args: str) -> str:
+        """Take a portable item from the current room to player inventory."""
         if not args:
             return "Take what?"
 
@@ -168,13 +202,13 @@ class CommandProcessor:
         current_location = self.game_manager.get_current_location()
         object_instances = current_location.get("objects", [])
 
-        for obj in object_instances[:]:
+        for obj in object_instances[:]:  # copy to avoid modification during iteration
             if obj.matches(target_name):
                 if isinstance(obj, PortableItem):
                     item_id = obj.id
                     success, message = self.game_manager.add_to_inventory(item_id)
                     if success:
-                        object_instances.remove(obj)
+                        object_instances.remove(obj)  # Remove from room
                         self.ship_view.description_renderer.rebuild_description()
                         self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
                         success_messages = [
@@ -185,8 +219,9 @@ class CommandProcessor:
                         ]
                         return random.choice(success_messages)
                     else:
-                        return message
+                        return message  # e.g., "Too heavy!"
                 else:
+                    # Fixed object - random failure message
                     failure_messages = [
                         f"The {obj.name} is bolted down. It's not coming loose.",
                         f"It's a part of the bulkhead. You have no luck prying it free.",
@@ -199,29 +234,36 @@ class CommandProcessor:
         return "There's nothing like that here to take."
 
     def _handle_store(self, args: str) -> str:
+        """Store an item from player inventory to ship cargo."""
         if not args:
             return "Store what?"
 
         target_name = args.strip().lower()
+
+        # NEW: Get current room and check if valid for storage
         current_location = self.game_manager.get_current_location()
         room_id = current_location["id"]
         if room_id not in ["storage room", "cargo bay"]:
             return "You can only store items in the storage room or cargo bay."
 
-        inventory_ids = self.game_manager.get_player_inventory()
+        inventory_ids = self.game_manager.get_player_inventory()  # list of item IDs (strings)
 
         for item_id in inventory_ids[:]:
-            obj_data = self.game_manager.items.get(item_id)
+            obj_data = self.game_manager.items.get(item_id)  # lookup full data by ID
             if obj_data and obj_data["type"] == "portable" and (
                 target_name == obj_data["name"].lower() or target_name in obj_data.get("keywords", [])
             ):
+                # Re-create PortableItem object for cargo (since cargo still expects objects)
                 obj_kwargs = {k: v for k, v in obj_data.items() if k != "type"}
                 obj = PortableItem(**obj_kwargs)
+
+                # NEW: Pass room_id to add_to_cargo
                 if self.game_manager.add_to_cargo(obj, room_id):
                     inventory_ids.remove(item_id)
                     self.ship_view.description_renderer.rebuild_description()
                     self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
-                    room_name = current_location["name"].lower()
+                    current_location = self.game_manager.get_current_location()
+                    room_name = current_location["name"].lower()  # e.g., "storage room" or "cargo bay"
                     return f"You store the {obj_data['name']} in the {room_name}."
                 else:
                     return "Failed to store item (cargo full?)."
@@ -229,9 +271,11 @@ class CommandProcessor:
         return f"You don't have a '{args}' in your inventory."
 
     def _handle_retrieve(self, args: str) -> str:
+        """Retrieve an item from ship cargo to player inventory."""
         if not args:
             return "Retrieve what?"
 
+        # NEW: Check if in a valid storage room
         current_location = self.game_manager.get_current_location()
         room_id = current_location["id"]
         if room_id not in ["storage room", "cargo bay"]:
@@ -245,7 +289,7 @@ class CommandProcessor:
                 item_id = obj.id
                 success, message = self.game_manager.add_to_inventory(item_id)
                 if success:
-                    self.game_manager.remove_from_cargo(item_id, room_id)
+                    self.game_manager.remove_from_cargo(item_id, room_id)  # Remove from cargo
                     self.ship_view.description_renderer.rebuild_description()
                     self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
                     success_messages = [
@@ -256,11 +300,12 @@ class CommandProcessor:
                     ]
                     return random.choice(success_messages)
                 else:
-                    return message
+                    return message  # e.g., "Too heavy!"
 
         return f"There's nothing like '{args}' in the {current_location['name'].lower()}."
 
     def _handle_drop(self, args: str) -> str:
+        """Drop an item from player inventory back to the current room."""
         if not args:
             return "Drop what?"
 
@@ -272,6 +317,7 @@ class CommandProcessor:
             if obj_data and (target_name == obj_data["name"].lower() or target_name in obj_data.get("keywords", [])):
                 if self.game_manager.remove_from_inventory(item_id):
                     current_location = self.game_manager.get_current_location()
+                    # Re-instantiate the object for the room
                     obj_type = obj_data["type"]
                     obj_kwargs = {k: v for k, v in obj_data.items() if k != "type"}
                     if obj_type == "portable":
@@ -279,8 +325,8 @@ class CommandProcessor:
                     else:
                         obj = FixedObject(**obj_kwargs)
                     current_location["objects"].append(obj)
-                    self.ship_view.description_renderer.rebuild_description()
-                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+                    self.ship_view.description_renderer.rebuild_description()  # Refresh immediately
+                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()  # NEW: Sync UI texts
                     drop_messages = [
                         f"You drop the {obj_data['name']}.",
                         f"You put down the {obj_data['name']}.",
@@ -291,6 +337,7 @@ class CommandProcessor:
         return f"You don't have a '{args}' to drop."
 
     def _handle_examine(self, args: str) -> str:
+        """Examine an object in the current room or inventory."""
         if not args:
             return "Examine what?"
 
@@ -298,10 +345,13 @@ class CommandProcessor:
         current_location = self.game_manager.get_current_location()
         object_instances = current_location.get("objects", [])
 
+        # Check room objects
         for obj in object_instances:
             if obj.matches(target_name):
-                return obj.on_examine() if hasattr(obj, "on_examine") else f"You see nothing special about the {obj.name}."
+                return obj.on_examine() if hasattr(obj,
+                                                   "on_examine") else f"You see nothing special about the {obj.name}."
 
+        # Check player inventory
         for item_id in self.game_manager.get_player_inventory_ids():
             obj_data = self.game_manager.items.get(item_id)
             if obj_data and (target_name == obj_data["name"].lower() or target_name in obj_data.get("keywords", [])):
@@ -309,21 +359,28 @@ class CommandProcessor:
 
         return f"There's nothing called '{args}' here to examine."
 
+    # Helper for access control (expand later with terminal check)
     def _can_access_ship_cargo(self) -> bool:
+        """Check if player can access ship cargo (for now, always False)."""
+        # Later: check if current room has a terminal or terminal is "unlocked"
         return False
 
     def _start_pin_prompt(self, action: str, door, exit_label):
+        """Initiate PIN entry phase with attempt tracking."""
         self.ship_view.pin_attempts = 0
         self.ship_view.pin_max_attempts = 3
         prompt = f"Enter PIN to {action} the door to {exit_label} ({self.ship_view.pin_attempts}/{self.ship_view.pin_max_attempts} attempts)"
         self.ship_view.response_text.text = prompt
 
     def _handle_pin_input(self, pin: str, action: str, door, exit_label, finish_callback):
+        """Shared PIN processing logic with retries."""
         self.ship_view.pin_attempts += 1
         success, message = self.ship_view.last_panel.attempt_pin(pin, self.game_manager.get_player_inventory())
 
         if success:
+            # Success: apply the action
             finish_callback(pin, door, exit_label)
+            # Clean up state
             if hasattr(self.ship_view, 'pin_attempts'):
                 del self.ship_view.pin_attempts
             if hasattr(self.ship_view, 'pin_max_attempts'):
@@ -331,33 +388,44 @@ class CommandProcessor:
             if hasattr(self.ship_view, 'pending_pin_callback'):
                 del self.ship_view.pending_pin_callback
         else:
+            # Failure: check attempts
             attempts_left = self.ship_view.pin_max_attempts - self.ship_view.pin_attempts
             if attempts_left > 0:
+                # Re-prompt with updated message
                 prompt = f"{message} Attempts left: {attempts_left}/{self.ship_view.pin_max_attempts}"
                 self.ship_view.response_text.text = prompt
+                # Keep the same callback
                 self.ship_view.pending_pin_callback = lambda p: self._handle_pin_input(
                     p, action, door, exit_label, finish_callback
                 )
             else:
+                # All attempts used: deny access
                 image_key = "open_image" if not door["locked"] else "locked_image"
                 final_image = door.get(image_key, "resources/images/closed_hatch.png")
                 self.ship_view.drawing.set_background_image(final_image)
                 self.ship_view.response_text.text = "Access denied after 3 incorrect PIN attempts. Process terminated."
 
+                # NEW: Invalidate one high-sec card
                 inventory_ids = self.game_manager.get_player_inventory()
                 if "id_card_high_sec" in inventory_ids:
+                    # Remove one high-sec card
                     self.game_manager.remove_from_inventory("id_card_high_sec")
+
+                    # Add damaged version
                     success, msg = self.game_manager.add_to_inventory("id_card_high_sec_damaged")
                     if success:
                         self.ship_view.response_text.text += "\nID card invalidated."
                     else:
                         self.ship_view.response_text.text += "\nID card invalidated, but inventory full - damaged card dropped."
 
+                    # Refresh description UI
                     self.ship_view.description_renderer.rebuild_description()
                     self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
                 else:
+                    # Safety fallback (shouldn't happen)
                     print("DEBUG: No high-sec card found during PIN failure")
 
+                # Clean up state
                 if hasattr(self.ship_view, 'pin_attempts'):
                     del self.ship_view.pin_attempts
                 if hasattr(self.ship_view, 'pin_max_attempts'):
@@ -366,18 +434,20 @@ class CommandProcessor:
                     del self.ship_view.pending_pin_callback
 
     def _finish_unlock_with_pin(self, pin: str, door, exit_label):
+        """Called only on successful PIN for unlock."""
         door["locked"] = False
         open_image = door.get("open_image", "resources/images/open_hatch.png")
         self.ship_view.drawing.set_background_image(open_image)
         self.ship_view.response_text.text = f"PIN accepted. Door unlocked. The hatch to {exit_label} is now open."
 
     def _finish_lock_with_pin(self, pin: str, door, exit_label):
+        """Called only on successful PIN for lock."""
         door["locked"] = True
         locked_image = door.get("locked_image", "resources/images/closed_hatch.png")
         self.ship_view.drawing.set_background_image(locked_image)
         self.ship_view.response_text.text = f"PIN accepted. Door locked. The hatch to {exit_label} is now closed."
 
-    # NEW: Shared door-finding helper
+    # Shared door-finding helper
     def _find_door_and_panel(self, target: str, current_room_id: str) -> tuple[dict | None, str | None, str | None, str | None]:
         """Shared logic to find matching door, panel on current side, exit label, or error."""
         matching_door = None
@@ -407,7 +477,6 @@ class CommandProcessor:
         if not matching_door:
             return None, None, None, f"No door connected to '{target}'. Try a valid room or direction."
 
-        # Find panel on current side
         panel_id = None
         for panel_data in matching_door.get("panel_ids", []):
             if panel_data["side"] == current_room_id:
@@ -419,9 +488,10 @@ class CommandProcessor:
 
         return matching_door, panel_id, exit_label, None
 
-    def _handle_unlock(self, args: str) -> str:
+    def _handle_door_action(self, action: str, args: str) -> str:
+        """Unified handler for both lock and unlock commands."""
         if not args:
-            return "Unlock what?"
+            return f"{action.capitalize()} what?"
 
         target = args.strip().lower()
         current_location = self.game_manager.get_current_location()
@@ -429,30 +499,35 @@ class CommandProcessor:
 
         current_name_normalized = current_location["name"].lower()
         if target == current_room_id.lower() or target == current_name_normalized:
-            return "Specify the room you're unlocking the door to."
+            return f"Specify the room you're {action}ing the door to."
 
+        # Find matching door, panel, exit label (shared helper)
         matching_door, panel_id, exit_label, error = self._find_door_and_panel(target, current_room_id)
         if error:
             return error
 
-        if not matching_door["locked"]:
-            return "That hatch is already unlocked."
+        # Early state check based on action
+        if (action == "unlock" and not matching_door["locked"]) or (action == "lock" and matching_door["locked"]):
+            return f"That hatch is already {action}ed."
 
         panel = self.game_manager.security_panels.get(panel_id)
         if not panel:
             return f"Panel '{panel_id}' not found."
 
+        # Check for damage before proceeding
         if panel.is_broken:
             damaged_image = matching_door.get("panel_image_damaged", "resources/images/panel_damaged_default.png")
             self.ship_view.drawing.set_background_image(damaged_image)
             return "The panel on this side is damaged and currently unusable. Repairing it may be possible"
 
+        # Check if player has ANY ID card
         player_inv = self.game_manager.get_player_inventory()
         has_any_card = "id_card_low_sec" in player_inv or "id_card_high_sec" in player_inv
 
         if not has_any_card:
             return "You need an ID card to swipe."
 
+        # Has any card → show panel + initial message
         panel_image = matching_door.get("panel_image", "resources/images/panel_default.png")
         self.ship_view.drawing.set_background_image(panel_image)
         self.ship_view.response_text.text = "Accessing door panel, checking card ID..."
@@ -460,85 +535,30 @@ class CommandProcessor:
         def on_delay_complete():
             self.ship_view.last_panel = panel
             self.ship_view.last_door = matching_door
-            success, message = panel.attempt_unlock(self.game_manager.get_player_inventory())
+            # Choose attempt method based on action
+            attempt_method = panel.attempt_unlock if action == "unlock" else panel.attempt_lock
+            success, message = attempt_method(self.game_manager.get_player_inventory())
 
             if success:
                 if panel.security_level == SecurityLevel.KEYCARD_HIGH_PIN:
-                    self._start_pin_prompt("unlock", matching_door, exit_label)
+                    self._start_pin_prompt(action, matching_door, exit_label)
+                    # Dynamic finish callback based on action
+                    finish_callback = self._finish_unlock_with_pin if action == "unlock" else self._finish_lock_with_pin
                     self.ship_view.pending_pin_callback = lambda p: self._handle_pin_input(
-                        p, "unlock", matching_door, exit_label, self._finish_unlock_with_pin
+                        p, action, matching_door, exit_label, finish_callback
                     )
                 else:
-                    matching_door["locked"] = False
-                    open_image = matching_door.get("open_image", "resources/images/open_hatch.png")
-                    self.ship_view.drawing.set_background_image(open_image)
-                    self.ship_view.response_text.text = f"ID accepted, door unlocked. The hatch to {exit_label} is now open."
+                    # Apply immediate state change
+                    matching_door["locked"] = action == "lock"
+                    image_key = "open_image" if action == "unlock" else "locked_image"
+                    image = matching_door.get(image_key, "resources/images/open_hatch.png" if action == "unlock" else "resources/images/closed_hatch.png")
+                    self.ship_view.drawing.set_background_image(image)
+                    self.ship_view.response_text.text = f"ID accepted, door {action}ed. The hatch to {exit_label} is now {'open' if action == 'unlock' else 'closed'}."
             else:
-                locked_image = matching_door.get("locked_image")
-                self.ship_view.drawing.set_background_image(locked_image)
-                self.ship_view.response_text.text = message
-
-        self.ship_view.schedule_delayed_action(5.0, on_delay_complete)
-
-        return "Accessing door panel, checking card ID..."
-
-    def _handle_lock(self, args: str) -> str:
-        if not args:
-            return "Lock what?"
-
-        target = args.strip().lower()
-        current_location = self.game_manager.get_current_location()
-        current_room_id = current_location["id"]
-
-        current_name_normalized = current_location["name"].lower()
-        if target == current_room_id.lower() or target == current_name_normalized:
-            return "Specify the room you're locking the door to."
-
-        matching_door, panel_id, exit_label, error = self._find_door_and_panel(target, current_room_id)
-        if error:
-            return error
-
-        if matching_door["locked"]:
-            return "That hatch is already locked."
-
-        panel = self.game_manager.security_panels.get(panel_id)
-        if not panel:
-            return f"Panel '{panel_id}' not found."
-
-        if panel.is_broken:
-            damaged_image = matching_door.get("panel_image_damaged", "resources/images/panel_damaged_default.png")
-            self.ship_view.drawing.set_background_image(damaged_image)
-            return "The panel on this side is damaged and currently unusable. Repairing it may be possible"
-
-        player_inv = self.game_manager.get_player_inventory()
-        has_any_card = "id_card_low_sec" in player_inv or "id_card_high_sec" in player_inv
-
-        if not has_any_card:
-            return "You need an ID card to swipe."
-
-        panel_image = matching_door.get("panel_image", "resources/images/panel_default.png")
-        self.ship_view.drawing.set_background_image(panel_image)
-        self.ship_view.response_text.text = "Accessing door panel, checking card ID..."
-
-        def on_delay_complete():
-            self.ship_view.last_panel = panel
-            self.ship_view.last_door = matching_door
-            success, message = panel.attempt_lock(self.game_manager.get_player_inventory())
-
-            if success:
-                if panel.security_level == SecurityLevel.KEYCARD_HIGH_PIN:
-                    self._start_pin_prompt("lock", matching_door, exit_label)
-                    self.ship_view.pending_pin_callback = lambda p: self._handle_pin_input(
-                        p, "lock", matching_door, exit_label, self._finish_lock_with_pin
-                    )
-                else:
-                    matching_door["locked"] = True
-                    locked_image = matching_door.get("locked_image", "resources/images/closed_hatch.png")
-                    self.ship_view.drawing.set_background_image(locked_image)
-                    self.ship_view.response_text.text = f"ID accepted, door locked. The hatch to {exit_label} is now closed."
-            else:
-                unlocked_image = matching_door.get("open_image")
-                self.ship_view.drawing.set_background_image(unlocked_image)
+                # Failure image (opposite state)
+                image_key = "locked_image" if action == "unlock" else "open_image"
+                image = matching_door.get(image_key)
+                self.ship_view.drawing.set_background_image(image)
                 self.ship_view.response_text.text = message
 
         self.ship_view.schedule_delayed_action(5.0, on_delay_complete)
