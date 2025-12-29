@@ -2,7 +2,8 @@
 
 Text and graphical sci-fi RPG in the 22nd century
 
-An experiment in building a codebase with the assistance of Grok 4 (Fast)
+An experiment in building a codebase with the assistance of Grok 4 (Fast, free plan)
+Update (30 Dec 25) Now using SuperGrok (paid).
 
 To anyone wishing to go down this same dark path of despair and
 enlightenment. I present the GOLDEN RULES as explained by Grok.
