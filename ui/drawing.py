@@ -2,6 +2,7 @@
 import arcade
 from constants import *
 
+
 class DrawingManager:
     """Handles all rendering and drawing logic for ShipView."""
 
@@ -9,18 +10,20 @@ class DrawingManager:
         self.view = view
         self.background_list = arcade.SpriteList()
 
-    def load_background(self):
-        """Load and scale background image to fit the image section while preserving aspect ratio."""
+    def _create_scaled_sprite(self, image_path: str) -> None:
+        """
+        Shared logic to load an image, scale it to fit the image section
+        while preserving aspect ratio, and add it to the background SpriteList.
+        """
         self.background_list = arcade.SpriteList()
-        current_location = self.view.game_manager.get_current_location()
 
         try:
-            texture = arcade.load_texture(current_location["background"])
+            texture = arcade.load_texture(image_path)
             if not texture:
-                print("Failed to load background texture.")
+                print(f"Failed to load texture: {image_path}")
                 return
 
-            # Get target dimensions (the image section area)
+            # Target dimensions = image section area
             target_width = self.view.image_section.width
             target_height = SCREEN_HEIGHT - EVENT_SECTION_HEIGHT
 
@@ -33,9 +36,6 @@ class DrawingManager:
             scale_h = target_height / orig_height
             scale = min(scale_w, scale_h)
 
-            new_width = int(orig_width * scale)
-            new_height = int(orig_height * scale)
-
             bg_sprite = arcade.Sprite()
             bg_sprite.texture = texture
             bg_sprite.scale = scale
@@ -46,7 +46,12 @@ class DrawingManager:
             self.background_list.append(bg_sprite)
 
         except Exception as e:
-            print(f"Background load failed: {e}")
+            print(f"Background load failed ({image_path}): {e}")
+
+    def load_background(self):
+        """Load and scale the current room's background image."""
+        current_location = self.view.game_manager.get_current_location()
+        self._create_scaled_sprite(current_location["background"])
 
     def draw_background(self):
         """Draw the background image."""
@@ -117,38 +122,5 @@ class DrawingManager:
         self.view.input_text.draw()
 
     def set_background_image(self, image_path: str):
-        """Load and display a new background image (e.g., locked door)."""
-        self.background_list = arcade.SpriteList()
-
-        try:
-            texture = arcade.load_texture(image_path)
-            if not texture:
-                print(f"Failed to load image: {image_path}")
-                return
-
-            target_width = self.view.image_section.width
-            target_height = SCREEN_HEIGHT - EVENT_SECTION_HEIGHT
-
-            orig_width = texture.width
-            orig_height = texture.height
-            if orig_width == 0 or orig_height == 0:
-                return
-
-            scale_w = target_width / orig_width
-            scale_h = target_height / orig_height
-            scale = min(scale_w, scale_h)
-
-            new_width = int(orig_width * scale)
-            new_height = int(orig_height * scale)
-
-            bg_sprite = arcade.Sprite()
-            bg_sprite.texture = texture
-            bg_sprite.scale = scale
-
-            bg_sprite.center_x = self.view.image_section.left + target_width / 2
-            bg_sprite.center_y = self.view.image_section.bottom + target_height / 2
-
-            self.background_list.append(bg_sprite)
-
-        except Exception as e:
-            print(f"Background load failed: {e}")
+        """Load and display a new background image (e.g., locked door, panel)."""
+        self._create_scaled_sprite(image_path)
