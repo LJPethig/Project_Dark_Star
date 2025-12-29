@@ -402,10 +402,30 @@ class CommandProcessor:
             else:
                 # All attempts used: deny access
                 image_key = "open_image" if not door["locked"] else "locked_image"
-                final_image = door.get(image_key, "resources/images/closed_hatch.png")  # fallback is incorrect
+                final_image = door.get(image_key, "resources/images/closed_hatch.png")
                 self.ship_view.drawing.set_background_image(final_image)
                 self.ship_view.response_text.text = "Access denied after 3 incorrect PIN attempts. Process terminated."
-                # TODO: Later add consequences here (e.g. alert security, lock out panel, etc.)
+
+                # NEW: Invalidate one high-sec card
+                inventory_ids = self.game_manager.get_player_inventory()
+                if "id_card_high_sec" in inventory_ids:
+                    # Remove one high-sec card
+                    self.game_manager.remove_from_inventory("id_card_high_sec")
+
+                    # Add damaged version
+                    success, msg = self.game_manager.add_to_inventory("id_card_high_sec_damaged")
+                    if success:
+                        self.ship_view.response_text.text += "\nID card invalidated."
+                    else:
+                        self.ship_view.response_text.text += "\nID card invalidated, but inventory full - damaged card dropped."
+
+                    # Refresh description UI
+                    self.ship_view.description_renderer.rebuild_description()
+                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+                else:
+                    # Safety fallback (shouldn't happen)
+                    print("DEBUG: No high-sec card found during PIN failure")
+
                 # Clean up state
                 if hasattr(self.ship_view, 'pin_attempts'):
                     del self.ship_view.pin_attempts

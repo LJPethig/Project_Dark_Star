@@ -26,6 +26,15 @@
     "examine_text": "The card has a faded photo and a security chip.",
     "mass": 0.0
   },
+   {
+    "id": "id_card_high_sec_damaged",
+    "type": "portable",
+    "name": "High level ID Card - Burnt out",
+    "description": "A chipped security card for high security areas, it appears damaged.",
+    "keywords": ["id card", "security card", "card", "id"],
+    "examine_text": "The card has a faded photo and a burnt out security chip.",
+    "mass": 0.0
+  },
   {
     "id": "terminal_personal",
     "type": "fixed",
