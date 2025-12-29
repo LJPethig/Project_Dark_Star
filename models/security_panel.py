@@ -7,13 +7,14 @@ class SecurityLevel(Enum):
     KEYCARD_HIGH_PIN = 3
 
 class SecurityPanel:
-    def __init__(self, panel_id: str, door_id: str, security_level: int, side: str):
+    def __init__(self, panel_id: str, door_id: str, security_level: int, side: str, pin: str):
         self.panel_id = panel_id
         self.door_id = door_id
         self.side = side
         self.security_level = SecurityLevel(security_level)
         self.is_broken = False
         self.repair_progress = 0.0
+        self.pin = pin
 
     def _check_keycard(self, player_inventory: list[str]) -> tuple[bool, str]:
         """Check if player has appropriate card."""
@@ -38,7 +39,9 @@ class SecurityPanel:
             return True, ""
         if pin_input is None:
             return False, "PIN required."
-        if pin_input != "1234":  # Placeholder - replace with actual logic
+        if self.pin is None:
+            return False, "Panel configuration error: no PIN set."
+        if pin_input != self.pin:
             return False, "Incorrect PIN."
         return True, ""
 

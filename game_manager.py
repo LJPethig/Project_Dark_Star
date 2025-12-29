@@ -131,17 +131,19 @@ class GameManager:
             for door in connections:
                 door_id = door["id"]
                 panel_ids = door.get("panel_ids", [])
+                security_level = door["security_level"]
+                door_pin = door.get("pin") if security_level == 3 else None  # Only load PIN for level 3
 
                 for panel_data in panel_ids:
                     panel_id = panel_data["id"]
                     side = panel_data["side"]
-                    security_level = door["security_level"]  # From door connection
 
                     panel = SecurityPanel(
                         panel_id=panel_id,
                         door_id=door_id,
                         security_level=security_level,
-                        side=side
+                        side=side,
+                        pin=door_pin  # Pass the PIN (None for non-level 3)
                     )
                     self.security_panels[panel_id] = panel
 

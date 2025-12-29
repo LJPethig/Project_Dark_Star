@@ -228,6 +228,7 @@
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 3,
+      "pin": "1111",
       "panel_image": "resources/images/panel_level3_swipe_pin.png",
       "panel_ids": [
         {
@@ -243,12 +244,13 @@
     {
       "id": "airlock_cargo_bay",
       "rooms": ["airlock", "cargo bay"],
-      "locked": false,
+      "locked": true,
       "locked_description": "The cargo bay hatch is locked.",
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
-      "security_level": 1,
-      "panel_image": "resources/images/panel_level1_swipe.png",
+      "security_level": 3,
+      "pin": "2222",
+      "panel_image": "resources/images/panel_level3_swipe_pin.png",
       "panel_ids": [
         {
           "id": "airlock_cargo_bay_panel_airlock",
