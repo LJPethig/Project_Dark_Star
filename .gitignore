@@ -15,3 +15,5 @@ __pycache__/
 # Optional: if you ever have local databases or logs
 *.sqlite3
 *.log
+
+STRUCTURE.md
