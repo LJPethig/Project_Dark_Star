@@ -1,8 +1,8 @@
 # door_handler.py
 """
 Dedicated handler for all door-related commands and security panel interactions.
-Extracted from command_processor.py to improve readability, separation of concerns,
-and extensibility (e.g., future repair, hack, override commands).
+Fully extracted from command_processor.py — improves readability and extensibility.
+Transient PIN state is managed via ShipView attributes (simple and effective for current scope).
 """
 
 from models.security_panel import SecurityLevel
@@ -190,7 +190,7 @@ class DoorHandler:
                 self._cleanup_pin_state()
 
     def _cleanup_pin_state(self) -> None:
-        """Centralized cleanup of PIN-related state on ShipView."""
+        """Centralized cleanup of PIN-related state on ShipView after success or lockout."""
         for attr in ['pin_attempts', 'pin_max_attempts', 'pending_pin_callback']:
             if hasattr(self.ship_view, attr):
                 delattr(self.ship_view, attr)

@@ -66,9 +66,6 @@ class CommandProcessor:
             verb = words[0] if words else ""
             args = ""
 
-        print(f"cmd is {cmd}")
-        print(f"verb is {verb} : args is {args}")
-
         # Look up and execute handler
         handler = self.commands.get(verb)
         if handler:
