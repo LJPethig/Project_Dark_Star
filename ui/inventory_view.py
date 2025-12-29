@@ -5,6 +5,8 @@ from constants import *
 class InventoryView(arcade.View):
     """Full-screen view for player inventory or ship cargo."""
 
+    ITEM_SPACING = 60  # Vertical spacing between each item line
+
     def __init__(self, game_manager, is_player: bool = True):
         super().__init__()
         self.game_manager = game_manager
@@ -15,7 +17,7 @@ class InventoryView(arcade.View):
         self.clear()
         arcade.set_background_color(BACKGROUND_COLOR)  # From constants
 
-        # Title
+        # Title (in accent color)
         if self.is_player:
             title = "YOUR INVENTORY"
         else:
@@ -32,12 +34,11 @@ class InventoryView(arcade.View):
             font_name=FONT_NAME_PRIMARY
         )
 
-        # Get items: list of IDs for player, list of objects for cargo
+        # Get items
         if self.is_player:
             item_ids = self.game_manager.get_player_inventory()
             items = [self.game_manager.items.get(item_id) for item_id in item_ids if item_id in self.game_manager.items]
         else:
-            # Get room-specific cargo
             current_location = self.game_manager.get_current_location()
             room_id = current_location["id"]
             items = self.game_manager.get_cargo_for_room(room_id)
@@ -53,40 +54,38 @@ class InventoryView(arcade.View):
                 font_name=FONT_NAME_PRIMARY
             )
         else:
-            # Start drawing items from top
             current_y = SCREEN_HEIGHT - TITLE_PADDING - DESCRIPTION_TITLE_FONT_SIZE - SECTION_TITLE_PADDING
 
             for item in items:
-                # Item name (now safe: item is dict for player, object for cargo)
+                # Item name in ACCENT_COLOR
                 item_name = item["name"] if isinstance(item, dict) else item.name
-
                 arcade.draw_text(
                     item_name,
                     TEXT_PADDING,
                     current_y,
                     ACCENT_COLOR,
-                    DESCRIPTION_FONT_SIZE,
+                    INPUT_FONT_SIZE,
                     font_name=FONT_NAME_PRIMARY
                 )
 
-                # Item description (truncated if too long)
+                # Description in TEXT_COLOR
                 desc = item["description"] if isinstance(item, dict) else item.description
-                desc = desc[:100] + "..." if len(desc) > 100 else desc
+                desc = desc[:150] + "..." if len(desc) > 150 else desc
+
                 arcade.draw_text(
-                    desc,
-                    TEXT_PADDING + 20,  # Slight indent
-                    current_y - LINE_SPACING,
+                    f"- {desc}",
+                    TEXT_PADDING + 300,  # Fixed offset — adjust 300 to taste (e.g. 250–400)
+                    current_y,
                     TEXT_COLOR,
                     INPUT_FONT_SIZE,
                     font_name=FONT_NAME_PRIMARY,
                     multiline=True,
-                    width=SCREEN_WIDTH - TEXT_PADDING * 4
+                    width=SCREEN_WIDTH - (TEXT_PADDING + 300 + TEXT_PADDING)
                 )
 
-                # Move down for next item
-                current_y -= 80  # Fixed spacing between items (can be made constant later)
+                current_y -= self.ITEM_SPACING
 
-        # Footer instructions
+        # Footer
         arcade.draw_text(
             "Press ESC or I to return",
             SCREEN_WIDTH / 2,
