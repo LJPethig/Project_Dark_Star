@@ -5,7 +5,7 @@ from constants import *
 class InventoryView(arcade.View):
     """Full-screen view for player inventory or ship cargo."""
 
-    ITEM_SPACING = 60  # Vertical spacing between each item line
+    ITEM_SPACING = 40  # Vertical spacing between each item line
 
     def __init__(self, game_manager, is_player: bool = True):
         super().__init__()

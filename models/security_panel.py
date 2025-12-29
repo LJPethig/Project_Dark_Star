@@ -1,3 +1,5 @@
+# security_panel
+
 from enum import Enum
 
 class SecurityLevel(Enum):
@@ -7,13 +9,14 @@ class SecurityLevel(Enum):
     KEYCARD_HIGH_PIN = 3
 
 class SecurityPanel:
-    def __init__(self, panel_id: str, door_id: str, security_level: int, side: str, pin: str):
+    def __init__(self, panel_id: str, door_id: str, security_level: int, side: str, pin: str | None = None,
+                 damaged: bool = False, repair_progress: float = 0.0):
         self.panel_id = panel_id
         self.door_id = door_id
         self.side = side
         self.security_level = SecurityLevel(security_level)
-        self.is_broken = False
-        self.repair_progress = 0.0
+        self.is_broken = damaged  # ← Load from JSON
+        self.repair_progress = repair_progress  # ← Load from JSON
         self.pin = pin
 
     def _check_keycard(self, player_inventory: list[str]) -> tuple[bool, str]:

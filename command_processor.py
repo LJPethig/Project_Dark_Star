@@ -506,6 +506,14 @@ class CommandProcessor:
         if not panel:
             return f"Panel '{panel_id}' not found."
 
+        # NEW: Check for damage before proceeding
+        if panel.is_broken:
+            damaged_image = matching_door.get("panel_image_damaged", "resources/images/panel_damaged_default.png")
+            self.ship_view.drawing.set_background_image(damaged_image)
+            return "The panel on this side is damaged and currently unusable. Repairing it may be possible"
+
+        # Continue with card check...
+
         # Check if player has ANY ID card
         player_inv = self.game_manager.get_player_inventory()
         has_any_card = "id_card_low_sec" in player_inv or "id_card_high_sec" in player_inv
@@ -602,6 +610,13 @@ class CommandProcessor:
         if not panel:
             return f"Panel '{panel_id}' not found."
 
+        # NEW: Check for damage before proceeding
+        if panel.is_broken:
+            damaged_image = matching_door.get("panel_image_damaged", "resources/images/panel_damaged_default.png")
+            self.ship_view.drawing.set_background_image(damaged_image)
+            return "The panel on this side is damaged and currently unusable. Repairing it may be possible"
+
+        # Continue with card check...
         # Check if player has ANY ID card
         player_inv = self.game_manager.get_player_inventory()
         has_any_card = "id_card_low_sec" in player_inv or "id_card_high_sec" in player_inv

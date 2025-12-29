@@ -121,7 +121,7 @@ class GameManager:
 
     def _load_security_panels(self):
         """Load and instantiate SecurityPanel instances from door_status.json."""
-        self.security_panels = {}  # panel_id -> SecurityPanel instance
+        self.security_panels = {}
 
         try:
             with open("data/door_status.json", "r", encoding="utf-8") as f:
@@ -132,18 +132,24 @@ class GameManager:
                 door_id = door["id"]
                 panel_ids = door.get("panel_ids", [])
                 security_level = door["security_level"]
-                door_pin = door.get("pin") if security_level == 3 else None  # Only load PIN for level 3
+                door_pin = door.get("pin") if security_level == 3 else None
 
                 for panel_data in panel_ids:
                     panel_id = panel_data["id"]
                     side = panel_data["side"]
+
+                    # NEW: Load damage fields if present
+                    damaged = panel_data.get("damaged", False)
+                    repair_progress = panel_data.get("repair_progress", 0.0)
 
                     panel = SecurityPanel(
                         panel_id=panel_id,
                         door_id=door_id,
                         security_level=security_level,
                         side=side,
-                        pin=door_pin  # Pass the PIN (None for non-level 3)
+                        pin=door_pin,
+                        damaged=damaged,  # NEW
+                        repair_progress=repair_progress  # NEW
                     )
                     self.security_panels[panel_id] = panel
 

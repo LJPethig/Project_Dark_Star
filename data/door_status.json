@@ -9,10 +9,13 @@
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
       "panel_image": "resources/images/panel_level1_swipe.png",
+      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
       "panel_ids": [
         {
           "id": "crew_quarters_main_corridor_panel_crew",
-          "side": "crew quarters"
+          "side": "crew quarters",
+          "damaged": true,
+          "repair_progress": 0.0
         },
         {
           "id": "crew_quarters_main_corridor_panel_main",
