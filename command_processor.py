@@ -37,7 +37,8 @@ class CommandProcessor:
             "lock": lambda args: self._handle_door_action("lock", args),
             "unlock": lambda args: self._handle_door_action("unlock", args),
             "repair door panel": self._handle_repair_door_panel,
-            "repair": self._handle_repair_door_panel,  # shortcut alias
+            "repair door access panel": self._handle_repair_door_panel,
+            "repair door": self._handle_repair_door_panel, # shortcut
             # Future commands will be added here, e.g.:
             # "look": self._handle_look,
         }

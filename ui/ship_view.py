@@ -180,24 +180,28 @@ class ShipView(arcade.View):
             self.current_input += chr(key)
             self._update_input_display()
 
-    def _show_panel_sequence(self, panel_image: str, final_image: str, success_message: str):
-        """Non-blocking: show panel → wait 5s → show success message + final image."""
-        # Step 1: Show panel and initial message
-        self.drawing.set_background_image(panel_image)
-        self.response_text.text = "Accessing door panel, checking card ID"
-
-        # Step 2: Schedule step 2 after 5 seconds
-        def step2(delta_time):
-            # Step 2: Show success and final image
-            self.response_text.text = success_message
-            self.drawing.set_background_image(final_image)
-            # Remove schedule (runs once)
-            arcade.unschedule(step2)
-
-        arcade.schedule(step2, 5.0)
+    # DEPRECATED
+    # def _show_panel_sequence(self, panel_image: str, final_image: str, success_message: str):
+    #     """Non-blocking: show panel → wait 5s → show success message + final image."""
+    #     print("_show_panel_sequence is used!")
+    #     # Step 1: Show panel and initial message
+    #     self.drawing.set_background_image(panel_image)
+    #     self.response_text.text = "Is this text used? door access panel, checking card ID"
+    #
+    #     # Step 2: Schedule step 2 after 5 seconds
+    #     def step2(delta_time):
+    #         print("Schedule step 2 after 5 seconds")
+    #         # Step 2: Show success and final image
+    #         self.response_text.text = success_message
+    #         self.drawing.set_background_image(final_image)
+    #         # Remove schedule (runs once)
+    #         arcade.unschedule(step2)
+    #
+    #     arcade.schedule(step2, 5.0)
 
     def schedule_delayed_action(self, delay_seconds: float, callback):
         def _delayed(delta_time):
+            print("schedule_delayed_action is used!")
             callback()
             arcade.unschedule(_delayed)
 

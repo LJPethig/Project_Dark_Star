@@ -40,7 +40,7 @@ class RepairHandler:
                             broken_panels.append((panel, exit_label, door))
 
         if not broken_panels:
-            return "There are no damaged door panels in this room."
+            return "There are no damaged door access panels in this room."
 
         # Auto-repair if only one
         if len(broken_panels) == 1 and not args.strip():
@@ -53,11 +53,11 @@ class RepairHandler:
             for panel, exit_label, door in broken_panels:
                 if self._matches_exit(target, door, current_room_id):
                     return self._perform_repair(panel, exit_label, door)
-            return f"No damaged door panel to '{args}'."
+            return f"No damaged door access panel to '{args}'."
 
         # Multiple broken panels — ask for clarification
         labels = [label for _, label, _ in broken_panels]
-        return f"Which door panel do you want to repair? ({', '.join(labels)})"
+        return f"Which door access panel do you want to repair? ({', '.join(labels)})"
 
     def _get_exit_label(self, door: dict, current_room_id: str) -> str:
         """Get player-friendly label for the exit from current side."""
@@ -86,7 +86,7 @@ class RepairHandler:
         # Immediate: show damaged panel and starting message
         damaged_image = matching_door.get("panel_image_damaged", "resources/images/panel_damaged_default.png")
         self.ship_view.drawing.set_background_image(damaged_image)
-        self.ship_view.response_text.text = "Repairing door panel..."
+        self.ship_view.response_text.text = "Repairing door access panel..."
 
         # Apply repair logic instantly (as before — magic repair)
         panel.is_broken = False
@@ -96,7 +96,7 @@ class RepairHandler:
             # After 8 seconds: show repaired panel
             repaired_image = matching_door.get("panel_image", "resources/images/panel_default.png")  # fallback to normal panel
             self.ship_view.drawing.set_background_image(repaired_image)
-            self.ship_view.response_text.text = f"You repair the door panel to {exit_label}. It is now operational."
+            self.ship_view.response_text.text = f"You repair the door access panel to {exit_label}. It is now operational."
 
             # Refresh description to reflect fixed state
             self.ship_view.description_renderer.rebuild_description()

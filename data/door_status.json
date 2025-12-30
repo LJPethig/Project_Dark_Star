@@ -19,7 +19,9 @@
         },
         {
           "id": "crew_quarters_main_corridor_panel_main",
-          "side": "main corridor"
+          "side": "main corridor",
+          "damaged": false,
+          "repair_progress": 0.0
         }
       ]
     },
@@ -32,14 +34,19 @@
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
       "panel_image": "resources/images/panel_level1_swipe.png",
+      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
       "panel_ids": [
         {
           "id": "galley_recreation_room_panel_galley",
-          "side": "galley"
+          "side": "galley",
+          "damaged": false,
+          "repair_progress": 0.0
         },
         {
           "id": "galley_recreation_room_panel_rec",
-          "side": "recreation room"
+          "side": "recreation room",
+          "damaged": false,
+          "repair_progress": 0.0
         }
       ]
     },
@@ -52,14 +59,19 @@
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 2,
       "panel_image": "resources/images/panel_level2_swipe.png",
+      "panel_image_damaged": "resources/images/panel_level2_swipe_damaged.png",
       "panel_ids": [
         {
           "id": "recreation_room_cockpit_panel_rec",
-          "side": "recreation room"
+          "side": "recreation room",
+          "damaged": true,
+          "repair_progress": 0.0
         },
         {
           "id": "recreation_room_cockpit_panel_cockpit",
-          "side": "cockpit"
+          "side": "cockpit",
+          "damaged": false,
+          "repair_progress": 0.0
         }
       ]
     },
@@ -82,7 +94,9 @@
         },
         {
           "id": "recreation_room_main_corridor_panel_main",
-          "side": "main corridor"
+          "side": "main corridor",
+          "damaged": false,
+          "repair_progress": 0.0
         }
       ]
     },
@@ -105,7 +119,9 @@
         },
         {
           "id": "recreation_room_med_bay_panel_medbay",
-          "side": "med-bay"
+          "side": "med-bay",
+          "damaged": false,
+          "repair_progress": 0.0
         }
       ]
     },
@@ -118,14 +134,19 @@
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
       "panel_image": "resources/images/panel_level1_swipe.png",
+      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
       "panel_ids": [
         {
           "id": "recreation_room_storage_room_panel_rec",
-          "side": "recreation room"
+          "side": "recreation room",
+          "damaged": false,
+          "repair_progress": 0.0
         },
         {
           "id": "recreation_room_storage_room_panel_storage",
-          "side": "storage room"
+          "side": "storage room",
+          "damaged": false,
+          "repair_progress": 0.0
         }
       ]
     },
@@ -138,14 +159,19 @@
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
       "panel_image": "resources/images/panel_level1_swipe.png",
+      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
       "panel_ids": [
         {
           "id": "storage_room_recreation_room_panel_storage",
-          "side": "storage room"
+          "side": "storage room",
+          "damaged": false,
+          "repair_progress": 0.0
         },
         {
           "id": "storage_room_recreation_room_panel_rec",
-          "side": "recreation room"
+          "side": "recreation room",
+          "damaged": false,
+          "repair_progress": 0.0
         }
       ]
     },
@@ -158,14 +184,19 @@
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
       "panel_image": "resources/images/panel_level1_swipe.png",
+      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
       "panel_ids": [
         {
           "id": "main_corridor_sub_corridor_panel_main",
-          "side": "main corridor"
+          "side": "main corridor",
+          "damaged": false,
+          "repair_progress": 0.0
         },
         {
           "id": "main_corridor_sub_corridor_panel_sub",
-          "side": "sub corridor"
+          "side": "sub corridor",
+          "damaged": false,
+          "repair_progress": 0.0
         }
       ]
     },
@@ -178,14 +209,19 @@
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 2,
       "panel_image": "resources/images/panel_level2_swipe.png",
+      "panel_image_damaged": "resources/images/panel_level2_swipe_damaged.png",
       "panel_ids": [
         {
           "id": "main_corridor_engineering_panel_main",
-          "side": "main corridor"
+          "side": "main corridor",
+          "damaged": false,
+          "repair_progress": 0.0
         },
         {
           "id": "main_corridor_engineering_panel_eng",
-          "side": "engineering"
+          "side": "engineering",
+          "damaged": false,
+          "repair_progress": 0.0
         }
       ]
     },
@@ -198,14 +234,19 @@
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
       "panel_image": "resources/images/panel_level1_swipe.png",
+      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
       "panel_ids": [
         {
           "id": "main_corridor_crew_quarters_panel_main",
-          "side": "main corridor"
+          "side": "main corridor",
+          "damaged": false,
+          "repair_progress": 0.0
         },
         {
           "id": "main_corridor_crew_quarters_panel_crew",
-          "side": "crew quarters"
+          "side": "crew quarters",
+          "damaged": false,
+          "repair_progress": 0.0
         }
       ]
     },
@@ -218,14 +259,19 @@
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
       "panel_image": "resources/images/panel_level1_swipe.png",
+      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
       "panel_ids": [
         {
           "id": "sub_corridor_cargo_bay_panel_sub",
-          "side": "sub corridor"
+          "side": "sub corridor",
+          "damaged": false,
+          "repair_progress": 0.0
         },
         {
           "id": "sub_corridor_cargo_bay_panel_cargo",
-          "side": "cargo bay"
+          "side": "cargo bay",
+          "damaged": false,
+          "repair_progress": 0.0
         }
       ]
     },
@@ -239,14 +285,19 @@
       "security_level": 3,
       "pin": "1111",
       "panel_image": "resources/images/panel_level3_swipe_pin.png",
+      "panel_image_damaged": "resources/images/panel_level3_swipe_pin_damaged.png",
       "panel_ids": [
         {
           "id": "engineering_life_support_panel_eng",
-          "side": "engineering"
+          "side": "engineering",
+          "damaged": false,
+          "repair_progress": 0.0
         },
         {
           "id": "engineering_life_support_panel_ls",
-          "side": "life support"
+          "side": "life support",
+          "damaged": false,
+          "repair_progress": 0.0
         }
       ]
     },
@@ -260,14 +311,19 @@
       "security_level": 3,
       "pin": "2222",
       "panel_image": "resources/images/panel_level3_swipe_pin.png",
+      "panel_image_damaged": "resources/images/panel_level3_swipe_pin_damaged.png",
       "panel_ids": [
         {
           "id": "airlock_cargo_bay_panel_airlock",
-          "side": "airlock"
+          "side": "airlock",
+          "damaged": false,
+          "repair_progress": 0.0
         },
         {
           "id": "airlock_cargo_bay_panel_cargo",
-          "side": "cargo bay"
+          "side": "cargo bay",
+          "damaged": false,
+          "repair_progress": 0.0
         }
       ]
     }

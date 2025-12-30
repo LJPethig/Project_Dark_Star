@@ -36,29 +36,29 @@ class DoorHandler:
         # Already correct state?
         if (action == "unlock" and not matching_door["locked"]) or \
            (action == "lock" and matching_door["locked"]):
-            return f"That hatch is already {action}ed."
+            return f"That door is already {action}ed."
 
         panel = self.game_manager.security_panels.get(panel_id)
         if not panel:
-            return f"Panel '{panel_id}' not found."
+            return f"Door access panel '{panel_id}' not found."
 
         # Check for damage before proceeding
         if panel.is_broken:
             damaged_image = matching_door.get("panel_image_damaged", "resources/images/panel_damaged_default.png")
             self.ship_view.drawing.set_background_image(damaged_image)
-            return "The panel on this side is damaged and currently unusable. Repairing it may be possible"
+            return "The door access panel on this side is damaged and currently unusable. Repairing it may be possible"
 
         # Check if player has ANY ID card
         player_inv = self.game_manager.get_player_inventory()
         has_any_card = "id_card_low_sec" in player_inv or "id_card_high_sec" in player_inv
 
         if not has_any_card:
-            return "You need an ID card to swipe."
+            return "You need an ID card to swipe the door access panel."
 
         # Has any card → show panel + initial message
         panel_image = matching_door.get("panel_image", "resources/images/panel_default.png")
         self.ship_view.drawing.set_background_image(panel_image)
-        self.ship_view.response_text.text = "Accessing door panel, checking card ID..."
+        self.ship_view.response_text.text = "Swiping door access panel, checking card ID..."
 
         def on_delay_complete():
             self.ship_view.last_panel = panel
@@ -81,7 +81,7 @@ class DoorHandler:
                     image_key = "open_image" if action == "unlock" else "locked_image"
                     image = matching_door.get(image_key, "resources/images/open_hatch.png" if action == "unlock" else "resources/images/closed_hatch.png")
                     self.ship_view.drawing.set_background_image(image)
-                    self.ship_view.response_text.text = f"ID accepted, door {action}ed. The hatch to {exit_label} is now {'open' if action == 'unlock' else 'closed'}."
+                    self.ship_view.response_text.text = f"ID accepted, door {action}ed. Access to {exit_label} is now {'open' if action == 'unlock' else 'closed'}."
             else:
                 # Failure image (opposite state)
                 image_key = "locked_image" if action == "unlock" else "open_image"
@@ -91,7 +91,7 @@ class DoorHandler:
 
         self.ship_view.schedule_delayed_action(5.0, on_delay_complete)
 
-        return "Accessing door panel, checking card ID..."
+        return "Swiping door access panel, checking card ID..."
 
     def _find_door_and_panel(self, target: str, current_room_id: str) -> tuple[dict | None, str | None, str | None, str | None]:
         """Shared logic to find matching door, panel on current side, exit label, or error."""
@@ -129,7 +129,7 @@ class DoorHandler:
                 break
 
         if not panel_id:
-            return matching_door, None, exit_label, "No panel on this side of the door."
+            return matching_door, None, exit_label, "There is no door access panel on this side."
 
         return matching_door, panel_id, exit_label, None
 
@@ -177,8 +177,6 @@ class DoorHandler:
                     success, msg = self.game_manager.add_to_inventory("id_card_high_sec_damaged")
                     if success:
                         self.ship_view.response_text.text += "\nID card invalidated."
-                    else:
-                        self.ship_view.response_text.text += "\nID card invalidated, but inventory full - damaged card dropped."
 
                     # Refresh description UI
                     self.ship_view.description_renderer.rebuild_description()
@@ -200,11 +198,11 @@ class DoorHandler:
         matching_door["locked"] = False
         open_image = matching_door.get("open_image", "resources/images/open_hatch.png")
         self.ship_view.drawing.set_background_image(open_image)
-        self.ship_view.response_text.text = f"PIN accepted. Door unlocked. The hatch to {exit_label} is now open."
+        self.ship_view.response_text.text = f"PIN accepted. Door unlocked. Access to {exit_label} is now open."
 
     def _finish_lock_with_pin(self, pin: str, matching_door: dict, exit_label: str) -> None:
         """Called only on successful PIN for lock."""
         matching_door["locked"] = True
         locked_image = matching_door.get("locked_image", "resources/images/closed_hatch.png")
         self.ship_view.drawing.set_background_image(locked_image)
-        self.ship_view.response_text.text = f"PIN accepted. Door locked. The hatch to {exit_label} is now closed."
+        self.ship_view.response_text.text = f"PIN accepted. Door locked. Access to {exit_label} is now closed."
