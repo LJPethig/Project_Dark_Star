@@ -44,15 +44,15 @@ class RepairHandler:
 
         # Auto-repair if only one
         if len(broken_panels) == 1 and not args.strip():
-            panel, exit_label, _ = broken_panels[0]
-            return self._perform_repair(panel, exit_label)
+            panel, exit_label, matching_door = broken_panels[0]
+            return self._perform_repair(panel, exit_label, matching_door)
 
         # If explicit target provided
         if args.strip():
             target = args.strip().lower()
             for panel, exit_label, door in broken_panels:
                 if self._matches_exit(target, door, current_room_id):
-                    return self._perform_repair(panel, exit_label)
+                    return self._perform_repair(panel, exit_label, door)
             return f"No damaged door panel to '{args}'."
 
         # Multiple broken panels — ask for clarification
@@ -81,16 +81,28 @@ class RepairHandler:
                     return True
         return False
 
-    def _perform_repair(self, panel: SecurityPanel, exit_label: str) -> str:
-        """Actually repair the panel (magic version for now)."""
+    def _perform_repair(self, panel: SecurityPanel, exit_label: str, matching_door: dict) -> str:
+        """Perform the repair with visual flow: damaged panel → 8s delay → repaired panel (persistent)."""
+        # Immediate: show damaged panel and starting message
+        damaged_image = matching_door.get("panel_image_damaged", "resources/images/panel_damaged_default.png")
+        self.ship_view.drawing.set_background_image(damaged_image)
+        self.ship_view.response_text.text = "Repairing door panel..."
+
+        # Apply repair logic instantly (as before — magic repair)
         panel.is_broken = False
         panel.repair_progress = 1.0
 
-        # Refresh UI
-        self.ship_view.description_renderer.rebuild_description()
-        self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+        def on_repair_complete():
+            # After 8 seconds: show repaired panel
+            repaired_image = matching_door.get("panel_image", "resources/images/panel_default.png")  # fallback to normal panel
+            self.ship_view.drawing.set_background_image(repaired_image)
+            self.ship_view.response_text.text = f"You repair the door panel to {exit_label}. It is now operational."
 
-        # Optional: switch background back to normal room (or panel image) — later enhancement
-        self.ship_view.drawing.load_background()
+            # Refresh description to reflect fixed state
+            self.ship_view.description_renderer.rebuild_description()
+            self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
 
-        return f"You repair the door panel to {exit_label}. It is now operational."
+        # Schedule the 8-second "working" delay
+        self.ship_view.schedule_delayed_action(8.0, on_repair_complete)
+
+        return ""  # Initial response shown visually
