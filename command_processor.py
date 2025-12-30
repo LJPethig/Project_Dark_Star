@@ -1,6 +1,8 @@
 from ui.inventory_view import InventoryView
 from models.interactable import PortableItem, FixedObject
 from door_handler import DoorHandler
+from repair_handler import RepairHandler
+
 import random
 
 class CommandProcessor:
@@ -34,6 +36,8 @@ class CommandProcessor:
             # Door actions delegated to DoorHandler for complex flows
             "lock": lambda args: self._handle_door_action("lock", args),
             "unlock": lambda args: self._handle_door_action("unlock", args),
+            "repair door panel": self._handle_repair_door_panel,
+            "repair": self._handle_repair_door_panel,  # shortcut alias
             # Future commands will be added here, e.g.:
             # "look": self._handle_look,
         }
@@ -53,18 +57,18 @@ class CommandProcessor:
         # Split into words
         words = cmd.split()
 
-        # Check for two-word verbs first (e.g., "pick up")
-        if len(words) >= 2:
-            two_word_verb = f"{words[0]} {words[1]}"
-            if two_word_verb in self.commands:
-                verb = two_word_verb
-                args = " ".join(words[2:]) if len(words) > 2 else ""
-            else:
-                verb = words[0]
-                args = " ".join(words[1:]) if len(words) > 1 else ""
-        else:
-            verb = words[0] if words else ""
-            args = ""
+        # Find the longest matching verb from the start of the command
+        verb = None
+        args = ""
+        for i in range(len(words), 0, -1):
+            candidate = " ".join(words[:i])
+            if candidate in self.commands:
+                verb = candidate
+                args = " ".join(words[i:])
+                break
+
+        if not verb:
+            return "I don't understand that command."
 
         # Look up and execute handler
         handler = self.commands.get(verb)
@@ -359,3 +363,8 @@ class CommandProcessor:
         """Delegate door lock/unlock to the dedicated handler."""
         door_handler = DoorHandler(self.ship_view)
         return door_handler.handle_door_action(action, args)
+
+    def _handle_repair_door_panel(self, args: str) -> str:
+        """Delegate repair of door panels to dedicated handler."""
+        repair_handler = RepairHandler(self.ship_view)
+        return repair_handler.handle_repair_door_panel(args)

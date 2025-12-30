@@ -72,10 +72,13 @@
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
       "panel_image": "resources/images/panel_level1_swipe.png",
+      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
       "panel_ids": [
         {
           "id": "recreation_room_main_corridor_panel_rec",
-          "side": "recreation room"
+          "side": "recreation room",
+          "damaged": true,
+          "repair_progress": 0.0
         },
         {
           "id": "recreation_room_main_corridor_panel_main",
@@ -92,10 +95,13 @@
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
       "panel_image": "resources/images/panel_level1_swipe.png",
+      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
       "panel_ids": [
         {
           "id": "recreation_room_med_bay_panel_rec",
-          "side": "recreation room"
+          "side": "recreation room",
+          "damaged": true,
+          "repair_progress": 0.0
         },
         {
           "id": "recreation_room_med_bay_panel_medbay",
