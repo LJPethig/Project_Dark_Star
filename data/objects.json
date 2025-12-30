@@ -9,6 +9,15 @@
     "mass": 1.5
   },
   {
+    "id": "scan_tool",
+    "type": "portable",
+    "name": "Scan Tool",
+    "description": "A handheld scanner for diagnostics",
+    "keywords": ["diag tool", "diagnostic tool","scan tool"],
+    "examine_text": "A comprehensive tablet based scan tool. Incorporating bi-directional diagnostic logic, oscilloscope, and thermal imaging with augmented reality overlays. Upgradable with additional ship systems schematics and manuals",
+    "mass": 2
+  },
+  {
     "id": "id_card_low_sec",
     "type": "portable",
     "name": "Basic level ID Card",

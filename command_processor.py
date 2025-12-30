@@ -347,7 +347,7 @@ class CommandProcessor:
                                                    "on_examine") else f"You see nothing special about the {obj.name}."
 
         # Check player inventory
-        for item_id in self.game_manager.get_player_inventory_ids():
+        for item_id in self.game_manager.get_player_inventory():
             obj_data = self.game_manager.items.get(item_id)
             if obj_data and (target_name == obj_data["name"].lower() or target_name in obj_data.get("keywords", [])):
                 return obj_data.get("examine_text", f"You see nothing special about the {obj_data['name']}.")
