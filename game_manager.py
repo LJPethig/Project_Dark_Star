@@ -1,8 +1,10 @@
 # game_manager.py
 import json
 from constants import STARTING_ROOM, PLAYER_NAME, SHIP_NAME
-from models.interactable import PortableItem, FixedObject  # Import the new interactable classes
-from models.security_panel import SecurityPanel  # NEW: Import the SecurityPanel class
+from models.interactable import PortableItem, FixedObject
+from models.security_panel import SecurityPanel
+from models.room import Room
+from models.door import Door
 
 
 class GameManager:
@@ -38,44 +40,36 @@ class GameManager:
             print(f"Failed to load objects.json: {e}")
             self.items = {}
 
-    def create_new_game(self, player_name=PLAYER_NAME, ship_name=SHIP_NAME, skills=None):
+    def create_new_game(self, player_name=PLAYER_NAME, ship_name=SHIP_NAME):
         """
-        Loads ship rooms from JSON and places the player in their quarters.
-        'skills' parameter is included for future background selection.
+        Loads ship rooms and doors from JSON and places the player in STARTING_ROOM.
         """
-        # Use fixed skills for now (will come from background choice later)
-        if skills is None:
-            skills = [
-                "Freighter Pilot License",
-                "Space Systems Engineering",
-                "EVA Certification",
-                "Computer Systems Specialist",
-                "Basic Trade Negotiation",
-                "Zero-G Repair"
-            ]
 
         self.player = {
             "name": player_name,
-            "skills": skills,
             "inventory": []  # list of item IDs (strings)
         }
 
+        # Load rooms and doors efficiently
+        rooms = self._load_ship_rooms()
+        doors = self._load_doors(rooms)
+
         self.ship = {
             "name": ship_name,
-            "rooms": self._load_ship_rooms(),
-            "cargo_by_room": {  # NEW
-                "storage room": [],  # Personal/small storage
-                "cargo bay": []  # Large/trade cargo
+            "rooms": rooms,
+            "doors": doors,
+            "cargo_by_room": {
+                "storage room": [],
+                "cargo bay": []
             }
         }
 
-        # Player always starts in quarters after waking up
-        self.current_location = self.ship["rooms"][STARTING_ROOM]
+        # Player starting location
+        self.current_location = rooms[STARTING_ROOM]
 
     def _load_ship_rooms(self) -> dict:
         """
         Load ship room data from JSON and instantiate Room objects.
-        Preserves exact current behavior — no new functionality added.
         """
         from models.room import Room
 
@@ -117,6 +111,120 @@ class GameManager:
                     room.add_object(obj_instance)
 
         return rooms
+
+    def _load_doors(self, rooms: dict[str, Room]) -> list["Door"]:
+        """
+        Load door connections from door_status.json and instantiate Door objects.
+        Supports paired forward/reverse entries for independent per-side panels.
+        Creates one Door per unique room pair, merging panel data from all directions.
+        """
+
+        try:
+            with open("data/door_status.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+                connections = data["connections"]
+        except Exception as e:
+            print(f"Failed to load door_status.json: {e}")
+            return []
+
+        doors = []
+        door_by_pair: dict[frozenset[str], Door] = {}  # pair_key -> Door
+
+        for conn in connections:
+            door_id = conn["id"]
+            room_ids = conn["rooms"]
+            if len(room_ids) != 2:
+                print(f"Warning: Door {door_id} does not connect exactly two rooms")
+                continue
+
+            room_a = rooms.get(room_ids[0])
+            room_b = rooms.get(room_ids[1])
+            if not room_a or not room_b:
+                print(f"Warning: Missing room for door {door_id}")
+                continue
+
+            # Unique unordered pair key
+            pair_key = frozenset([room_a.id, room_b.id])
+
+            # Reuse existing Door if already created
+            if pair_key in door_by_pair:
+                door = door_by_pair[pair_key]
+            else:
+                door = Door(
+                    door_id=door_id,
+                    room_a=room_a,
+                    room_b=room_b,
+                    locked=conn.get("locked", False),
+                    security_level=conn["security_level"],
+                    pin=conn.get("pin"),
+                    images={
+                        "open": conn.get("open_image", "resources/images/image_missing.png"),
+                        "locked": conn.get("locked_image", "resources/images/image_missing.png"),
+                        "panel": conn.get("panel_image", "resources/images/image_missing.png"),
+                        "panel_damaged": conn.get("panel_image_damaged", "resources/images/image_missing.png"),
+                    },
+                )
+                door_by_pair[pair_key] = door
+                doors.append(door)
+
+            # Load panels from this connection — overwrites only same side
+            for panel_data in conn.get("panel_ids", []):
+                panel_id = panel_data["id"]
+                side_room_id = panel_data["side"]
+                damaged = panel_data.get("damaged", False)
+                repair_progress = panel_data.get("repair_progress", 0.0)
+
+                print("START------------------------------")
+                print(panel_data)
+                print(f"DEBUG: damaged = {damaged}")
+
+                panel = SecurityPanel(
+                    panel_id=panel_id,
+                    door_id=door_id,
+                    security_level=door.security_level,
+                    side=side_room_id,
+                    pin=door.pin,
+                    damaged=damaged,
+                    repair_progress=repair_progress,
+                )
+
+                print(f"panel is broken : {panel.is_broken}")
+
+                # Overwrite panel for this side (safe — each side appears only once across pairs)
+                door.panels[side_room_id] = panel
+                print(f"ATTACHED PANEL: side={side_room_id}, panel_id={panel_id}, is_broken={panel.is_broken}")
+                print("END ---------------------")
+
+                # Assign to the room
+                side_room = room_a if side_room_id == room_a.id else room_b
+                side_room.panels[door_id] = panel
+
+        # Rewrite exits to point to the shared Door instance (after all doors loaded)
+        for door in doors:
+            room_a, room_b = door.rooms
+
+            exit_key_a = None
+            for k, v in room_a.exits.items():
+                if v.get("target") == room_b.id:
+                    exit_key_a = k
+                    break
+
+            exit_key_b = None
+            for k, v in room_b.exits.items():
+                if v.get("target") == room_a.id:
+                    exit_key_b = k
+                    break
+
+            if exit_key_a is None or exit_key_b is None:
+                print(f"Warning: Missing bidirectional exit for door {door.id} between {room_a.id} and {room_b.id}")
+                continue
+
+            for room, exit_key in [(room_a, exit_key_a), (room_b, exit_key_b)]:
+                original_exit = room.exits[exit_key].copy()
+                original_exit["door"] = door
+                room.exits[exit_key] = original_exit
+
+        return doors
 
     def _load_door_status(self):
         """Load door status from door_status.json."""

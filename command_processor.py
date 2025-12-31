@@ -104,55 +104,50 @@ class CommandProcessor:
         # Find the exit
         next_id = None
         exit_label = None
+        matching_exit_data = None
         if normalized_cmd in current_location.exits:
-            exit_data = current_location.exits[normalized_cmd]
-            next_id = exit_data["target"]
-            exit_label = exit_data.get("label", current_location.name)
+            matching_exit_data = current_location.exits[normalized_cmd]
         else:
             for exit_key, ed in current_location.exits.items():
                 if "direction" in ed and normalized_cmd == ed["direction"].lower():
-                    exit_data = ed
-                    next_id = ed["target"]
-                    exit_label = ed.get("label", current_location.name)
+                    matching_exit_data = ed
                     break
                 if "shortcuts" in ed and normalized_cmd in [s.lower() for s in ed["shortcuts"]]:
-                    exit_data = ed
-                    next_id = ed["target"]
-                    exit_label = ed.get("label", current_location.name)
+                    matching_exit_data = ed
                     break
 
-        if not next_id:
+        if not matching_exit_data:
             return "You can't go that way."
 
-        # NEW: Check door status from door_status.json
-        current_room_id = current_location.id
-        for door in self.game_manager.door_status:
-            if set(door["rooms"]) == {current_room_id, next_id}:
-                if door["locked"]:
-                    # Show locked door image
-                    image_path = door.get("locked_image", "resources/images/locked_door_default.png")
-                    self.ship_view.drawing.set_background_image(image_path)
+        # Handle movement — support both secured doors and open archways
+        if "door" in matching_exit_data:
+            # Secured door — full lock check
+            target_door = matching_exit_data["door"]
 
-                    # Find the correct panel ID for this side
-                    panel_id = None
-                    for panel_data in door.get("panel_ids", []):
-                        if panel_data["side"] == current_room_id:
-                            panel_id = panel_data["id"]
-                            break
+            if target_door.locked:
+                image_path = target_door.images.get("locked", "resources/images/image_missing.png")
+                self.ship_view.drawing.set_background_image(image_path)
 
-                    if panel_id:
-                        # Set as active immediately so use panel works right now
-                        self.game_manager.last_attempted_panel_id = panel_id
-                        self.game_manager.last_attempted_door_id = door["id"]
-                    else:
-                        print("DEBUG: No panel found for current side — this shouldn't happen")
+                panel = target_door.get_panel_for_room(current_location)
+                if panel:
+                    self.game_manager.last_attempted_panel_id = panel.panel_id
+                    self.game_manager.last_attempted_door_id = target_door.id
 
-                    return door["locked_description"]
-                break  # door found and not locked, proceed
+                return target_door.images.get("locked_description", "The door is locked.")
 
-        # Move normally
+            # Unlocked door — proceed to move
+            target_room = target_door.get_other_room(current_location)
+        else:
+            # Open archway — no door, no lock check
+            target_room_id = matching_exit_data["target"]
+            target_room = self.game_manager.ship["rooms"][target_room_id]
+
+        next_id = target_room.id
+        exit_label = matching_exit_data.get("label", target_room.name)
+
+        # Move normally — refresh UI
         self.ship_view.change_location(next_id)
-        display_name = exit_label if exit_label else self.game_manager.get_current_location().name
+        display_name = exit_label if exit_label else target_room.name
         return f"You enter {display_name}."
 
     def _handle_player_inventory(self, args: str) -> str:

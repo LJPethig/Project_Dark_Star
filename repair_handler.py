@@ -6,7 +6,7 @@ Designed for future expansion (tools, consumables, progress, other objects).
 """
 
 from models.security_panel import SecurityPanel
-
+from models.door import Door
 
 class RepairHandler:
     """
@@ -27,17 +27,21 @@ class RepairHandler:
         current_location = self.game_manager.get_current_location()
         current_room_id = current_location.id
 
-        # Find all broken door panels in this room
+        # Find all broken door panels in this room using merged Door instances
         broken_panels = []
-        for door in self.game_manager.door_status:
-            if current_room_id in door["rooms"]:
-                for panel_data in door.get("panel_ids", []):
-                    if panel_data["side"] == current_room_id:
-                        panel = self.game_manager.security_panels.get(panel_data["id"])
-                        if panel and panel.is_broken:
-                            # Get exit label for player-friendly display
-                            exit_label = self._get_exit_label(door, current_room_id)
-                            broken_panels.append((panel, exit_label, door))
+        for door in self.game_manager.ship["doors"]:
+            panel = door.get_panel_for_room(current_location)
+            if panel and panel.is_broken:
+                # Get exit label from current room's exits
+                other_room = door.get_other_room(current_location)
+                exit_label = None
+                for exit_key, ed in current_location.exits.items():
+                    if ed["target"] == other_room.id:
+                        exit_label = ed.get("label", other_room.name)
+                        break
+                if exit_label is None:
+                    exit_label = other_room.name
+                broken_panels.append((panel, exit_label, door))
 
         if not broken_panels:
             return "There are no damaged door access panels in this room."
@@ -81,10 +85,10 @@ class RepairHandler:
                     return True
         return False
 
-    def _perform_repair(self, panel: SecurityPanel, exit_label: str, matching_door: dict) -> str:
+    def _perform_repair(self, panel: SecurityPanel, exit_label: str, matching_door: Door) -> str:
         """Perform the repair with visual flow: damaged panel → 8s delay → repaired panel (persistent)."""
         # Immediate: show damaged panel and starting message
-        damaged_image = matching_door.get("panel_image_damaged", "resources/images/panel_damaged_default.png")
+        damaged_image = matching_door.images.get("panel_damaged", "resources/images/image_missing.png")
         self.ship_view.drawing.set_background_image(damaged_image)
         self.ship_view.response_text.text = "Repairing door access panel..."
 
@@ -94,7 +98,7 @@ class RepairHandler:
 
         def on_repair_complete():
             # After 8 seconds: show repaired panel
-            repaired_image = matching_door.get("panel_image", "resources/images/panel_default.png")  # fallback to normal panel
+            repaired_image = matching_door.images.get("panel", "resources/images/image_missing.png")
             self.ship_view.drawing.set_background_image(repaired_image)
             self.ship_view.response_text.text = f"You repair the door access panel to {exit_label}. It is now operational."
 

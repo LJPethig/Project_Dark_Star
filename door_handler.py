@@ -28,23 +28,28 @@ class DoorHandler:
         current_room_id = current_location.id
 
         # Use shared finder logic
-        matching_door, panel_id, exit_label, error = self._find_door_and_panel(args, current_room_id)
+        matching_door, panel_id, exit_label, error = self._find_door_and_panel(args, current_room_id, action)
 
         if error:
             return error
 
         # Already correct state?
-        if (action == "unlock" and not matching_door["locked"]) or \
-           (action == "lock" and matching_door["locked"]):
+        if (action == "unlock" and not matching_door.locked) or \
+           (action == "lock" and matching_door.locked):
             return f"That door is already {action}ed."
 
-        panel = self.game_manager.security_panels.get(panel_id)
+        panel = matching_door.get_panel_for_room(current_location)
+        print(
+            f"RUNTIME PANEL DEBUG: panel_id={getattr(panel, 'panel_id', 'None')}, side={getattr(panel, 'side', 'None')}, is_broken={panel.is_broken if panel else 'None'}, door_id={getattr(panel, 'door_id', 'None')}")
+        print(
+            f"DOOR PANELS DICT: { {k: {'panel_id': p.panel_id, 'is_broken': p.is_broken} for k, p in matching_door.panels.items()} }")
         if not panel:
-            return f"Door access panel '{panel_id}' not found."
+            print("NO PANEL:")
+            return "No access panel on this side."
 
         # Check for damage before proceeding
         if panel.is_broken:
-            damaged_image = matching_door.get("panel_image_damaged", "resources/images/panel_damaged_default.png")
+            damaged_image = matching_door.images.get("panel_damaged", "resources/images/image_missing.png")
             self.ship_view.drawing.set_background_image(damaged_image)
             return "The door access panel on this side is damaged and currently unusable. Repairing it may be possible"
 
@@ -56,7 +61,7 @@ class DoorHandler:
             return "You need an ID card to swipe the door access panel."
 
         # Has any card → show panel + initial message
-        panel_image = matching_door.get("panel_image", "resources/images/panel_default.png")
+        panel_image = matching_door.images.get("panel", "resources/images/image_missing.png")
         self.ship_view.drawing.set_background_image(panel_image)
         self.ship_view.response_text.text = "Swiping door access panel, checking card ID..."
 
@@ -77,15 +82,15 @@ class DoorHandler:
                     )
                 else:
                     # Apply immediate state change
-                    matching_door["locked"] = action == "lock"
-                    image_key = "open_image" if action == "unlock" else "locked_image"
-                    image = matching_door.get(image_key, "resources/images/open_hatch.png" if action == "unlock" else "resources/images/closed_hatch.png")
+                    matching_door.locked = action == "lock"
+                    image_key = "open" if action == "unlock" else "locked"
+                    image = matching_door.images.get(image_key, "resources/images/image_missing.png" if action == "unlock" else "resources/images/image_missing.png")
                     self.ship_view.drawing.set_background_image(image)
                     self.ship_view.response_text.text = f"ID accepted, door {action}ed. Access to {exit_label} is now {'open' if action == 'unlock' else 'closed'}."
             else:
                 # Failure image (opposite state)
-                image_key = "locked_image" if action == "unlock" else "open_image"
-                image = matching_door.get(image_key)
+                image_key = "locked" if action == "unlock" else "open"
+                image = matching_door.images.get(image_key)
                 self.ship_view.drawing.set_background_image(image)
                 self.ship_view.response_text.text = message
 
@@ -93,45 +98,74 @@ class DoorHandler:
 
         return "Swiping door access panel, checking card ID..."
 
-    def _find_door_and_panel(self, target: str, current_room_id: str) -> tuple[dict | None, str | None, str | None, str | None]:
-        """Shared logic to find matching door, panel on current side, exit label, or error."""
-        matching_door = None
-        next_room_id = None
-        exit_label = None
+    def _find_door_and_panel(self, args: str, current_room_id: str, action: str = "") -> tuple:
+        """
+        Find the matching door and its panel based on player input.
+        Updated for Door instances — uses exit["door"] references.
+        """
+        current_room = self.game_manager.get_current_location()
+        args = args.strip().lower() if args else ""
 
-        for door in self.game_manager.door_status:
-            if current_room_id in door["rooms"]:
-                other_room = next(r for r in door["rooms"] if r != current_room_id)
+        # Handle empty input: try to auto-select the obvious secured door
+        if not args:
+            secured_exits = [ed for ed in current_room.exits.values() if "door" in ed]
+            if len(secured_exits) == 1:
+                exit_data = secured_exits[0]
+                door = exit_data["door"]
+                panel = door.get_panel_for_room(current_room)
+                if panel:
+                    return door, panel.panel_id, exit_data["label"], None
+            # If no secured doors (or multiple), just ask
+            return None, None, None, "Which door?"
 
-                if target == other_room.lower():
-                    matching_door = door
-                    next_room_id = other_room
-                    exit_label = other_room
-                    break
-
-                for exit_key, ed in self.game_manager.get_current_location().exits.items():
-                    if target == exit_key.lower() or target in [s.lower() for s in ed.get("shortcuts", [])]:
-                        if ed["target"] == other_room:
-                            matching_door = door
-                            next_room_id = other_room
-                            exit_label = ed.get("label", other_room)
-                            break
-                if matching_door:
-                    break
-
-        if not matching_door:
-            return None, None, None, f"No door connected to '{target}'. Try a valid room or direction."
-
-        panel_id = None
-        for panel_data in matching_door.get("panel_ids", []):
-            if panel_data["side"] == current_room_id:
-                panel_id = panel_data["id"]
+        # Find if input matches any valid exit (door or archway)
+        matching_exit = None
+        for exit_data in current_room.exits.values():
+            if self._matches_exit(args, exit_data):
+                matching_exit = exit_data
                 break
 
-        if not panel_id:
-            return matching_door, None, exit_label, "There is no door access panel on this side."
+        if not matching_exit:
+            return None, None, None, "There is no such exit."
 
-        return matching_door, panel_id, exit_label, None
+        # It's a valid exit — now check if it's lockable
+        if "door" not in matching_exit:
+            target_room_id = matching_exit["target"]
+            target_room = self.game_manager.ship["rooms"][target_room_id]
+            target_name = target_room.name
+            current_name = current_room.name
+
+            if action == "unlock":
+                message = f"There is an open archway between {current_name} and {target_name}, there is nothing to unlock."
+            else:  # Must be "lock" — no other possibility
+                message = f"There is an open archway between {current_name} and {target_name}, it has no lock."
+
+            return None, None, None, message
+
+        # Secured door: get panel
+        door = matching_exit["door"]
+        panel = door.get_panel_for_room(current_room)
+        if panel:
+            return door, panel.panel_id, matching_exit["label"], None
+        else:
+            return None, None, None, "No access panel on this side."
+
+    def _matches_exit(self, target: str, exit_data: dict) -> bool:
+        """Check if player input matches an exit using label, direction, or shortcuts."""
+        if not target:
+            return False
+
+        ed = exit_data
+        target_lower = target  # Already lowered by caller
+
+        if target_lower == ed.get("label", "").lower():
+            return True
+        if "direction" in ed and ed["direction"] and target_lower == ed["direction"].lower():
+            return True
+        if "shortcuts" in ed and target_lower in [s.lower() for s in ed.get("shortcuts", [])]:
+            return True
+
+        return False
 
     def _start_pin_prompt(self, action: str, matching_door: dict, exit_label: str) -> None:
         """Initiate PIN entry phase with attempt tracking."""
@@ -162,8 +196,8 @@ class DoorHandler:
                 )
             else:
                 # All attempts used: deny access
-                image_key = "open_image" if not matching_door["locked"] else "locked_image"
-                final_image = matching_door.get(image_key, "resources/images/closed_hatch.png")
+                image_key = "open" if not matching_door.locked else "locked"
+                final_image = matching_door.images.get(image_key, "resources/images/image_missing.png")
                 self.ship_view.drawing.set_background_image(final_image)
                 self.ship_view.response_text.text = "Access denied after 3 incorrect PIN attempts. Process terminated."
 
@@ -193,16 +227,16 @@ class DoorHandler:
             if hasattr(self.ship_view, attr):
                 delattr(self.ship_view, attr)
 
-    def _finish_unlock_with_pin(self, pin: str, matching_door: dict, exit_label: str) -> None:
+    def _finish_unlock_with_pin(self, pin: str, matching_door, exit_label: str) -> None:
         """Called only on successful PIN for unlock."""
-        matching_door["locked"] = False
-        open_image = matching_door.get("open_image", "resources/images/open_hatch.png")
+        matching_door.locked = False
+        open_image = matching_door.images.get("open", "resources/images/image_missing.png")
         self.ship_view.drawing.set_background_image(open_image)
         self.ship_view.response_text.text = f"PIN accepted. Door unlocked. Access to {exit_label} is now open."
 
-    def _finish_lock_with_pin(self, pin: str, matching_door: dict, exit_label: str) -> None:
+    def _finish_lock_with_pin(self, pin: str, matching_door, exit_label: str) -> None:
         """Called only on successful PIN for lock."""
-        matching_door["locked"] = True
-        locked_image = matching_door.get("locked_image", "resources/images/closed_hatch.png")
+        matching_door.locked = True
+        locked_image = matching_door.images.get("locked", "resources/images/image_missing.png")
         self.ship_view.drawing.set_background_image(locked_image)
         self.ship_view.response_text.text = f"PIN accepted. Door locked. Access to {exit_label} is now closed."
