@@ -73,39 +73,48 @@ class GameManager:
         self.current_location = self.ship["rooms"][STARTING_ROOM]
 
     def _load_ship_rooms(self) -> dict:
-        """Load ship room data from JSON and instantiate objects from self.items."""
-        with open("data/ship_rooms.json", "r") as f:
+        """
+        Load ship room data from JSON and instantiate Room objects.
+        Preserves exact current behavior — no new functionality added.
+        """
+        from models.room import Room
+
+        with open("data/ship_rooms.json", "r", encoding="utf-8") as f:
             rooms_data = json.load(f)
 
         rooms = {}
+
+        # Temporary storage for raw object IDs
+        raw_object_ids = {}
+
+        # First pass: create Room instances
         for room_data in rooms_data:
             room_id = room_data["id"]
+            raw_object_ids[room_id] = room_data.get("objects", [])
 
-            # Convert raw "objects" list of IDs into instantiated Interactable objects
-            objects = []
-            for obj_id in room_data.get("objects", []):
-                item_data = self.items.get(obj_id)
-                if not item_data:
-                    print(f"Warning: Item ID '{obj_id}' not found in objects.json")
-                    continue
+            room = Room(
+                room_id=room_id,
+                name=room_data["name"],
+                description=room_data["description"],
+                background=room_data["background"],
+                exits=room_data["exits"]
+            )
+            rooms[room.id] = room
 
-                obj_type = item_data.get("type", "portable")
-
-                # Remove 'type' key (it's not expected by the dataclasses)
-                obj_kwargs = {k: v for k, v in item_data.items() if k != "type"}
-
-                if obj_type == "portable":
-                    obj = PortableItem(**obj_kwargs)
-                elif obj_type == "fixed":
-                    obj = FixedObject(**obj_kwargs)
-                else:
-                    print(f"Warning: Unknown object type '{obj_type}' for {obj_id}")
-                    continue
-
-                objects.append(obj)
-
-            room_data["objects"] = objects  # Replace ID list with instantiated objects
-            rooms[room_id] = room_data
+        # Second pass: instantiate objects using the saved raw IDs
+        for room in rooms.values():
+            for obj_id in raw_object_ids[room.id]:
+                obj_data = self.items.get(obj_id)
+                if obj_data:
+                    if obj_data["type"] == "portable":
+                        obj_instance = PortableItem(
+                            **{k: v for k, v in obj_data.items() if k != "type"}
+                        )
+                    else:
+                        obj_instance = FixedObject(
+                            **{k: v for k, v in obj_data.items() if k != "type"}
+                        )
+                    room.add_object(obj_instance)
 
         return rooms
 

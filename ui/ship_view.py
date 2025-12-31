@@ -59,7 +59,7 @@ class ShipView(arcade.View):
         # --- Description section content (global Y) ---
         current_location = self.game_manager.get_current_location()  # Query live from GameManager
         self.description_title = arcade.Text(
-            current_location["name"],
+            current_location.name,
             x=self.text_left + self.text_padding,
             y=SCREEN_HEIGHT - TITLE_PADDING,
             color=ACCENT_COLOR,
@@ -114,7 +114,7 @@ class ShipView(arcade.View):
         self.drawing.load_background()  # Refresh background
         self.description_renderer.rebuild_description()  # Refresh description
         self.description_texts = self.description_renderer.get_description_texts()  # NEW: Sync ShipView's texts
-        self.description_title.text = self.game_manager.get_current_location()["name"]
+        self.description_title.text = self.game_manager.get_current_location().name
 
     def on_update(self, delta_time: float):
         self.blink_timer += delta_time

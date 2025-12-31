@@ -104,28 +104,28 @@ class CommandProcessor:
         # Find the exit
         next_id = None
         exit_label = None
-        if normalized_cmd in current_location["exits"]:
-            exit_data = current_location["exits"][normalized_cmd]
+        if normalized_cmd in current_location.exits:
+            exit_data = current_location.exits[normalized_cmd]
             next_id = exit_data["target"]
-            exit_label = exit_data.get("label", current_location["name"])
+            exit_label = exit_data.get("label", current_location.name)
         else:
-            for exit_key, ed in current_location["exits"].items():
+            for exit_key, ed in current_location.exits.items():
                 if "direction" in ed and normalized_cmd == ed["direction"].lower():
                     exit_data = ed
                     next_id = ed["target"]
-                    exit_label = ed.get("label", current_location["name"])
+                    exit_label = ed.get("label", current_location.name)
                     break
                 if "shortcuts" in ed and normalized_cmd in [s.lower() for s in ed["shortcuts"]]:
                     exit_data = ed
                     next_id = ed["target"]
-                    exit_label = ed.get("label", current_location["name"])
+                    exit_label = ed.get("label", current_location.name)
                     break
 
         if not next_id:
             return "You can't go that way."
 
         # NEW: Check door status from door_status.json
-        current_room_id = current_location["id"]
+        current_room_id = current_location.id
         for door in self.game_manager.door_status:
             if set(door["rooms"]) == {current_room_id, next_id}:
                 if door["locked"]:
@@ -152,7 +152,7 @@ class CommandProcessor:
 
         # Move normally
         self.ship_view.change_location(next_id)
-        display_name = exit_label if exit_label else self.game_manager.get_current_location()["name"]
+        display_name = exit_label if exit_label else self.game_manager.get_current_location().name
         return f"You enter {display_name}."
 
     def _handle_player_inventory(self, args: str) -> str:
@@ -174,7 +174,7 @@ class CommandProcessor:
     def _handle_debug_cargo(self, args: str) -> str:
         """TEMP: Force access to ship cargo for testing."""
         current_location = self.game_manager.get_current_location()
-        room_id = current_location["id"]
+        room_id = current_location.id
 
         # Get cargo for the current room
         cargo_items = self.game_manager.get_cargo_for_room(room_id)
@@ -185,7 +185,7 @@ class CommandProcessor:
         self.ship_view.window.show_view(cargo_view)
 
         # Optional: Show room-specific info in the response
-        room_name = current_location["name"]
+        room_name = current_location.name
         return f"DEBUG: Opening {room_name} cargo manifest (terminal bypass)...\nItems: {len(cargo_items)}"
 
     def _handle_take(self, args: str) -> str:
@@ -195,7 +195,7 @@ class CommandProcessor:
 
         target_name = args.strip().lower()
         current_location = self.game_manager.get_current_location()
-        object_instances = current_location.get("objects", [])
+        object_instances = current_location.objects
 
         for obj in object_instances[:]:  # copy to avoid modification during iteration
             if obj.matches(target_name):
@@ -237,7 +237,7 @@ class CommandProcessor:
 
         # NEW: Get current room and check if valid for storage
         current_location = self.game_manager.get_current_location()
-        room_id = current_location["id"]
+        room_id = current_location.id
         if room_id not in ["storage room", "cargo bay"]:
             return "You can only store items in the storage room or cargo bay."
 
@@ -258,7 +258,7 @@ class CommandProcessor:
                     self.ship_view.description_renderer.rebuild_description()
                     self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
                     current_location = self.game_manager.get_current_location()
-                    room_name = current_location["name"].lower()  # e.g., "storage room" or "cargo bay"
+                    room_name = current_location.name.lower()  # e.g., "storage room" or "cargo bay"
                     return f"You store the {obj_data['name']} in the {room_name}."
                 else:
                     return "Failed to store item (cargo full?)."
@@ -272,7 +272,7 @@ class CommandProcessor:
 
         # NEW: Check if in a valid storage room
         current_location = self.game_manager.get_current_location()
-        room_id = current_location["id"]
+        room_id = current_location.id
         if room_id not in ["storage room", "cargo bay"]:
             return "You can only retrieve items in the storage room or cargo bay."
 
@@ -288,16 +288,16 @@ class CommandProcessor:
                     self.ship_view.description_renderer.rebuild_description()
                     self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
                     success_messages = [
-                        f"You retrieve the {obj.name} from the {current_location['name'].lower()}.",
-                        f"You take the {obj.name} from the {current_location['name'].lower()}.",
-                        f"You pick up the {obj.name} from the {current_location['name'].lower()}.",
+                        f"You retrieve the {obj.name} from the {current_location.name.lower()}.",
+                        f"You take the {obj.name} from the {current_location.name.lower()}.",
+                        f"You pick up the {obj.name} from the {current_location.name.lower()}.",
                         f"The {obj.name} is now in your hands."
                     ]
                     return random.choice(success_messages)
                 else:
                     return message  # e.g., "Too heavy!"
 
-        return f"There's nothing like '{args}' in the {current_location['name'].lower()}."
+        return f"There's nothing like '{args}' in the {current_location.name.lower()}."
 
     def _handle_drop(self, args: str) -> str:
         """Drop an item from player inventory back to the current room."""
@@ -319,7 +319,7 @@ class CommandProcessor:
                         obj = PortableItem(**obj_kwargs)
                     else:
                         obj = FixedObject(**obj_kwargs)
-                    current_location["objects"].append(obj)
+                    current_location.objects.append(obj)
                     self.ship_view.description_renderer.rebuild_description()  # Refresh immediately
                     self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()  # NEW: Sync UI texts
                     drop_messages = [
@@ -338,7 +338,7 @@ class CommandProcessor:
 
         target_name = args.strip().lower()
         current_location = self.game_manager.get_current_location()
-        object_instances = current_location.get("objects", [])
+        object_instances = current_location.objects
 
         # Check room objects
         for obj in object_instances:

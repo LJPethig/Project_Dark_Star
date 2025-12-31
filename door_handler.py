@@ -25,7 +25,7 @@ class DoorHandler:
         All side effects (delays, images, state changes, PIN prompts) are handled internally.
         """
         current_location = self.game_manager.get_current_location()
-        current_room_id = current_location["id"]
+        current_room_id = current_location.id
 
         # Use shared finder logic
         matching_door, panel_id, exit_label, error = self._find_door_and_panel(args, current_room_id)
@@ -109,7 +109,7 @@ class DoorHandler:
                     exit_label = other_room
                     break
 
-                for exit_key, ed in self.game_manager.get_current_location()["exits"].items():
+                for exit_key, ed in self.game_manager.get_current_location().exits.items():
                     if target == exit_key.lower() or target in [s.lower() for s in ed.get("shortcuts", [])]:
                         if ed["target"] == other_room:
                             matching_door = door

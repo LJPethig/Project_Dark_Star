@@ -22,7 +22,7 @@ class InventoryView(arcade.View):
             title = "YOUR INVENTORY"
         else:
             current_location = self.game_manager.get_current_location()
-            room_name = current_location["name"]
+            room_name = current_location.name
             title = f"{room_name.upper()} INVENTORY"
         arcade.draw_text(
             title,
@@ -40,7 +40,7 @@ class InventoryView(arcade.View):
             items = [self.game_manager.items.get(item_id) for item_id in item_ids if item_id in self.game_manager.items]
         else:
             current_location = self.game_manager.get_current_location()
-            room_id = current_location["id"]
+            room_id = current_location.id
             items = self.game_manager.get_cargo_for_room(room_id)
 
         if not items:

@@ -25,7 +25,7 @@ class RepairHandler:
         If multiple → prompt for clarification.
         """
         current_location = self.game_manager.get_current_location()
-        current_room_id = current_location["id"]
+        current_room_id = current_location.id
 
         # Find all broken door panels in this room
         broken_panels = []
@@ -62,7 +62,7 @@ class RepairHandler:
     def _get_exit_label(self, door: dict, current_room_id: str) -> str:
         """Get player-friendly label for the exit from current side."""
         other_room = next(r for r in door["rooms"] if r != current_room_id)
-        exits = self.game_manager.get_current_location()["exits"]
+        exits = self.game_manager.get_current_location().exits
         for exit_key, ed in exits.items():
             if ed["target"] == other_room:
                 return ed.get("label", other_room)
@@ -73,7 +73,7 @@ class RepairHandler:
         other_room = next(r for r in door["rooms"] if r != current_room_id)
         if target == other_room.lower():
             return True
-        exits = self.game_manager.get_current_location()["exits"]
+        exits = self.game_manager.get_current_location().exits
         for exit_key, ed in exits.items():
             if ed["target"] == other_room:
                 if (target == exit_key.lower() or

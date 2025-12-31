@@ -15,7 +15,7 @@ class DescriptionRenderer:
         current_location = self.view.game_manager.get_current_location()
         current_y = SCREEN_HEIGHT - TITLE_PADDING - DESCRIPTION_TITLE_FONT_SIZE - SECTION_TITLE_PADDING
 
-        for line in current_location["description"]:
+        for line in current_location.description:
             if not line.strip():
                 current_y -= LINE_SPACING
                 continue
@@ -67,7 +67,7 @@ class DescriptionRenderer:
             current_y -= line_height + LINE_SPACING
 
         # Dynamic "You see:" section for objects (names only)
-        objects = current_location.get("objects", [])
+        objects = current_location.objects
         if objects:
             # Add spacing before section
             current_y -= LINE_SPACING * 2
