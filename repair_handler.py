@@ -63,26 +63,35 @@ class RepairHandler:
         labels = [label for _, label, _ in broken_panels]
         return f"Which door access panel do you want to repair? ({', '.join(labels)})"
 
-    def _get_exit_label(self, door: dict, current_room_id: str) -> str:
+    def _get_exit_label(self, door: Door, current_room_id: str) -> str:
         """Get player-friendly label for the exit from current side."""
-        other_room = next(r for r in door["rooms"] if r != current_room_id)
-        exits = self.game_manager.get_current_location().exits
-        for exit_key, ed in exits.items():
-            if ed["target"] == other_room:
-                return ed.get("label", other_room)
-        return other_room
+        current_room = self.game_manager.ship["rooms"][current_room_id]
+        other_room = door.get_other_room(current_room)
 
-    def _matches_exit(self, target: str, door: dict, current_room_id: str) -> bool:
+        for exit_key, ed in current_room.exits.items():
+            if ed["target"] == other_room.id:
+                return ed.get("label", other_room.name)
+
+        return other_room.name
+
+    def _matches_exit(self, target: str, door: Door, current_room_id: str) -> bool:
         """Check if target matches the exit on this side (using keywords/shortcuts)."""
-        other_room = next(r for r in door["rooms"] if r != current_room_id)
-        if target == other_room.lower():
+        target = target.strip().lower()
+        if not target:
+            return False
+
+        current_room = self.game_manager.ship["rooms"][current_room_id]
+        other_room = door.get_other_room(current_room)
+
+        if target == other_room.id.lower():
             return True
-        exits = self.game_manager.get_current_location().exits
-        for exit_key, ed in exits.items():
-            if ed["target"] == other_room:
+
+        for exit_key, ed in current_room.exits.items():
+            if ed["target"] == other_room.id:
                 if (target == exit_key.lower() or
-                    target in [s.lower() for s in ed.get("shortcuts", [])]):
+                        target in [s.lower() for s in ed.get("shortcuts", [])]):
                     return True
+
         return False
 
     def _perform_repair(self, panel: SecurityPanel, exit_label: str, matching_door: Door) -> str:

@@ -4,7 +4,6 @@
       "id": "crew_quarters_main_corridor",
       "rooms": ["crew quarters", "main corridor"],
       "locked": false,
-      "locked_description": "The hatch to the main corridor is locked.",
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
@@ -26,60 +25,9 @@
       ]
     },
     {
-      "id": "main_corridor_crew_quarters",
-      "rooms": ["main corridor", "crew quarters"],
-      "locked": false,
-      "locked_description": "The crew quarters hatch is locked.",
-      "open_image": "resources/images/open_hatch.png",
-      "locked_image": "resources/images/closed_hatch.png",
-      "security_level": 1,
-      "panel_image": "resources/images/panel_level1_swipe.png",
-      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
-      "panel_ids": [
-        {
-          "id": "main_corridor_crew_quarters_panel_main",
-          "side": "main corridor",
-          "damaged": false,
-          "repair_progress": 0.0
-        },
-        {
-          "id": "main_corridor_crew_quarters_panel_crew",
-          "side": "crew quarters",
-          "damaged": true,
-          "repair_progress": 0.0
-        }
-      ]
-    },
-    {
-      "id": "galley_recreation_room",
-      "rooms": ["galley", "recreation room"],
-      "locked": false,
-      "locked_description": "The rec room hatch is locked.",
-      "open_image": "resources/images/open_hatch.png",
-      "locked_image": "resources/images/closed_hatch.png",
-      "security_level": 1,
-      "panel_image": "resources/images/panel_level1_swipe.png",
-      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
-      "panel_ids": [
-        {
-          "id": "galley_recreation_room_panel_galley",
-          "side": "galley",
-          "damaged": false,
-          "repair_progress": 0.0
-        },
-        {
-          "id": "galley_recreation_room_panel_rec",
-          "side": "recreation room",
-          "damaged": false,
-          "repair_progress": 0.0
-        }
-      ]
-    },
-    {
       "id": "recreation_room_galley",
       "rooms": ["recreation room", "galley"],
       "locked": false,
-      "locked_description": "The galley hatch is locked.",
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
@@ -104,7 +52,6 @@
       "id": "recreation_room_cockpit",
       "rooms": ["recreation room", "cockpit"],
       "locked": false,
-      "locked_description": "The heavy cockpit door is locked.",
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 2,
@@ -126,35 +73,9 @@
       ]
     },
     {
-      "id": "cockpit_recreation_room",
-      "rooms": ["cockpit", "recreation room"],
-      "locked": false,
-      "locked_description": "The recreation room door is locked.",
-      "open_image": "resources/images/open_hatch.png",
-      "locked_image": "resources/images/closed_hatch.png",
-      "security_level": 2,
-      "panel_image": "resources/images/panel_level2_swipe.png",
-      "panel_image_damaged": "resources/images/panel_level2_swipe_damaged.png",
-      "panel_ids": [
-        {
-          "id": "cockpit_recreation_room_panel_cockpit",
-          "side": "cockpit",
-          "damaged": false,
-          "repair_progress": 0.0
-        },
-        {
-          "id": "cockpit_recreation_room_panel_rec",
-          "side": "recreation room",
-          "damaged": false,
-          "repair_progress": 0.0
-        }
-      ]
-    },
-    {
       "id": "recreation_room_main_corridor",
       "rooms": ["recreation room", "main corridor"],
       "locked": false,
-      "locked_description": "The corridor hatch is locked.",
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
@@ -164,7 +85,7 @@
         {
           "id": "recreation_room_main_corridor_panel_rec",
           "side": "recreation room",
-          "damaged": true,
+          "damaged": false,
           "repair_progress": 0.0
         },
         {
@@ -176,35 +97,9 @@
       ]
     },
     {
-      "id": "main_corridor_recreation_room",
-      "rooms": ["main corridor", "recreation room"],
-      "locked": false,
-      "locked_description": "The recreation room hatch is locked.",
-      "open_image": "resources/images/open_hatch.png",
-      "locked_image": "resources/images/closed_hatch.png",
-      "security_level": 1,
-      "panel_image": "resources/images/panel_level1_swipe.png",
-      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
-      "panel_ids": [
-        {
-          "id": "main_corridor_recreation_room_panel_main",
-          "side": "main corridor",
-          "damaged": false,
-          "repair_progress": 0.0
-        },
-        {
-          "id": "main_corridor_recreation_room_panel_rec",
-          "side": "recreation room",
-          "damaged": false,
-          "repair_progress": 0.0
-        }
-      ]
-    },
-    {
       "id": "recreation_room_med_bay",
       "rooms": ["recreation room", "med-bay"],
       "locked": false,
-      "locked_description": "The med-bay hatch is locked.",
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
@@ -226,35 +121,9 @@
       ]
     },
     {
-      "id": "med_bay_recreation_room",
-      "rooms": ["med-bay", "recreation room"],
-      "locked": false,
-      "locked_description": "The recreation room hatch is locked.",
-      "open_image": "resources/images/open_hatch.png",
-      "locked_image": "resources/images/closed_hatch.png",
-      "security_level": 1,
-      "panel_image": "resources/images/panel_level1_swipe.png",
-      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
-      "panel_ids": [
-        {
-          "id": "med_bay_recreation_room_panel_medbay",
-          "side": "med-bay",
-          "damaged": false,
-          "repair_progress": 0.0
-        },
-        {
-          "id": "med_bay_recreation_room_panel_rec",
-          "side": "recreation room",
-          "damaged": false,
-          "repair_progress": 0.0
-        }
-      ]
-    },
-    {
       "id": "recreation_room_storage_room",
       "rooms": ["recreation room", "storage room"],
       "locked": false,
-      "locked_description": "The storage room door is locked.",
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
@@ -276,35 +145,9 @@
       ]
     },
     {
-      "id": "storage_room_recreation_room",
-      "rooms": ["storage room", "recreation room"],
-      "locked": false,
-      "locked_description": "The recreation room hatch is locked.",
-      "open_image": "resources/images/open_hatch.png",
-      "locked_image": "resources/images/closed_hatch.png",
-      "security_level": 1,
-      "panel_image": "resources/images/panel_level1_swipe.png",
-      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
-      "panel_ids": [
-        {
-          "id": "storage_room_recreation_room_panel_storage",
-          "side": "storage room",
-          "damaged": false,
-          "repair_progress": 0.0
-        },
-        {
-          "id": "storage_room_recreation_room_panel_rec",
-          "side": "recreation room",
-          "damaged": false,
-          "repair_progress": 0.0
-        }
-      ]
-    },
-    {
       "id": "main_corridor_sub_corridor",
       "rooms": ["main corridor", "sub corridor"],
       "locked": false,
-      "locked_description": "The sub corridor entrance is locked.",
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
@@ -326,35 +169,9 @@
       ]
     },
     {
-      "id": "sub_corridor_main_corridor",
-      "rooms": ["sub corridor", "main corridor"],
-      "locked": false,
-      "locked_description": "The main corridor entrance is locked.",
-      "open_image": "resources/images/open_hatch.png",
-      "locked_image": "resources/images/closed_hatch.png",
-      "security_level": 1,
-      "panel_image": "resources/images/panel_level1_swipe.png",
-      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
-      "panel_ids": [
-        {
-          "id": "sub_corridor_main_corridor_panel_sub",
-          "side": "sub corridor",
-          "damaged": false,
-          "repair_progress": 0.0
-        },
-        {
-          "id": "sub_corridor_main_corridor_panel_main",
-          "side": "main corridor",
-          "damaged": false,
-          "repair_progress": 0.0
-        }
-      ]
-    },
-    {
       "id": "main_corridor_engineering",
       "rooms": ["main corridor", "engineering"],
-      "locked": true,
-      "locked_description": "The engineering door is locked.",
+      "locked": false,
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 2,
@@ -376,35 +193,9 @@
       ]
     },
     {
-      "id": "engineering_main_corridor",
-      "rooms": ["engineering", "main corridor"],
-      "locked": true,
-      "locked_description": "The main corridor door is locked.",
-      "open_image": "resources/images/open_hatch.png",
-      "locked_image": "resources/images/closed_hatch.png",
-      "security_level": 2,
-      "panel_image": "resources/images/panel_level2_swipe.png",
-      "panel_image_damaged": "resources/images/panel_level2_swipe_damaged.png",
-      "panel_ids": [
-        {
-          "id": "engineering_main_corridor_panel_eng",
-          "side": "engineering",
-          "damaged": false,
-          "repair_progress": 0.0
-        },
-        {
-          "id": "engineering_main_corridor_panel_main",
-          "side": "main corridor",
-          "damaged": false,
-          "repair_progress": 0.0
-        }
-      ]
-    },
-    {
       "id": "sub_corridor_cargo_bay",
       "rooms": ["sub corridor", "cargo bay"],
       "locked": true,
-      "locked_description": "The door to the cargo bay is locked.",
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,
@@ -426,35 +217,9 @@
       ]
     },
     {
-      "id": "cargo_bay_sub_corridor",
-      "rooms": ["cargo bay", "sub corridor"],
-      "locked": true,
-      "locked_description": "The sub corridor door is locked.",
-      "open_image": "resources/images/open_hatch.png",
-      "locked_image": "resources/images/closed_hatch.png",
-      "security_level": 1,
-      "panel_image": "resources/images/panel_level1_swipe.png",
-      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
-      "panel_ids": [
-        {
-          "id": "cargo_bay_sub_corridor_panel_cargo",
-          "side": "cargo bay",
-          "damaged": false,
-          "repair_progress": 0.0
-        },
-        {
-          "id": "cargo_bay_sub_corridor_panel_sub",
-          "side": "sub corridor",
-          "damaged": false,
-          "repair_progress": 0.0
-        }
-      ]
-    },
-    {
       "id": "engineering_life_support",
       "rooms": ["engineering", "life support"],
-      "locked": true,
-      "locked_description": "The life support hatch is locked.",
+      "locked": false,
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 3,
@@ -477,62 +242,9 @@
       ]
     },
     {
-      "id": "life_support_engineering",
-      "rooms": ["life support", "engineering"],
-      "locked": true,
-      "locked_description": "The engineering hatch is locked.",
-      "open_image": "resources/images/open_hatch.png",
-      "locked_image": "resources/images/closed_hatch.png",
-      "security_level": 3,
-      "pin": "1111",
-      "panel_image": "resources/images/panel_level3_swipe_pin.png",
-      "panel_image_damaged": "resources/images/panel_level3_swipe_pin_damaged.png",
-      "panel_ids": [
-        {
-          "id": "life_support_engineering_panel_ls",
-          "side": "life support",
-          "damaged": false,
-          "repair_progress": 0.0
-        },
-        {
-          "id": "life_support_engineering_panel_eng",
-          "side": "engineering",
-          "damaged": false,
-          "repair_progress": 0.0
-        }
-      ]
-    },
-    {
-      "id": "airlock_cargo_bay",
-      "rooms": ["airlock", "cargo bay"],
-      "locked": true,
-      "locked_description": "The cargo bay hatch is locked.",
-      "open_image": "resources/images/open_hatch.png",
-      "locked_image": "resources/images/closed_hatch.png",
-      "security_level": 3,
-      "pin": "2222",
-      "panel_image": "resources/images/panel_level3_swipe_pin.png",
-      "panel_image_damaged": "resources/images/panel_level3_swipe_pin_damaged.png",
-      "panel_ids": [
-        {
-          "id": "airlock_cargo_bay_panel_airlock",
-          "side": "airlock",
-          "damaged": false,
-          "repair_progress": 0.0
-        },
-        {
-          "id": "airlock_cargo_bay_panel_cargo",
-          "side": "cargo bay",
-          "damaged": false,
-          "repair_progress": 0.0
-        }
-      ]
-    },
-    {
       "id": "cargo_bay_airlock",
       "rooms": ["cargo bay", "airlock"],
-      "locked": true,
-      "locked_description": "The airlock hatch is locked.",
+      "locked": false,
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 3,
