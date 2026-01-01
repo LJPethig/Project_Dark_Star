@@ -38,9 +38,11 @@ class CommandProcessor:
             "unlock": lambda args: self._handle_door_action("unlock", args),
             "repair door panel": self._handle_repair_door_panel,
             "repair door access panel": self._handle_repair_door_panel,
+            "repair access panel": self._handle_repair_door_panel,
             "repair door": self._handle_repair_door_panel, # shortcut
-            # Future commands will be added here, e.g.:
-            # "look": self._handle_look,
+            "look": self._handle_look,
+            "l": self._handle_look,
+            # Future commands will be added here
         }
 
     def process(self, cmd: str) -> str:
@@ -364,3 +366,25 @@ class CommandProcessor:
         """Delegate repair of door panels to dedicated handler."""
         repair_handler = RepairHandler(self.ship_view)
         return repair_handler.handle_repair_door_panel(args)
+
+    def _handle_look(self, args: str) -> str:
+        """Survey the current room — reset background and give flavor text.
+        Ignores any arguments for a more natural, forgiving feel."""
+        current_location = self.game_manager.get_current_location()
+        background_image = current_location.background or "resources/images/image_missing.png"
+        self.ship_view.drawing.set_background_image(background_image)
+
+        # Refresh description to ensure consistency
+        self.ship_view.description_renderer.rebuild_description()
+        self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+
+        messages = [
+            "You survey your surroundings.",
+            "You take a moment to look around.",
+            "You scan the room carefully.",
+            "You observe your environment."
+        ]
+        message = random.choice(messages)
+        self.ship_view.response_text.text = message
+
+        return message
