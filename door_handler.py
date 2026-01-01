@@ -6,6 +6,7 @@ Transient PIN state is managed via ShipView attributes (simple and effective for
 """
 
 from models.security_panel import SecurityLevel
+from constants import CARD_SWIPE_WAIT
 
 
 class DoorHandler:
@@ -132,7 +133,7 @@ class DoorHandler:
                 self.ship_view.drawing.set_background_image(image)
                 self.ship_view.response_text.text = message
 
-        self.ship_view.schedule_delayed_action(5.0, on_delay_complete)
+        self.ship_view.schedule_delayed_action(CARD_SWIPE_WAIT, on_delay_complete)
 
         return "Swiping door access panel, checking card ID..."
 

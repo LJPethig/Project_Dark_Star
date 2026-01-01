@@ -101,6 +101,19 @@ class ShipView(arcade.View):
             anchor_y="top"
         )
 
+        # --- Ship time display (bottom-right, event section) ---
+        self.ship_time_text = arcade.Text(
+            "",
+            x=SCREEN_WIDTH - TEXT_PADDING,
+            y=self.event_section_height // 2,
+            color=CLOCK_COLOR,
+            font_size=FONT_SIZE_SMALL,
+            font_name=FONT_NAME_PRIMARY,
+            anchor_x="right",
+            anchor_y="center"
+        )
+
+
 
     def _update_response_display(self):
         self.response_text.text = self.last_response
@@ -144,6 +157,9 @@ class ShipView(arcade.View):
         # Draw all text (global coordinates)
         self.drawing.draw_text_elements()
 
+        # Draw ship time (always on top)
+        self.ship_time_text.draw()
+
     def on_key_press(self, key, modifiers):
         if key == arcade.key.ENTER:
             cmd = self.current_input.strip()
@@ -180,24 +196,40 @@ class ShipView(arcade.View):
             self.current_input += chr(key)
             self._update_input_display()
 
-    # DEPRECATED
-    # def _show_panel_sequence(self, panel_image: str, final_image: str, success_message: str):
-    #     """Non-blocking: show panel → wait 5s → show success message + final image."""
-    #     print("_show_panel_sequence is used!")
-    #     # Step 1: Show panel and initial message
-    #     self.drawing.set_background_image(panel_image)
-    #     self.response_text.text = "Is this text used? door access panel, checking card ID"
-    #
-    #     # Step 2: Schedule step 2 after 5 seconds
-    #     def step2(delta_time):
-    #         print("Schedule step 2 after 5 seconds")
-    #         # Step 2: Show success and final image
-    #         self.response_text.text = success_message
-    #         self.drawing.set_background_image(final_image)
-    #         # Remove schedule (runs once)
-    #         arcade.unschedule(step2)
-    #
-    #     arcade.schedule(step2, 5.0)
+    def on_show_view(self):
+        """Called when this view becomes active — perfect place to start the clock."""
+        super().on_show_view()  # Always keep this if present
+
+        # Show current time immediately
+        self.update_ship_time_display()
+
+        # Start ticking every 60 seconds
+        arcade.schedule(self._clock_tick, CLOCK_UPDATE_INTERVAL)
+
+    def update_ship_time_display(self):
+        """Refresh the ship time text in the event section."""
+        if hasattr(self.game_manager, "chronometer"):
+            self.ship_time_text.text = self.game_manager.chronometer.get_formatted()
+        else:
+            self.ship_time_text.text = "Chronometer not initialized"
+
+    def _clock_tick(self, delta_time: float):
+        """Called every CLOCK_UPDATE_INTERVAL seconds to update clock during normal play."""
+        if self.game_manager.chronometer is not None:
+            self.game_manager.chronometer.advance(1)
+        self.update_ship_time_display()
+
+    def flash_ship_time(self):
+        """Briefly highlight the clock to signal a significant time advance."""
+        # Temporarily brighten the clock
+        self.ship_time_text.color = CLOCK_FLASH_COLOR
+
+        def reset_color(delta_time):
+            self.ship_time_text.color = CLOCK_COLOR
+            arcade.unschedule(reset_color)
+
+        # Flash for 0.5 seconds
+        arcade.schedule_once(reset_color, 0.5)
 
     def schedule_delayed_action(self, delay_seconds: float, callback):
         def _delayed(delta_time):
@@ -206,3 +238,8 @@ class ShipView(arcade.View):
             arcade.unschedule(_delayed)
 
         arcade.schedule(_delayed, delay_seconds)
+
+    def on_hide_view(self):
+        """Stop the clock when leaving this view (e.g., inventory)."""
+        super().on_hide_view()
+        arcade.unschedule(self._clock_tick)

@@ -3,7 +3,7 @@ import json
 from constants import STARTING_ROOM, PLAYER_NAME, SHIP_NAME
 from models.interactable import PortableItem, FixedObject
 from models.ship import Ship
-
+from models.chronometer import Chronometer
 
 class GameManager:
     """Central coordinator for game state.
@@ -42,6 +42,9 @@ class GameManager:
 
         self.ship = Ship.load_from_json(name=ship_name, items=self.items)
         self.current_location = self.ship.rooms[STARTING_ROOM]
+
+        # NEW: Initialize ship chronometer
+        self.chronometer = Chronometer()
 
     def get_current_location(self):
         """Return the current Room instance."""

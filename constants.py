@@ -31,6 +31,17 @@ ALERT_COLOR = (255, 140, 0, 255)          # Dark orange
 CURSOR_COLOR = (0, 255, 0, 255)           # Green
 PANEL_OVERLAY = (0, 0, 0, 200)            # Semi-transparent black panel
 BACKGROUND_OVERLAY = (0, 0, 0, 100)        # Subtle dark overlay for images
+CLOCK_COLOR = (100, 100, 100, 255)          # Mid grey
+CLOCK_FLASH_COLOR = (255, 255, 255, 255)    # White
+
+# Chronometer settings
+START_DATE_TIME = (2147, 1, 1, 0, 0)  # year, month, day, hour, minute — launch epoch
+SHIP_PANEL_REPAIR_MINUTES = 30        # Ship time advance on panel repair
+SHORT_WAIT = 8.0                      # Player-visible delay in seconds for panel repair
+CLOCK_UPDATE_INTERVAL = 60.0          # Real-time seconds between normal clock ticks
+
+CARD_SWIPE_WAIT = 3.0  # Player-visible delay in seconds for door card swipe
+
 
 
 # Added for complete sectioning of ship_view
@@ -61,3 +72,4 @@ INPUT_FONT_SIZE = 12
 DIVIDER_COLOR = (100, 150, 200, 180)   # RGBA
 DIVIDER_THICKNESS = 2
 EVENT_SECTION_BG_COLOR = (20, 30, 50, 180)  # Dark semi-transparent for event area
+

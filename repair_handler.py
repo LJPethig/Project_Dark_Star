@@ -7,6 +7,7 @@ Designed for future expansion (tools, consumables, progress, other objects).
 
 from models.security_panel import SecurityPanel
 from models.door import Door
+from constants import SHIP_PANEL_REPAIR_MINUTES, SHORT_WAIT
 
 
 class RepairHandler:
@@ -79,7 +80,13 @@ class RepairHandler:
             self.ship_view.description_renderer.rebuild_description()
             self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
 
-        # Schedule the 8-second "working" delay
-        self.ship_view.schedule_delayed_action(8.0, on_repair_complete)
+            # NEW: Advance ship time and refresh clock immediately
+            if self.game_manager.chronometer is not None:
+                self.game_manager.chronometer.advance(SHIP_PANEL_REPAIR_MINUTES)
+                self.ship_view.update_ship_time_display()
+                self.ship_view.flash_ship_time()  # Visual cue for time jump
+
+        # Schedule the player visible delay
+        self.ship_view.schedule_delayed_action(SHORT_WAIT, on_repair_complete)
 
         return ""  # Initial response shown visually
