@@ -140,7 +140,7 @@ class CommandProcessor:
         else:
             # Open archway — no door, no lock check
             target_room_id = matching_exit_data["target"]
-            target_room = self.game_manager.ship["rooms"][target_room_id]
+            target_room = self.game_manager.ship.rooms[target_room_id]
 
         next_id = target_room.id
         exit_label = matching_exit_data.get("label", target_room.name)

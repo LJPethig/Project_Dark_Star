@@ -25,17 +25,49 @@ class DoorHandler:
         All side effects (delays, images, state changes, PIN prompts) are handled internally.
         """
         current_location = self.game_manager.get_current_location()
-        current_room_id = current_location.id
 
-        # Use shared finder logic
-        matching_door, panel_id, exit_label, error = self._find_door_and_panel(args, current_room_id, action)
+        # Use shared finder logic — now via Ship.find_door_from_room
+        # Find secured door only
+        matching_door = self.game_manager.ship.find_door_from_room(current_location, args)
 
-        if error:
-            return error
+        if not matching_door:
+            # If args provided, check if it matches any valid exit (including archways)
+            if args.strip():
+                target = args.strip().lower()
+                for exit_key, exit_data in current_location.exits.items():
+                    other_room_id = exit_data["target"]
+                    other_room = self.game_manager.ship.rooms[other_room_id]
+
+                    # Match on key, label, direction, shortcuts, or room ID
+                    if (target == exit_key.lower() or
+                        target == exit_data.get("label", "").lower() or
+                        ("direction" in exit_data and target == exit_data["direction"].lower()) or
+                        target in [s.lower() for s in exit_data.get("shortcuts", [])] or
+                        target == other_room.id.lower()):
+
+                        # Valid exit found — if no door, it's an archway
+                        if "door" not in exit_data:
+                            current_name = current_location.name
+                            target_name = other_room.name
+                            if action == "unlock":
+                                return f"There is an open archway between {current_name} and {target_name}, there is nothing to unlock."
+                            else:  # lock
+                                return f"There is an open archway between {current_name} and {target_name}, it has no lock."
+
+                # If we get here: target doesn't match any exit
+                return f"There is no such exit."
+
+            # No args → prompt for which door
+            return "Which door?"
 
         # Already correct state?
         if (action == "unlock" and not matching_door.locked) or \
            (action == "lock" and matching_door.locked):
+            other_room = matching_door.get_other_room(current_location)
+            exit_label = next(
+                (ed.get("label", other_room.name) for ed in current_location.exits.values() if ed.get("target") == other_room.id),
+                other_room.name
+            )
             return f"That door is already {action}ed."
 
         panel = matching_door.get_panel_for_room(current_location)
@@ -65,6 +97,12 @@ class DoorHandler:
         self.ship_view.drawing.set_background_image(panel_image)
         self.ship_view.response_text.text = "Swiping door access panel, checking card ID..."
 
+        other_room = matching_door.get_other_room(current_location)
+        exit_label = next(
+            (ed.get("label", other_room.name) for ed in current_location.exits.values() if ed.get("target") == other_room.id),
+            other_room.name
+        )
+
         def on_delay_complete():
             self.ship_view.last_panel = panel
             self.ship_view.last_door = matching_door
@@ -84,7 +122,7 @@ class DoorHandler:
                     # Apply immediate state change
                     matching_door.locked = action == "lock"
                     image_key = "open" if action == "unlock" else "locked"
-                    image = matching_door.images.get(image_key, "resources/images/image_missing.png" if action == "unlock" else "resources/images/image_missing.png")
+                    image = matching_door.images.get(image_key, "resources/images/image_missing.png")
                     self.ship_view.drawing.set_background_image(image)
                     self.ship_view.response_text.text = f"ID accepted, door {action}ed. Access to {exit_label} is now {'open' if action == 'unlock' else 'closed'}."
             else:
@@ -98,83 +136,14 @@ class DoorHandler:
 
         return "Swiping door access panel, checking card ID..."
 
-    def _find_door_and_panel(self, args: str, current_room_id: str, action: str = "") -> tuple:
-        """
-        Find the matching door and its panel based on player input.
-        Updated for Door instances — uses exit["door"] references.
-        """
-        current_room = self.game_manager.get_current_location()
-        args = args.strip().lower() if args else ""
-
-        # Handle empty input: try to auto-select the obvious secured door
-        if not args:
-            secured_exits = [ed for ed in current_room.exits.values() if "door" in ed]
-            if len(secured_exits) == 1:
-                exit_data = secured_exits[0]
-                door = exit_data["door"]
-                panel = door.get_panel_for_room(current_room)
-                if panel:
-                    return door, panel.panel_id, exit_data["label"], None
-            # If no secured doors (or multiple), just ask
-            return None, None, None, "Which door?"
-
-        # Find if input matches any valid exit (door or archway)
-        matching_exit = None
-        for exit_data in current_room.exits.values():
-            if self._matches_exit(args, exit_data):
-                matching_exit = exit_data
-                break
-
-        if not matching_exit:
-            return None, None, None, "There is no such exit."
-
-        # It's a valid exit — now check if it's lockable
-        if "door" not in matching_exit:
-            target_room_id = matching_exit["target"]
-            target_room = self.game_manager.ship["rooms"][target_room_id]
-            target_name = target_room.name
-            current_name = current_room.name
-
-            if action == "unlock":
-                message = f"There is an open archway between {current_name} and {target_name}, there is nothing to unlock."
-            else:  # Must be "lock" — no other possibility
-                message = f"There is an open archway between {current_name} and {target_name}, it has no lock."
-
-            return None, None, None, message
-
-        # Secured door: get panel
-        door = matching_exit["door"]
-        panel = door.get_panel_for_room(current_room)
-        if panel:
-            return door, panel.panel_id, matching_exit["label"], None
-        else:
-            return None, None, None, "No access panel on this side."
-
-    def _matches_exit(self, target: str, exit_data: dict) -> bool:
-        """Check if player input matches an exit using label, direction, or shortcuts."""
-        if not target:
-            return False
-
-        ed = exit_data
-        target_lower = target  # Already lowered by caller
-
-        if target_lower == ed.get("label", "").lower():
-            return True
-        if "direction" in ed and ed["direction"] and target_lower == ed["direction"].lower():
-            return True
-        if "shortcuts" in ed and target_lower in [s.lower() for s in ed.get("shortcuts", [])]:
-            return True
-
-        return False
-
-    def _start_pin_prompt(self, action: str, matching_door: dict, exit_label: str) -> None:
+    def _start_pin_prompt(self, action: str, matching_door, exit_label: str) -> None:
         """Initiate PIN entry phase with attempt tracking."""
         self.ship_view.pin_attempts = 0
         self.ship_view.pin_max_attempts = 3
         prompt = f"Enter PIN to {action} the door to {exit_label} ({self.ship_view.pin_attempts}/{self.ship_view.pin_max_attempts} attempts)"
         self.ship_view.response_text.text = prompt
 
-    def _handle_pin_input(self, pin: str, action: str, matching_door: dict, exit_label: str, finish_callback) -> None:
+    def _handle_pin_input(self, pin: str, action: str, matching_door, exit_label: str, finish_callback) -> None:
         """Shared PIN processing logic with retries."""
         self.ship_view.pin_attempts += 1
         success, message = self.ship_view.last_panel.attempt_pin(pin, self.game_manager.get_player_inventory())

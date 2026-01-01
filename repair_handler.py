@@ -8,6 +8,7 @@ Designed for future expansion (tools, consumables, progress, other objects).
 from models.security_panel import SecurityPanel
 from models.door import Door
 
+
 class RepairHandler:
     """
     Handles repair logic for damaged objects, starting with door panels.
@@ -25,23 +26,9 @@ class RepairHandler:
         If multiple → prompt for clarification.
         """
         current_location = self.game_manager.get_current_location()
-        current_room_id = current_location.id
 
-        # Find all broken door panels in this room using merged Door instances
-        broken_panels = []
-        for door in self.game_manager.ship["doors"]:
-            panel = door.get_panel_for_room(current_location)
-            if panel and panel.is_broken:
-                # Get exit label from current room's exits
-                other_room = door.get_other_room(current_location)
-                exit_label = None
-                for exit_key, ed in current_location.exits.items():
-                    if ed["target"] == other_room.id:
-                        exit_label = ed.get("label", other_room.name)
-                        break
-                if exit_label is None:
-                    exit_label = other_room.name
-                broken_panels.append((panel, exit_label, door))
+        # NEW: Use centralized helper from Ship — eliminates duplication
+        broken_panels = self.game_manager.ship.get_broken_panels_in_room(current_location)
 
         if not broken_panels:
             return "There are no damaged door access panels in this room."
@@ -54,45 +41,22 @@ class RepairHandler:
         # If explicit target provided
         if args.strip():
             target = args.strip().lower()
-            for panel, exit_label, door in broken_panels:
-                if self._matches_exit(target, door, current_room_id):
-                    return self._perform_repair(panel, exit_label, door)
+            matching_door = self.game_manager.ship.find_door_from_room(current_location, target)
+            if matching_door:
+                panel = matching_door.get_panel_for_room(current_location)
+                if panel and panel.is_broken:
+                    exit_label = next(
+                        (ed.get("label", matching_door.get_other_room(current_location).name)
+                         for ed in current_location.exits.values()
+                         if ed.get("target") == matching_door.get_other_room(current_location).id),
+                        matching_door.get_other_room(current_location).name
+                    )
+                    return self._perform_repair(panel, exit_label, matching_door)
             return f"No damaged door access panel to '{args}'."
 
         # Multiple broken panels — ask for clarification
         labels = [label for _, label, _ in broken_panels]
         return f"Which door access panel do you want to repair? ({', '.join(labels)})"
-
-    def _get_exit_label(self, door: Door, current_room_id: str) -> str:
-        """Get player-friendly label for the exit from current side."""
-        current_room = self.game_manager.ship["rooms"][current_room_id]
-        other_room = door.get_other_room(current_room)
-
-        for exit_key, ed in current_room.exits.items():
-            if ed["target"] == other_room.id:
-                return ed.get("label", other_room.name)
-
-        return other_room.name
-
-    def _matches_exit(self, target: str, door: Door, current_room_id: str) -> bool:
-        """Check if target matches the exit on this side (using keywords/shortcuts)."""
-        target = target.strip().lower()
-        if not target:
-            return False
-
-        current_room = self.game_manager.ship["rooms"][current_room_id]
-        other_room = door.get_other_room(current_room)
-
-        if target == other_room.id.lower():
-            return True
-
-        for exit_key, ed in current_room.exits.items():
-            if ed["target"] == other_room.id:
-                if (target == exit_key.lower() or
-                        target in [s.lower() for s in ed.get("shortcuts", [])]):
-                    return True
-
-        return False
 
     def _perform_repair(self, panel: SecurityPanel, exit_label: str, matching_door: Door) -> str:
         """Perform the repair with visual flow: damaged panel → 8s delay → repaired panel (persistent)."""
