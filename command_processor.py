@@ -1,9 +1,11 @@
+# command_processor.py
 from ui.inventory_view import InventoryView
 from models.interactable import PortableItem, FixedObject
 from door_handler import DoorHandler
 from repair_handler import RepairHandler
 
 import random
+
 
 class CommandProcessor:
     """Command processor that handles player input using a registry pattern."""
@@ -197,8 +199,7 @@ class CommandProcessor:
         for obj in object_instances[:]:  # copy to avoid modification during iteration
             if obj.matches(target_name):
                 if isinstance(obj, PortableItem):
-                    item_id = obj.id
-                    success, message = self.game_manager.add_to_inventory(item_id)
+                    success, message = self.game_manager.add_to_inventory(obj)
                     if success:
                         object_instances.remove(obj)  # Remove from room
                         self.ship_view.description_renderer.rebuild_description()
@@ -238,27 +239,15 @@ class CommandProcessor:
         if room_id not in ["storage room", "cargo bay"]:
             return "You can only store items in the storage room or cargo bay."
 
-        inventory_ids = self.game_manager.get_player_inventory()  # list of item IDs (strings)
+        inventory = self.game_manager.get_player_inventory()
 
-        for item_id in inventory_ids[:]:
-            obj_data = self.game_manager.items.get(item_id)  # lookup full data by ID
-            if obj_data and obj_data["type"] == "portable" and (
-                target_name == obj_data["name"].lower() or target_name in obj_data.get("keywords", [])
-            ):
-                # Re-create PortableItem object for cargo (since cargo still expects objects)
-                obj_kwargs = {k: v for k, v in obj_data.items() if k != "type"}
-                obj = PortableItem(**obj_kwargs)
-
-                # NEW: Pass room_id to add_to_cargo
-                if self.game_manager.add_to_cargo(obj, room_id):
-                    inventory_ids.remove(item_id)
+        for item in inventory[:]:
+            if item.matches(target_name):
+                if self.game_manager.add_to_cargo(item, room_id):
+                    self.game_manager.remove_from_inventory(item)
                     self.ship_view.description_renderer.rebuild_description()
                     self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
-                    current_location = self.game_manager.get_current_location()
-                    room_name = current_location.name.lower()  # e.g., "storage room" or "cargo bay"
-                    return f"You store the {obj_data['name']} in the {room_name}."
-                else:
-                    return "Failed to store item (cargo full?)."
+                    return f"You store the {item.name} in the {current_location.name.lower()}."
 
         return f"You don't have a '{args}' in your inventory."
 
@@ -276,19 +265,18 @@ class CommandProcessor:
         target_name = args.strip().lower()
         cargo_items = self.game_manager.get_cargo_for_room(room_id)
 
-        for obj in cargo_items[:]:
-            if obj.matches(target_name) and isinstance(obj, PortableItem):
-                item_id = obj.id
-                success, message = self.game_manager.add_to_inventory(item_id)
+        for item in cargo_items[:]:
+            if item.matches(target_name) and isinstance(item, PortableItem):
+                success, message = self.game_manager.add_to_inventory(item)
                 if success:
-                    self.game_manager.remove_from_cargo(item_id, room_id)  # Remove from cargo
+                    self.game_manager.remove_from_cargo(item.id, room_id)  # Remove from cargo
                     self.ship_view.description_renderer.rebuild_description()
                     self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
                     success_messages = [
-                        f"You retrieve the {obj.name} from the {current_location.name.lower()}.",
-                        f"You take the {obj.name} from the {current_location.name.lower()}.",
-                        f"You pick up the {obj.name} from the {current_location.name.lower()}.",
-                        f"The {obj.name} is now in your hands."
+                        f"You retrieve the {item.name} from the {current_location.name.lower()}.",
+                        f"You take the {item.name} from the {current_location.name.lower()}.",
+                        f"You pick up the {item.name} from the {current_location.name.lower()}.",
+                        f"The {item.name} is now in your hands."
                     ]
                     return random.choice(success_messages)
                 else:
@@ -302,28 +290,20 @@ class CommandProcessor:
             return "Drop what?"
 
         target_name = args.strip().lower()
-        inventory_ids = self.game_manager.get_player_inventory()
+        inventory = self.game_manager.get_player_inventory()
 
-        for item_id in inventory_ids[:]:
-            obj_data = self.game_manager.items.get(item_id)
-            if obj_data and (target_name == obj_data["name"].lower() or target_name in obj_data.get("keywords", [])):
-                if self.game_manager.remove_from_inventory(item_id):
+        for item in inventory[:]:
+            if item.matches(target_name):
+                if self.game_manager.remove_from_inventory(item):
                     current_location = self.game_manager.get_current_location()
-                    # Re-instantiate the object for the room
-                    obj_type = obj_data["type"]
-                    obj_kwargs = {k: v for k, v in obj_data.items() if k != "type"}
-                    if obj_type == "portable":
-                        obj = PortableItem(**obj_kwargs)
-                    else:
-                        obj = FixedObject(**obj_kwargs)
-                    current_location.objects.append(obj)
+                    current_location.objects.append(item)
                     self.ship_view.description_renderer.rebuild_description()  # Refresh immediately
-                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()  # NEW: Sync UI texts
+                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
                     drop_messages = [
-                        f"You drop the {obj_data['name']}.",
-                        f"You put down the {obj_data['name']}.",
-                        f"You leave the {obj_data['name']}.",
-                        f"The {obj_data['name']} is now on the floor."
+                        f"You drop the {item.name}.",
+                        f"You put down the {item.name}.",
+                        f"You leave the {item.name}.",
+                        f"The {item.name} is now on the floor."
                     ]
                     return random.choice(drop_messages)
         return f"You don't have a '{args}' to drop."
@@ -335,19 +315,16 @@ class CommandProcessor:
 
         target_name = args.strip().lower()
         current_location = self.game_manager.get_current_location()
-        object_instances = current_location.objects
 
         # Check room objects
-        for obj in object_instances:
+        for obj in current_location.objects:
             if obj.matches(target_name):
-                return obj.on_examine() if hasattr(obj,
-                                                   "on_examine") else f"You see nothing special about the {obj.name}."
+                return obj.on_examine()
 
-        # Check player inventory
-        for item_id in self.game_manager.get_player_inventory():
-            obj_data = self.game_manager.items.get(item_id)
-            if obj_data and (target_name == obj_data["name"].lower() or target_name in obj_data.get("keywords", [])):
-                return obj_data.get("examine_text", f"You see nothing special about the {obj_data['name']}.")
+        # Check player inventory (now live instances)
+        for item in self.game_manager.get_player_inventory():
+            if item.matches(target_name):
+                return item.on_examine()
 
         return f"There's nothing called '{args}' here to examine."
 

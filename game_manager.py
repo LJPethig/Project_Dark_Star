@@ -1,10 +1,12 @@
 # game_manager.py
 import json
 import random
+from typing import List
 from constants import STARTING_ROOM, PLAYER_NAME, SHIP_NAME
 from models.interactable import PortableItem, FixedObject
 from models.ship import Ship
 from models.chronometer import Chronometer
+
 
 class GameManager:
     """Central coordinator for game state.
@@ -16,7 +18,7 @@ class GameManager:
         self.player = None
         self.ship = None
         self.current_location = None
-        self.items = {}  # id -> full item dict from objects.json
+        self.items = {}  # id -> full item dict from objects.json (kept as template source)
 
         self._load_items()
 
@@ -38,7 +40,7 @@ class GameManager:
         """Create a new game by loading the ship and placing the player."""
         self.player = {
             "name": player_name,
-            "inventory": []  # list of item IDs (strings)
+            "inventory": []  # NOW: list of live PortableItem instances
         }
 
         self.ship = Ship.load_from_json(name=ship_name, items=self.items)
@@ -61,32 +63,35 @@ class GameManager:
         else:
             raise ValueError(f"Invalid room ID: {room_id}")
 
-    # Inventory helpers
-    def add_to_inventory(self, item_id: str) -> tuple[bool, str]:
-        """Add a portable item by ID to player inventory, checking mass."""
-        item_data = self.items.get(item_id)
-        if not item_data or item_data["type"] != "portable":
+    # Instance-based inventory helpers
+    def add_to_inventory(self, item: PortableItem) -> tuple[bool, str]:
+        """Add a live PortableItem instance to player inventory, checking mass."""
+        if not isinstance(item, PortableItem):
             return False, "You can't take that."
 
-        mass = item_data.get("mass", 0.0)
+        mass = getattr(item, "mass", 0.0)
         if self.player_carry_mass + mass > self.player_max_carry_mass:
-            return False, f"Too heavy! You can carry {self.player_max_carry_mass - self.player_carry_mass:.1f} kg more."
+            remaining = self.player_max_carry_mass - self.player_carry_mass
+            return False, f"Too heavy! You can carry {remaining:.1f} kg more."
 
-        self.player["inventory"].append(item_id)
+        self.player["inventory"].append(item)
         self.player_carry_mass += mass
-        return True, f"You take the {item_data['name']}."
+        return True, f"You take the {item.name}."
 
-    def remove_from_inventory(self, item_id: str) -> bool:
-        """Remove an item by ID from inventory and update mass."""
-        if item_id in self.player["inventory"]:
-            item_data = self.items.get(item_id)
-            if item_data:
-                self.player_carry_mass -= item_data.get("mass", 0.0)
-            self.player["inventory"].remove(item_id)
+    def remove_from_inventory(self, item: PortableItem) -> bool:
+        """Remove a live instance from inventory and update mass."""
+        if item in self.player["inventory"]:
+            mass = getattr(item, "mass", 0.0)
+            self.player["inventory"].remove(item)
+            self.player_carry_mass -= mass
             return True
         return False
 
-    # Cargo helpers — delegated to Ship
+    def get_player_inventory(self) -> List[PortableItem]:
+        """Return the player's personal inventory (list of live instances)."""
+        return self.player["inventory"]
+
+    # Cargo helpers — delegated to Ship (already instance-based)
     def add_to_cargo(self, item: PortableItem, room_id: str) -> bool:
         """Add item to the cargo list for the specified room."""
         return self.ship.add_to_cargo(item, room_id)
@@ -98,10 +103,6 @@ class GameManager:
     def get_cargo_for_room(self, room_id: str) -> list:
         """Get cargo list for a specific room."""
         return self.ship.get_cargo_for_room(room_id)
-
-    def get_player_inventory(self) -> list:
-        """Return the player's personal inventory list (of item IDs)."""
-        return self.player["inventory"]
 
     def _place_portable_items(self) -> None:
         """Procedurally place all portable items at game start with required guarantees."""

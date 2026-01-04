@@ -15,9 +15,9 @@ class InventoryView(arcade.View):
 
     def on_draw(self):
         self.clear()
-        arcade.set_background_color(BACKGROUND_COLOR)  # From constants
+        arcade.set_background_color(BACKGROUND_COLOR)
 
-        # Title (in accent color)
+        # Title
         if self.is_player:
             title = "YOUR INVENTORY"
         else:
@@ -34,14 +34,13 @@ class InventoryView(arcade.View):
             font_name=FONT_NAME_PRIMARY
         )
 
-        # Get items
+        # Get items — unified handling for both player and cargo
         if self.is_player:
-            item_ids = self.game_manager.get_player_inventory()
-            items = [self.game_manager.items.get(item_id) for item_id in item_ids if item_id in self.game_manager.items]
+            items = self.game_manager.get_player_inventory()  # Now list[PortableItem]
         else:
             current_location = self.game_manager.get_current_location()
             room_id = current_location.id
-            items = self.game_manager.get_cargo_for_room(room_id)
+            items = self.game_manager.get_cargo_for_room(room_id)  # Already list[PortableItem]
 
         if not items:
             arcade.draw_text(
@@ -57,8 +56,8 @@ class InventoryView(arcade.View):
             current_y = SCREEN_HEIGHT - TITLE_PADDING - DESCRIPTION_TITLE_FONT_SIZE - SECTION_TITLE_PADDING
 
             for item in items:
-                # Item name in ACCENT_COLOR
-                item_name = item["name"] if isinstance(item, dict) else item.name
+                # Both paths now give live instances → direct access
+                item_name = item.name
                 arcade.draw_text(
                     item_name,
                     TEXT_PADDING,
@@ -68,13 +67,12 @@ class InventoryView(arcade.View):
                     font_name=FONT_NAME_PRIMARY
                 )
 
-                # Description in TEXT_COLOR
-                desc = item["description"] if isinstance(item, dict) else item.description
+                desc = item.description
                 desc = desc[:150] + "..." if len(desc) > 150 else desc
 
                 arcade.draw_text(
                     f"- {desc}",
-                    TEXT_PADDING + 300,  # Fixed offset — adjust 300 to taste (e.g. 250–400)
+                    TEXT_PADDING + 300,
                     current_y,
                     TEXT_COLOR,
                     INPUT_FONT_SIZE,
@@ -85,7 +83,7 @@ class InventoryView(arcade.View):
 
                 current_y -= self.ITEM_SPACING
 
-        # Footer
+        # Footer (unchanged)
         arcade.draw_text(
             "Press ESC or I to return",
             SCREEN_WIDTH / 2,
