@@ -34,6 +34,7 @@ class PortableItem(Interactable):
     """Items that can be taken and carried in inventory."""
     takeable: bool = True
     mass: float = 0.0  # NEW: Added this field for mass-based inventory limit
+    equip_slot: Optional[str] = None  # ← Wearable items have this set
 
 
 @dataclass

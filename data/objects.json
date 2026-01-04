@@ -6,7 +6,43 @@
     "description": "A sturdy tool for zero-G repairs.",
     "keywords": ["wrench", "adjustable wrench", "tool"],
     "examine_text": "Well-worn but reliable.",
+    "mass": 1
+  },
+  {
+    "id": "powered_bit_driver",
+    "type": "portable",
+    "name": "Power Bit Driver",
+    "description": "An electric screwdriver and bit set. Suitable for most small fasteners found on ship access panels. ",
+    "keywords": ["screwdriver", "bit driver", "tool"],
+    "examine_text": "In good condition.",
+    "mass": 0.5
+  },
+  {
+    "id": "electrical_service_kit",
+    "type": "portable",
+    "name": "Electrical Service Tool Kit",
+    "description": "A small case of common sized wire strippers, crimping and interconnect assembly tools",
+    "keywords": ["electrical kit", "electrical service kit", "crimping tools"],
+    "examine_text": "In good condition.",
     "mass": 1.5
+  },
+  {
+    "id": "laser_solderer",
+    "type": "portable",
+    "name": "Laser Solderer",
+    "description": "A specialist tool for fast and reliable electrical repair.",
+    "keywords": ["solderer", "laser solderer", "tool"],
+    "examine_text": "Well-worn but reliable.",
+    "mass": 0.5
+  },
+  {
+    "id": "socket_set",
+    "type": "portable",
+    "name": "Socket Set",
+    "description": "A small case of common sized sockets, ratchets and adapters for medium sized fasteners.",
+    "keywords": ["sockets", "socket set", "ratchet set", "tool"],
+    "examine_text": "Well-worn but reliable.",
+    "mass": 2.5
   },
   {
     "id": "scan_tool",
@@ -15,7 +51,25 @@
     "description": "A handheld scanner for diagnostics",
     "keywords": ["diag tool", "diagnostic tool","scan tool"],
     "examine_text": "A comprehensive tablet based scan tool. Incorporating bi-directional diagnostic logic, oscilloscope, and thermal imaging with augmented reality overlays. Upgradable with additional ship systems schematics and manuals",
-    "mass": 2
+    "mass": 1.5
+  },
+  {
+    "id": "wire_low_voltage",
+    "type": "portable",
+    "name": "Low Voltage Wire",
+    "description": "Small gauge electrical wire.",
+    "keywords": ["wire spool", "wire","electrical wire"],
+    "examine_text": "5 meters of small gauge insulated wire.",
+    "mass": 0.1
+  },
+  {
+    "id": "wire_optical",
+    "type": "portable",
+    "name": "Optical Wire",
+    "description": "Hybrid optical wire",
+    "keywords": ["wire spool", "wire","optical wire"],
+    "examine_text": "2 meters of high quality jacketed optical wire.",
+    "mass": 0.1
   },
   {
     "id": "id_card_low_sec",
@@ -61,18 +115,34 @@
     "examine_text": "Screen is locked. Needs credentials."
   },
   {
+    "id": "terminal_medical",
+    "type": "fixed",
+    "name": "Medical Terminal",
+    "description": "Medical records and diagnostics terminal.",
+    "keywords": ["console", "computer", "terminal", "medical terminal"],
+    "examine_text": "Screen is locked. Needs credentials."
+  },
+  {
+    "id": "terminal_navigation",
+    "type": "fixed",
+    "name": "Ship navigation terminal",
+    "description": "The ships navigation terminal.",
+    "keywords": ["console", "computer", "terminal", "nav terminal", "navigation terminal"],
+    "examine_text": "Screen is locked. Needs credentials."
+  },
+  {
     "id": "tool_belt",
-    "type": "wearable",
+    "type": "portable",
     "name": "Tool Belt",
     "description": "A heavy-duty belt with multiple pouches.",
     "keywords": ["tool belt", "belt"],
-    "examine_text": "Well-used, with slots for small tools.",
-    "mass": 1.0,
+    "examine_text": "Well-used, with slots and pockets for small tools.",
+    "mass": 0.5,
     "equip_slot": "waist"
   },
   {
     "id": "eva_suit",
-    "type": "wearable",
+    "type": "portable",
     "name": "EVA Suit",
     "description": "A full EVA suit for spacewalks.",
     "keywords": ["eva suit", "suit", "spacesuit"],

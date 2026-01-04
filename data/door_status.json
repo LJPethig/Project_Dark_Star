@@ -195,7 +195,7 @@
     {
       "id": "sub_corridor_cargo_bay",
       "rooms": ["sub corridor", "cargo bay"],
-      "locked": true,
+      "locked": false,
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
       "security_level": 1,

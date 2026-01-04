@@ -1,5 +1,6 @@
 # game_manager.py
 import json
+import random
 from constants import STARTING_ROOM, PLAYER_NAME, SHIP_NAME
 from models.interactable import PortableItem, FixedObject
 from models.ship import Ship
@@ -42,6 +43,9 @@ class GameManager:
 
         self.ship = Ship.load_from_json(name=ship_name, items=self.items)
         self.current_location = self.ship.rooms[STARTING_ROOM]
+
+        # NEW: Place portable items procedurally
+        self._place_portable_items()
 
         # NEW: Initialize ship chronometer
         self.chronometer = Chronometer()
@@ -98,3 +102,56 @@ class GameManager:
     def get_player_inventory(self) -> list:
         """Return the player's personal inventory list (of item IDs)."""
         return self.player["inventory"]
+
+    def _place_portable_items(self) -> None:
+        """Procedurally place all portable items at game start with required guarantees."""
+        if not self.ship or not self.items:
+            return
+
+        random.seed()  # Ensure fresh randomness each new game
+
+        # Room references
+        crew_quarters = self.ship.rooms["crew quarters"]
+        storage_room = self.ship.rooms["storage room"]
+        engineering = self.ship.rooms["engineering"]
+        cargo_bay = self.ship.rooms["cargo bay"]
+
+        scatter_rooms = [storage_room, engineering, cargo_bay]
+
+        # === 1. Guaranteed undamaged high-sec card (critical progression item) ===
+        high_sec_data = self.items["id_card_high_sec"]
+        high_sec_item = PortableItem(**{k: v for k, v in high_sec_data.items() if k != "type"})
+        random.choice(scatter_rooms).add_object(high_sec_item)
+
+        # === 2. One random ID card in each required room ===
+        id_card_ids = ["id_card_low_sec", "id_card_high_sec", "id_card_high_sec_damaged"]
+        for room in [crew_quarters, engineering, storage_room]:
+            card_id = random.choice(id_card_ids)
+            card_data = self.items[card_id]
+            card = PortableItem(**{k: v for k, v in card_data.items() if k != "type"})
+            room.add_object(card)
+
+        # === 3. All other portable items (tools, wires, wearables, scan tool, etc.) ===
+        # Includes EVA suit and tool belt automatically via "type": "portable"
+        portable_ids = [
+            item_id for item_id, data in self.items.items()
+            if data.get("type") == "portable" and not item_id.startswith("id_card")
+        ]
+
+        # Uniques: appear exactly once
+        uniques = {"scan_tool", "eva_suit"}  # tool_belt can be common if desired
+        normal_items = [pid for pid in portable_ids if pid not in uniques]
+        unique_items = [pid for pid in portable_ids if pid in uniques]
+
+        # Place uniques once
+        for unique_id in unique_items:
+            item_data = self.items[unique_id]
+            item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
+            random.choice(scatter_rooms).add_object(item)
+
+        # Place all remaining tools/wires/wearables
+        random.shuffle(normal_items)
+        for item_id in normal_items:
+            item_data = self.items[item_id]
+            item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
+            random.choice(scatter_rooms).add_object(item)

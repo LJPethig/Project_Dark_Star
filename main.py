@@ -17,6 +17,9 @@ class ProjectDarkStar(arcade.Window):
             style=arcade.Window.WINDOW_STYLE_BORDERLESS  # This removes OS chrome
         )
 
+        # Set FPS to 30 (update every 1/30 seconds)
+        self.set_update_rate(1 / 30)  # <-- Add this line
+
         # Black background
         arcade.set_background_color((0, 0, 0, 255))
 

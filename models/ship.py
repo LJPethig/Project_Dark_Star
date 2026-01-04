@@ -42,7 +42,7 @@ class Ship:
 
         for room_data in rooms_data:
             room_id = room_data["id"]
-            raw_object_ids[room_id] = room_data.get("objects", [])
+            raw_object_ids[room_id] = room_data.get("fixed_objects", [])
 
             room = Room(
                 room_id=room_id,
