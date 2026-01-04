@@ -17,7 +17,7 @@
         "shortcuts": ["corridor CH-1", "corridor", "CH-1", "main corridor CH-1"]
       }
     },
-    "fixed_objects": ["terminal_personal"]
+    "fixed_objects": ["terminal_personal", "storage_locker_small_type_a"]
   },
   {
     "id": "galley",
@@ -122,7 +122,7 @@
         "shortcuts": ["rec room", "rec-room","rec"]
       }
     },
-    "fixed_objects": ["terminal_storage"]
+    "fixed_objects": ["terminal_storage", "storage_locker_small_type_b", "storage_locker_large_type_a"]
   },
   {
     "id": "hyper-sleep chamber",
@@ -257,7 +257,7 @@
         "direction": "left"
       }
     },
-    "fixed_objects": []
+    "fixed_objects": ["tool_storage_cabinet", "storage_locker_large_type_b"]
   },
   {
     "id": "life support",
@@ -295,7 +295,7 @@
         "direction": "back"
       }
     },
-    "fixed_objects": []
+    "fixed_objects": ["eva_equipment_locker"]
   },
   {
     "id": "cargo bay",
@@ -322,6 +322,6 @@
         "direction": "left"
       }
     },
-    "fixed_objects": ["terminal_storage"]
+    "fixed_objects": ["terminal_storage", "storage_locker_large_type_a"]
   }
 ]

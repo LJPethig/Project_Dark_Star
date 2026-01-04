@@ -3,7 +3,7 @@ import json
 import random
 from typing import List
 from constants import STARTING_ROOM, PLAYER_NAME, SHIP_NAME
-from models.interactable import PortableItem, FixedObject
+from models.interactable import PortableItem, FixedObject, StorageUnit  # Added StorageUnit
 from models.ship import Ship
 from models.chronometer import Chronometer
 
@@ -116,43 +116,83 @@ class GameManager:
         storage_room = self.ship.rooms["storage room"]
         engineering = self.ship.rooms["engineering"]
         cargo_bay = self.ship.rooms["cargo bay"]
+        airlock = self.ship.rooms["airlock"]
 
-        scatter_rooms = [storage_room, engineering, cargo_bay]
+        # Find storage units by ID
+        crew_locker = next((obj for obj in crew_quarters.objects if obj.id == "storage_locker_small_type_a"), None)
+        storage_small = next((obj for obj in storage_room.objects if obj.id == "storage_locker_small_type_b"), None)
+        storage_large = next((obj for obj in storage_room.objects if obj.id == "storage_locker_large_type_a"), None)
+        engineering_tool_cabinet = next((obj for obj in engineering.objects if obj.id == "tool_storage_cabinet"), None)
+        engineering_large = next((obj for obj in engineering.objects if obj.id == "storage_locker_large_type_b"), None)
+        eva_locker = next((obj for obj in airlock.objects if obj.id == "eva_equipment_locker"), None)
+        cargo_large = next((obj for obj in cargo_bay.objects if obj.id == "storage_locker_large_type_a"), None)
 
         # === 1. Guaranteed undamaged high-sec card (critical progression item) ===
         high_sec_data = self.items["id_card_high_sec"]
         high_sec_item = PortableItem(**{k: v for k, v in high_sec_data.items() if k != "type"})
-        random.choice(scatter_rooms).add_object(high_sec_item)
+        # Place in personal locker for realism and early discovery
+        if crew_locker and crew_locker.add_item(high_sec_item):
+            pass
+        else:
+            crew_quarters.add_object(high_sec_item)  # fallback
 
         # === 2. One random ID card in each required room ===
         id_card_ids = ["id_card_low_sec", "id_card_high_sec", "id_card_high_sec_damaged"]
-        for room in [crew_quarters, engineering, storage_room]:
+        for room, container in [
+            (crew_quarters, crew_locker),
+            (engineering, engineering_large),
+            (storage_room, storage_large)
+        ]:
             card_id = random.choice(id_card_ids)
             card_data = self.items[card_id]
             card = PortableItem(**{k: v for k, v in card_data.items() if k != "type"})
-            room.add_object(card)
+            if container and container.add_item(card):
+                pass
+            else:
+                room.add_object(card)  # fallback loose
 
-        # === 3. All other portable items (tools, wires, wearables, scan tool, etc.) ===
-        # Includes EVA suit and tool belt automatically via "type": "portable"
+        # === 3. All other portable items ===
         portable_ids = [
             item_id for item_id, data in self.items.items()
             if data.get("type") == "portable" and not item_id.startswith("id_card")
         ]
 
         # Uniques: appear exactly once
-        uniques = {"scan_tool", "eva_suit"}  # tool_belt can be common if desired
+        uniques = {"scan_tool", "eva_suit"}
         normal_items = [pid for pid in portable_ids if pid not in uniques]
         unique_items = [pid for pid in portable_ids if pid in uniques]
 
-        # Place uniques once
+        # Place uniques thematically
         for unique_id in unique_items:
             item_data = self.items[unique_id]
             item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
-            random.choice(scatter_rooms).add_object(item)
+            if unique_id == "eva_suit" and eva_locker:
+                eva_locker.add_item(item)
+            elif unique_id == "scan_tool" and engineering_tool_cabinet:
+                engineering_tool_cabinet.add_item(item)
+            else:
+                # Fallback scatter
+                random.choice([storage_room, engineering, cargo_bay]).add_object(item)
 
-        # Place all remaining tools/wires/wearables
+        # Place normal tools/wires/wearables — mostly in tool cabinet and general storage
         random.shuffle(normal_items)
+        placement_targets = []
+        if engineering_tool_cabinet:
+            placement_targets.extend([engineering_tool_cabinet] * 5)  # bias toward tool cabinet
+        if storage_large:
+            placement_targets.extend([storage_large] * 3)
+        if cargo_large:
+            placement_targets.extend([cargo_large] * 2)
+        if storage_small:
+            placement_targets.append(storage_small)
+
         for item_id in normal_items:
             item_data = self.items[item_id]
             item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
-            random.choice(scatter_rooms).add_object(item)
+            target = random.choice(placement_targets)
+            if isinstance(target, StorageUnit):
+                if not target.add_item(item):
+                    # Fallback to loose if full
+                    random.choice([storage_room, engineering, cargo_bay]).add_object(item)
+            else:
+                target.add_object(item)

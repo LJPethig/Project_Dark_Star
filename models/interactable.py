@@ -107,3 +107,54 @@ class FixedObject(Interactable):
         # - self.powered = True
         # - self.current_user = None
         # - self.tamper_count = 0
+
+class StorageUnit(FixedObject):
+    """
+    A fixed storage unit (locker, cabinet, rack) that can hold PortableItem instances.
+    Supports open/close state and mass-based capacity.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        # Runtime state — only what we use now
+        self.contents: List[PortableItem] = []          # Items currently inside
+        self.is_open: bool = False                      # Open/closed state
+        self.capacity_mass: float = kwargs.get("capacity_mass", 100.0)
+
+        # Current total mass of contents (updated on add/remove)
+        self.current_mass: float = 0.0
+
+    def can_add_item(self, item: PortableItem) -> bool:
+        """Check if an item can fit by mass."""
+        item_mass = getattr(item, "mass", 0.0)
+        return (self.current_mass + item_mass) <= self.capacity_mass
+
+    def add_item(self, item: PortableItem) -> bool:
+        """Add an item if capacity allows. Returns success."""
+        if not self.can_add_item(item):
+            return False
+        self.contents.append(item)
+        self.current_mass += getattr(item, "mass", 0.0)
+        return True
+
+    def remove_item(self, item: PortableItem) -> bool:
+        """Remove an item if present. Returns success."""
+        if item in self.contents:
+            self.contents.remove(item)
+            self.current_mass -= getattr(item, "mass", 0.0)
+            return True
+        return False
+
+    def get_contents_list(self) -> str:
+        """Return a formatted string of contents for look in / examine."""
+        if not self.contents:
+            return "It is empty."
+
+        item_names = [item.name for item in self.contents]
+        if len(item_names) == 1:
+            return item_names[0]
+        elif len(item_names) == 2:
+            return f"{item_names[0]} and {item_names[1]}"
+        else:
+            return ", ".join(item_names[:-1]) + f", and {item_names[-1]}"

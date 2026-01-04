@@ -149,5 +149,65 @@
     "examine_text": "Sealed and pressurized, ready for vacuum.",
     "mass": 12.0,
     "equip_slot": "body"
+  },
+  {
+    "id": "storage_locker_small_type_a",
+    "type": "fixed",
+    "name": "Small Storage Locker",
+    "description": "A compact wall-mounted storage locker.",
+    "keywords": ["locker", "small locker", "storage locker", "cabinet", "storage"],
+    "examine_text": "A lightweight metal locker with a single door and internal shelving.",
+    "capacity_mass": 60.0,
+    "open_description": "The door swings open smoothly, revealing neatly organised shelves."
+  },
+  {
+    "id": "storage_locker_small_type_b",
+    "type": "fixed",
+    "name": "Small Storage Locker",
+    "description": "A compact wall-mounted storage locker.",
+    "keywords": ["locker", "small locker", "storage locker", "cabinet", "storage"],
+    "examine_text": "A lightweight metal locker with a single door and internal shelving.",
+    "capacity_mass": 80.0,
+    "open_description": "The door swings open smoothly, revealing neatly organised shelves."
+  },
+  {
+    "id": "storage_locker_large_type_a",
+    "type": "fixed",
+    "name": "Large Storage Cabinet",
+    "description": "A full-height storage cabinet with multiple drawers and compartments.",
+    "keywords": ["cabinet", "large cabinet", "storage cabinet", "locker"],
+    "examine_text": "Heavy-duty construction with reinforced doors and adjustable shelving.",
+    "capacity_mass": 150.0,
+    "open_description": "The double doors part with a soft hiss, exposing deep shelves and pull-out drawers."
+  },
+  {
+    "id": "storage_locker_large_type_b",
+    "type": "fixed",
+    "name": "Large Storage Cabinet",
+    "description": "A full-height storage cabinet with multiple drawers and compartments.",
+    "keywords": ["cabinet", "large cabinet", "storage cabinet", "locker"],
+    "examine_text": "Heavy-duty construction with reinforced doors and adjustable shelving.",
+    "capacity_mass": 180.0,
+    "open_description": "The double doors part with a soft hiss, exposing deep shelves and pull-out drawers."
+  },
+  {
+    "id": "eva_equipment_locker",
+    "type": "fixed",
+    "name": "EVA Equipment Locker",
+    "description": "Dedicated storage for extravehicular activity gear.",
+    "keywords": ["eva locker", "eva storage", "suit locker", "equipment locker"],
+    "examine_text": "Padded hangers and sealed compartments protect delicate EVA components.",
+    "capacity_mass": 150.0,
+    "open_description": "The tall door opens to reveal a full-length suit rack and accessory bins."
+  },
+  {
+    "id": "tool_storage_cabinet",
+    "type": "fixed",
+    "name": "Tool Storage Cabinet",
+    "description": "A professional-grade cabinet for organising hand tools.",
+    "keywords": ["tool cabinet", "tool storage", "tool locker", "tools"],
+    "examine_text": "Foam-lined drawers and magnetic tool holders keep everything in place.",
+    "capacity_mass": 100.0,
+    "open_description": "Drawers slide out smoothly on ball-bearing runners, displaying precision-cut foam inserts."
   }
 ]

@@ -1,6 +1,6 @@
 # command_processor.py
 from ui.inventory_view import InventoryView
-from models.interactable import PortableItem, FixedObject
+from models.interactable import PortableItem, FixedObject, StorageUnit  # Added StorageUnit
 from door_handler import DoorHandler
 from repair_handler import RepairHandler
 
@@ -17,34 +17,44 @@ class CommandProcessor:
         # Command registry: verb → handler function
         # Handlers receive the full remaining args (after the verb)
         self.commands = {
+            # Storage unit commands — grouped for clarity (multi-word verbs work due to longest-match logic)
+            "open": self._handle_open,
+            "close": self._handle_close,
+            "look in": self._handle_look_in,
+            "take from": self._handle_take_from,
+            "put in": self._handle_put_in,
+
+            # Core movement and interaction
             "quit": self._handle_quit,
-            "exit": self._handle_quit,  # alias for quit
+            "exit": self._handle_quit,
             "go": self._handle_move,
-            "enter": self._handle_move,  # alias
-            "move": self._handle_move,   # alias
-            # NEW: Inventory & cargo commands
+            "enter": self._handle_move,
+            "move": self._handle_move,
+            "look": self._handle_look,
+            "l": self._handle_look,
+
+            # Inventory and object manipulation
             "inventory": self._handle_player_inventory,
-            "i": self._handle_player_inventory,  # shortcut
+            "i": self._handle_player_inventory,
             "take": self._handle_take,
-            "pick up": self._handle_take,   # alias, spaces are stripped
-            "store": self._handle_store,
-            "cargo": self._handle_ship_cargo,     # Restricted to terminals
-            "debug cargo": self._handle_debug_cargo,  # TEMPORARY: for testing without terminal
-            # NEW: Examine command
-            "examine": self._handle_examine,
-            "x": self._handle_examine,  # shortcut
+            "pick up": self._handle_take,
             "drop": self._handle_drop,
+            "examine": self._handle_examine,
+            "x": self._handle_examine,
+
+            # Legacy/terminal cargo (to be deprecated)
+            "store": self._handle_store,
             "retrieve": self._handle_retrieve,
-            # Door actions delegated to DoorHandler for complex flows
+            "cargo": self._handle_ship_cargo,
+            "debug cargo": self._handle_debug_cargo,
+
+            # Door and repair
             "lock": lambda args: self._handle_door_action("lock", args),
             "unlock": lambda args: self._handle_door_action("unlock", args),
             "repair door panel": self._handle_repair_door_panel,
             "repair door access panel": self._handle_repair_door_panel,
             "repair access panel": self._handle_repair_door_panel,
-            "repair door": self._handle_repair_door_panel, # shortcut
-            "look": self._handle_look,
-            "l": self._handle_look,
-            # Future commands will be added here
+            "repair door": self._handle_repair_door_panel,
         }
 
     def process(self, cmd: str) -> str:
@@ -59,29 +69,54 @@ class CommandProcessor:
             self.ship_view.pending_pin_callback(pin)
             return ""  # Response handled inside callback
 
+        # Special handling for preposition-based container commands
+        if " from " in cmd and cmd.startswith("take "):
+            # 'take wrench from locker'
+            parts = cmd.split(" from ", 1)
+            item_part = parts[0][5:].strip()  # remove "take "
+            container_part = parts[1].strip()
+            return self._handle_take_from(f"{item_part} from {container_part}")
+
+        if " in " in cmd and cmd.startswith("put "):
+            # 'put wrench in locker'
+            parts = cmd.split(" in ", 1)
+            item_part = parts[0][4:].strip()  # remove "put "
+            container_part = parts[1].strip()
+            return self._handle_put_in(f"{item_part} in {container_part}")
+
         # Split into words
         words = cmd.split()
+
+        print(f"DEBUG: Input command: '{cmd}'")
+        print(f"DEBUG: Split words: {words}")
 
         # Find the longest matching verb from the start of the command
         verb = None
         args = ""
         for i in range(len(words), 0, -1):
             candidate = " ".join(words[:i])
+            print(f"  Trying candidate (length {i}): '{candidate}'")
             if candidate in self.commands:
                 verb = candidate
                 args = " ".join(words[i:])
+                print(f"  >>> MATCHED verb: '{verb}'")
+                print(f"  >>> Remaining args: '{args}'")
                 break
 
         if not verb:
+            print("  >>> NO verb matched — unknown command")
             return "I don't understand that command."
 
         # Look up and execute handler
         handler = self.commands.get(verb)
         if handler:
+            print(f"  >>> Calling handler: {handler.__name__}")
             return handler(args)
 
         # No matching command → unknown
+        print("  >>> Handler not found (should not happen)")
         return f"I don't understand '{cmd}'. Try 'help' for available commands."
+
 
     def _handle_quit(self, args: str) -> str:
         """Handle quit/exit commands."""
@@ -327,6 +362,158 @@ class CommandProcessor:
                 return item.on_examine()
 
         return f"There's nothing called '{args}' here to examine."
+
+    # === NEW: Storage Unit Handlers ===
+
+    def _find_storage_unit(self, target_name: str):
+        """Helper: find a StorageUnit in current room by keyword match."""
+        current_location = self.game_manager.get_current_location()
+        for obj in current_location.objects:
+            if isinstance(obj, StorageUnit) and obj.matches(target_name):
+                return obj
+        return None
+
+    def _handle_open(self, args: str) -> str:
+        """Open a storage unit (locker, cabinet, etc.)."""
+        if not args:
+            return "Open what?"
+
+        target_name = args.strip().lower()
+        unit = self._find_storage_unit(target_name)
+        if not unit:
+            return f"There's no {args} here to open."
+
+        if unit.is_open:
+            return f"The {unit.name.lower()} is already open."
+
+        unit.is_open = True
+        if hasattr(unit, "open_description") and unit.open_description:
+            return unit.open_description
+        return f"You open the {unit.name.lower()}."
+
+    def _handle_close(self, args: str) -> str:
+        """Close a storage unit."""
+        if not args:
+            return "Close what?"
+
+        target_name = args.strip().lower()
+        unit = self._find_storage_unit(target_name)
+        if not unit:
+            return f"There's no {args} here to close."
+
+        if not unit.is_open:
+            return f"The {unit.name.lower()} is already closed."
+
+        unit.is_open = False
+        return f"You close the {unit.name.lower()}."
+
+    def _handle_look_in(self, args: str) -> str:
+        """Look inside an open storage unit."""
+        if not args:
+            return "Look in what?"
+
+        target_name = args.strip().lower()
+        unit = self._find_storage_unit(target_name)
+        if not unit:
+            return f"There's no {args} here to look in."
+
+        if not unit.is_open:
+            return f"The {unit.name.lower()} is closed."
+
+        if not unit.contents:
+            return f"The {unit.name.lower()} is empty."
+
+        response = f"Inside the {unit.name.lower()} you see:\n"
+        for item in unit.contents:
+            response += f"• {item.name}\n"
+        return response.strip()
+
+    def _handle_take_from(self, args: str) -> str:
+        """Take an item from a storage unit: 'take wrench from locker'"""
+        print("_handle_take_from called")
+        if not args:
+            return "Take what from where?"
+
+        parts = args.lower().split(" from ")
+        if len(parts) != 2:
+            return "Take what from where? Try 'take [item] from [locker]'."
+
+        item_name = parts[0].strip()
+        container_name = parts[1].strip()
+
+        # === DEBUG BLOCK START ===
+        print(f"DEBUG: Player typed container name: '{container_name}'")
+        current_location = self.game_manager.get_current_location()
+        print(f"DEBUG: Searching in room: {current_location.name}")
+        for obj in current_location.objects:
+            if isinstance(obj, StorageUnit):
+                print(f"  Found StorageUnit: {obj.name} (id: {obj.id})")
+                print(f"    Keywords: {obj.keywords}")
+                match_result = obj.matches(container_name)
+                print(f"    Does '{container_name}' match? {match_result}")
+        # === DEBUG BLOCK END ===
+
+        unit = self._find_storage_unit(container_name)
+        if not unit:
+            return f"There's no {container_name} here."
+
+        if not unit.is_open:
+            return f"The {unit.name.lower()} is closed."
+
+        target_item = None
+        for item in unit.contents:
+            if item.matches(item_name):
+                target_item = item
+                break
+
+        if not target_item:
+            return f"There's no {item_name} in the {unit.name.lower()}."
+
+        success, message = self.game_manager.add_to_inventory(target_item)
+        if success:
+            unit.remove_item(target_item)
+            self.ship_view.description_renderer.rebuild_description()
+            self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+            return f"You take the {target_item.name} from the {unit.name.lower()}."
+        else:
+            return message  # e.g., too heavy
+
+    def _handle_put_in(self, args: str) -> str:
+        """Put an item into a storage unit: 'put wrench in locker'"""
+        if not args:
+            return "Put what in where?"
+
+        parts = args.lower().split(" in ")
+        if len(parts) != 2:
+            return "Put what in where? Try 'put [item] in [locker]'."
+
+        item_name = parts[0].strip()
+        container_name = parts[1].strip()
+
+        unit = self._find_storage_unit(container_name)
+        if not unit:
+            return f"There's no {container_name} here."
+
+        if not unit.is_open:
+            return f"The {unit.name.lower()} is closed."
+
+        inventory = self.game_manager.get_player_inventory()
+        target_item = None
+        for item in inventory:
+            if item.matches(item_name):
+                target_item = item
+                break
+
+        if not target_item:
+            return f"You don't have a {item_name}."
+
+        if not unit.add_item(target_item):
+            return f"The {unit.name.lower()} is too full to hold the {target_item.name}."
+
+        self.game_manager.remove_from_inventory(target_item)
+        self.ship_view.description_renderer.rebuild_description()
+        self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+        return f"You put the {target_item.name} in the {unit.name.lower()}."
 
     # Helper for access control (expand later with terminal check)
     def _can_access_ship_cargo(self) -> bool:

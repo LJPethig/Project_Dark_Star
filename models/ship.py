@@ -8,7 +8,7 @@ Loads rooms, objects, doors, and panels exactly as current code does.
 from typing import Dict, List, Tuple
 from models.room import Room
 from models.door import Door
-from models.interactable import PortableItem, FixedObject
+from models.interactable import PortableItem, FixedObject, StorageUnit
 from models.security_panel import SecurityPanel
 
 import json
@@ -53,7 +53,16 @@ class Ship:
             )
             ship.rooms[room_id] = room
 
-        # Instantiate objects
+        # Instantiate objects — now with proper subclass selection
+        storage_unit_ids = {
+            "storage_locker_small_type_a",
+            "storage_locker_small_type_b",
+            "storage_locker_large_type_a",
+            "storage_locker_large_type_b",
+            "eva_equipment_locker",
+            "tool_storage_cabinet"
+        }
+
         for room in ship.rooms.values():
             for obj_id in raw_object_ids[room.id]:
                 obj_data = items.get(obj_id)
@@ -61,10 +70,15 @@ class Ship:
                     continue
                 # Filter out 'type' — matches current behavior exactly
                 filtered_data = {k: v for k, v in obj_data.items() if k != "type"}
+
                 if obj_data["type"] == "portable":
                     obj_instance = PortableItem(**filtered_data)
                 else:
-                    obj_instance = FixedObject(**filtered_data)
+                    # Fixed object — check if it's a storage unit
+                    if obj_id in storage_unit_ids:
+                        obj_instance = StorageUnit(**filtered_data)
+                    else:
+                        obj_instance = FixedObject(**filtered_data)
                 room.add_object(obj_instance)
 
         # === Load doors and panels (exact replica of _load_doors) ===
