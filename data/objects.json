@@ -206,7 +206,7 @@
     "type": "fixed",
     "name": "Tool Storage Cabinet",
     "description": "A professional-grade cabinet for organising hand tools and diagnostic equipment.",
-    "keywords": ["tool cabinet", "tool storage", "tool chest"],
+    "keywords": ["cabinet","tool cabinet", "tool storage", "tool chest"],
     "capacity_mass": 120.0,
     "open_description": "Drawers slide out smoothly on ball-bearing runners, displaying precision-cut foam inserts."
   },

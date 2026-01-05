@@ -374,7 +374,7 @@ class CommandProcessor:
         return None
 
     def _handle_open(self, args: str) -> str:
-        """Open a storage unit (locker, cabinet, etc.)."""
+        """Open a storage unit and automatically reveal its contents."""
         if not args:
             return "Open what?"
 
@@ -383,13 +383,28 @@ class CommandProcessor:
         if not unit:
             return f"There's no {args} here to open."
 
-        if unit.is_open:
-            return f"The {unit.name.lower()} is already open."
+        lines = []
 
-        unit.is_open = True
-        if hasattr(unit, "open_description") and unit.open_description:
-            return unit.open_description
-        return f"You open the {unit.name.lower()}."
+        if unit.is_open:
+            lines.append(f"The {unit.name.lower()} is already open.")
+        else:
+            unit.is_open = True
+            lines.append(f"You open the {unit.name.lower()}.")
+            if hasattr(unit, "open_description") and unit.open_description:
+                lines.append(unit.open_description)
+
+        # Always show contents
+        contents_text = unit.get_contents_list()
+        if "empty" in contents_text.lower():
+            lines.append("It is empty.")
+        else:
+            lines.append(f"Inside you see: {contents_text}")
+
+        # Refresh UI
+        self.ship_view.description_renderer.rebuild_description()
+        self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+
+        return "\n".join(lines)
 
     def _handle_close(self, args: str) -> str:
         """Close a storage unit."""

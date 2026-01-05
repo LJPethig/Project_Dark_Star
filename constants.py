@@ -48,7 +48,7 @@ CARD_SWIPE_WAIT = 3.0  # Player-visible delay in seconds for door card swipe
 
 # Layout ratios and heights
 LEFT_PANEL_RATIO = 0.45                # Image width ratio
-DESCRIPTION_SECTION_RATIO = 0.55       # Proportion of right text area for description
+DESCRIPTION_SECTION_RATIO = 0.50       # Proportion of right text area for description
 EVENT_SECTION_HEIGHT = 60              # Pixels for bottom event section
 
 # Fixed heights
