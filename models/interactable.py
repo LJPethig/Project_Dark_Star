@@ -56,13 +56,21 @@ class Interactable:
         # Store any extra fields passed from JSON (e.g., mass, equip_slot)
         self.__dict__.update(extra_fields)
 
-    def matches(self, word: str) -> bool:
-        """Check if player input matches this object's keywords."""
-        return word.lower() in [k.lower() for k in self.keywords]
+    def matches(self, input_str: str) -> bool:
+        """Return True if input_str exactly matches any keyword (case-insensitive).
+            Keywords are checked longest-first at match time to favor more specific phrases
+            when multiple objects share shorter common keywords (e.g., 'storage')."""
+        input_lower = input_str.lower()
+        # Sort keywords at match time: longest and most specific first
+        sorted_keywords = sorted(self.keywords, key=lambda k: (-len(k), k.lower()))
+        for kw in sorted_keywords:
+            if input_lower == kw.lower():
+                return True
+        return False
 
     def on_examine(self) -> str:
         """Default examine behavior (can be overridden in subclasses)."""
-        return self.examine_text or f"You see nothing special about the {self.name}."
+        return self.description or f"You see nothing special about the {self.name}."
 
     def on_use(self) -> str:
         """Default use behavior (can be overridden)."""

@@ -20,26 +20,30 @@ class DescriptionRenderer:
                 current_y -= LINE_SPACING
                 continue
 
-            # Split line into normal text and *highlighted* parts
+            # Split line into normal and highlighted parts (* for exits, % for objects)
             parts = []
             i = 0
             while i < len(line):
-                if line[i] == '*':
-                    j = line.find('*', i + 1)
+                if line[i] in '*%':
+                    delimiter = line[i]
+                    j = line.find(delimiter, i + 1)
                     if j != -1:
                         highlighted = line[i + 1:j]
-                        parts.append((highlighted, ACCENT_COLOR))  # (text, color)
+                        color = ACCENT_COLOR if delimiter == '*' else OBJECT_COLOR
+                        parts.append((highlighted, color))
                         i = j + 1
-                    else:
-                        parts.append((line[i], TEXT_COLOR))
-                        i += 1
-                else:
-                    j = line.find('*', i)
-                    if j == -1:
-                        j = len(line)
-                    normal = line[i:j]
+                        continue
+                    # No closing delimiter — treat opener as literal text
+                # Normal text up to next delimiter or end of line
+                next_pos = len(line)
+                for delim in '*%':
+                    pos = line.find(delim, i)
+                    if pos != -1 and pos < next_pos:
+                        next_pos = pos
+                normal = line[i:next_pos]
+                if normal:
                     parts.append((normal, TEXT_COLOR))
-                    i = j
+                i = next_pos
 
             # Create Text objects for each part on the same line
             x_pos = self.view.text_left + self.view.text_padding

@@ -5,7 +5,6 @@
     "name": "Adjustable Wrench",
     "description": "A sturdy tool for zero-G repairs.",
     "keywords": ["wrench", "adjustable wrench", "tool"],
-    "examine_text": "Well-worn but reliable.",
     "mass": 1
   },
   {
@@ -14,7 +13,6 @@
     "name": "Power Bit Driver",
     "description": "An electric screwdriver and bit set. Suitable for most small fasteners found on ship access panels. ",
     "keywords": ["screwdriver", "bit driver", "tool"],
-    "examine_text": "In good condition.",
     "mass": 0.5
   },
   {
@@ -23,7 +21,6 @@
     "name": "Electrical Service Tool Kit",
     "description": "A small case of common sized wire strippers, crimping and interconnect assembly tools",
     "keywords": ["electrical kit", "electrical service kit", "crimping tools"],
-    "examine_text": "In good condition.",
     "mass": 1.5
   },
   {
@@ -32,7 +29,6 @@
     "name": "Laser Solderer",
     "description": "A specialist tool for fast and reliable electrical repair.",
     "keywords": ["solderer", "laser solderer", "tool"],
-    "examine_text": "Well-worn but reliable.",
     "mass": 0.5
   },
   {
@@ -41,16 +37,14 @@
     "name": "Socket Set",
     "description": "A small case of common sized sockets, ratchets and adapters for medium sized fasteners.",
     "keywords": ["sockets", "socket set", "ratchet set", "tool"],
-    "examine_text": "Well-worn but reliable.",
     "mass": 2.5
   },
   {
     "id": "scan_tool",
     "type": "portable",
     "name": "Scan Tool",
-    "description": "A handheld scanner for diagnostics",
+    "description": "A hand-held tablet based scan tool. Incorporating diagnostic logic, oscilloscope, and thermal imaging with augmented reality overlays. Upgradable with additional ship systems schematics and manuals.",
     "keywords": ["diag tool", "diagnostic tool","scan tool"],
-    "examine_text": "A comprehensive tablet based scan tool. Incorporating bi-directional diagnostic logic, oscilloscope, and thermal imaging with augmented reality overlays. Upgradable with additional ship systems schematics and manuals",
     "mass": 1.5
   },
   {
@@ -59,7 +53,6 @@
     "name": "Low Voltage Wire",
     "description": "Small gauge electrical wire.",
     "keywords": ["wire spool", "wire","electrical wire"],
-    "examine_text": "5 meters of small gauge insulated wire.",
     "mass": 0.1
   },
   {
@@ -68,7 +61,6 @@
     "name": "Optical Wire",
     "description": "Hybrid optical wire",
     "keywords": ["wire spool", "wire","optical wire"],
-    "examine_text": "2 meters of high quality jacketed optical wire.",
     "mass": 0.1
   },
   {
@@ -77,7 +69,6 @@
     "name": "Basic level ID Card",
     "description": "A chipped security card for low security areas.",
     "keywords": ["id card", "security card", "card", "id"],
-    "examine_text": "The card has a faded photo and a security chip.",
     "mass": 0.0
   },
   {
@@ -86,7 +77,6 @@
     "name": "High level ID Card",
     "description": "A chipped security card for high security areas.",
     "keywords": ["id card", "security card", "card", "id"],
-    "examine_text": "The card has a faded photo and a security chip.",
     "mass": 0.0
   },
    {
@@ -95,48 +85,42 @@
     "name": "High level ID Card - Burnt out",
     "description": "A chipped security card for high security areas, it appears damaged.",
     "keywords": ["id card", "security card", "card", "id"],
-    "examine_text": "The card has a faded photo and a burnt out security chip.",
     "mass": 0.0
   },
   {
     "id": "terminal_personal",
     "type": "fixed",
     "name": "Personal Terminal",
-    "description": "Your cabin's control console.",
-    "keywords": ["console", "computer", "terminal", "personal terminal"],
-    "examine_text": "Screen is locked. Needs credentials."
+    "description": "Your personal computer terminal.",
+    "keywords": ["console", "computer", "terminal", "personal terminal"]
   },
   {
     "id": "terminal_storage",
     "type": "fixed",
     "name": "Storage Terminal",
     "description": "An inventory management terminal.",
-    "keywords": ["console", "computer", "terminal", "storage terminal", "inventory terminal"],
-    "examine_text": "Screen is locked. Needs credentials."
+    "keywords": ["console", "computer", "terminal", "storage terminal", "inventory terminal"]
   },
   {
     "id": "terminal_medical",
     "type": "fixed",
     "name": "Medical Terminal",
     "description": "Medical records and diagnostics terminal.",
-    "keywords": ["console", "computer", "terminal", "medical terminal"],
-    "examine_text": "Screen is locked. Needs credentials."
+    "keywords": ["console", "computer", "terminal", "medical terminal"]
   },
   {
     "id": "terminal_navigation",
     "type": "fixed",
     "name": "Ship navigation terminal",
     "description": "The ships navigation terminal.",
-    "keywords": ["console", "computer", "terminal", "nav terminal", "navigation terminal"],
-    "examine_text": "Screen is locked. Needs credentials."
+    "keywords": ["console", "computer", "terminal", "nav terminal", "navigation terminal"]
   },
   {
     "id": "tool_belt",
     "type": "portable",
     "name": "Tool Belt",
-    "description": "A heavy-duty belt with multiple pouches.",
+    "description": "A heavy-duty belt with multiple pouches and clips for hand tools.",
     "keywords": ["tool belt", "belt"],
-    "examine_text": "Well-used, with slots and pockets for small tools.",
     "mass": 0.5,
     "equip_slot": "waist"
   },
@@ -146,68 +130,105 @@
     "name": "EVA Suit",
     "description": "A full EVA suit for spacewalks.",
     "keywords": ["eva suit", "suit", "spacesuit"],
-    "examine_text": "Sealed and pressurized, ready for vacuum.",
     "mass": 12.0,
     "equip_slot": "body"
   },
   {
-    "id": "storage_locker_small_type_a",
+    "id": "crew_quarters_cabinet",
     "type": "fixed",
-    "name": "Small Storage Locker",
-    "description": "A compact wall-mounted storage locker.",
-    "keywords": ["locker", "small locker", "storage locker", "cabinet", "storage"],
-    "examine_text": "A lightweight metal locker with a single door and internal shelving.",
-    "capacity_mass": 60.0,
-    "open_description": "The door swings open smoothly, revealing neatly organised shelves."
+    "name": "Personal Locker",
+    "description": "Your personal closet, with twin doors, built into the wall.",
+    "keywords": [
+      "cabinet",
+      "locker",
+      "closet",
+      "personal cabinet",
+      "personal locker",
+      "personal closet"
+    ],
+    "capacity_mass": 120.0,
+    "open_description": "The cabinet doors slide open smoothly, revealing racks for clothing and several shelves."
   },
   {
-    "id": "storage_locker_small_type_b",
+    "id": "storage_room_small_cabinet",
     "type": "fixed",
-    "name": "Small Storage Locker",
-    "description": "A compact wall-mounted storage locker.",
-    "keywords": ["locker", "small locker", "storage locker", "cabinet", "storage"],
-    "examine_text": "A lightweight metal locker with a single door and internal shelving.",
+    "name": "Small Cabinet",
+    "description": "A compact wall-mounted cabinet.",
+    "keywords": [
+      "cabinet",
+      "small cabinet",
+      "wall mounted cabinet"
+    ],
     "capacity_mass": 80.0,
-    "open_description": "The door swings open smoothly, revealing neatly organised shelves."
+    "open_description": "The door swings open smoothly, revealing several shelves."
   },
   {
-    "id": "storage_locker_large_type_a",
+    "id": "storage_room_large_storage_unit",
     "type": "fixed",
-    "name": "Large Storage Cabinet",
-    "description": "A full-height storage cabinet with multiple drawers and compartments.",
-    "keywords": ["cabinet", "large cabinet", "storage cabinet", "locker"],
-    "examine_text": "Heavy-duty construction with reinforced doors and adjustable shelving.",
-    "capacity_mass": 150.0,
-    "open_description": "The double doors part with a soft hiss, exposing deep shelves and pull-out drawers."
+    "name": "Large Storage Unit",
+    "description": "A large wall-mounted storage unit.",
+    "keywords": [
+      "storage",
+      "storage unit",
+      "large storage unit",
+      "large cabinet",
+      "large storage cabinet",
+      "wall mounted storage unit",
+      "wall mounted storage"
+    ],
+    "capacity_mass": 200.0,
+    "open_description": "The door swings open smoothly, revealing several shelves and parts bins."
   },
   {
-    "id": "storage_locker_large_type_b",
-    "type": "fixed",
-    "name": "Large Storage Cabinet",
-    "description": "A full-height storage cabinet with multiple drawers and compartments.",
-    "keywords": ["cabinet", "large cabinet", "storage cabinet", "locker"],
-    "examine_text": "Heavy-duty construction with reinforced doors and adjustable shelving.",
-    "capacity_mass": 180.0,
-    "open_description": "The double doors part with a soft hiss, exposing deep shelves and pull-out drawers."
-  },
-  {
-    "id": "eva_equipment_locker",
+    "id": "cargo_bay_eva_equipment_locker",
     "type": "fixed",
     "name": "EVA Equipment Locker",
-    "description": "Dedicated storage for extravehicular activity gear.",
-    "keywords": ["eva locker", "eva storage", "suit locker", "equipment locker"],
-    "examine_text": "Padded hangers and sealed compartments protect delicate EVA components.",
+    "description": "Dedicated storage for EVA gear with padded hangers and storage bins.",
+    "keywords": ["eva locker", "eva suit locker", "eva equipment locker","equipment locker"],
     "capacity_mass": 150.0,
     "open_description": "The tall door opens to reveal a full-length suit rack and accessory bins."
   },
   {
-    "id": "tool_storage_cabinet",
+    "id": "cargo_bay_large_cabinet",
+    "type": "fixed",
+    "name": "Large Cabinet",
+    "description": "A large wall-mounted cabinet.",
+    "keywords": [
+      "cabinet",
+      "large cabinet",
+      "wall mounted cabinet"
+    ],
+    "capacity_mass": 150.0,
+    "open_description": "The door swings open smoothly, revealing several shelves."
+  },
+  {
+    "id": "engineering_tool_storage_cabinet",
     "type": "fixed",
     "name": "Tool Storage Cabinet",
-    "description": "A professional-grade cabinet for organising hand tools.",
-    "keywords": ["tool cabinet", "tool storage", "tool locker", "tools"],
-    "examine_text": "Foam-lined drawers and magnetic tool holders keep everything in place.",
-    "capacity_mass": 100.0,
+    "description": "A professional-grade cabinet for organising hand tools and diagnostic equipment.",
+    "keywords": ["tool cabinet", "tool storage", "tool chest"],
+    "capacity_mass": 120.0,
     "open_description": "Drawers slide out smoothly on ball-bearing runners, displaying precision-cut foam inserts."
+  },
+  {
+    "id": "engineering_large_parts_storage_unit",
+    "type": "fixed",
+    "name": "Large Parts Storage Unit",
+    "description": "A large wall-mounted parts storage cabinet.",
+    "keywords": [
+      "storage",
+      "storage unit",
+      "large storage unit",
+      "parts cabinet",
+      "parts storage",
+      "large storage cabinet",
+      "large parts cabinet",
+      "large cabinet",
+      "wall mounted storage unit",
+      "wall mounted cabinet",
+      "wall mounted parts storage"
+    ],
+    "capacity_mass": 200.0,
+    "open_description": "The door swings open smoothly, revealing several shelves and parts bins."
   }
 ]

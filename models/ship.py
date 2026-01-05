@@ -53,29 +53,19 @@ class Ship:
             )
             ship.rooms[room_id] = room
 
-        # Instantiate objects — now with proper subclass selection
-        storage_unit_ids = {
-            "storage_locker_small_type_a",
-            "storage_locker_small_type_b",
-            "storage_locker_large_type_a",
-            "storage_locker_large_type_b",
-            "eva_equipment_locker",
-            "tool_storage_cabinet"
-        }
-
+        # Instantiate objects — data-driven subclass selection
         for room in ship.rooms.values():
             for obj_id in raw_object_ids[room.id]:
                 obj_data = items.get(obj_id)
                 if not obj_data:
                     continue
-                # Filter out 'type' — matches current behavior exactly
                 filtered_data = {k: v for k, v in obj_data.items() if k != "type"}
 
                 if obj_data["type"] == "portable":
                     obj_instance = PortableItem(**filtered_data)
                 else:
-                    # Fixed object — check if it's a storage unit
-                    if obj_id in storage_unit_ids:
+                    # Fixed object — if it has capacity_mass, it's a StorageUnit
+                    if "capacity_mass" in obj_data:
                         obj_instance = StorageUnit(**filtered_data)
                     else:
                         obj_instance = FixedObject(**filtered_data)
