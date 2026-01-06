@@ -11,25 +11,33 @@ def parse_markup_line(
     font_name: str = FONT_NAME_PRIMARY
 ) -> tuple[list[arcade.Text], float]:
     """
-    Parse a single line with *cyan* and %purple% markup.
+    Parse a single line with markup:
+    *text* → cyan (ACCENT_COLOR)
+    %text% → purple (OBJECT_COLOR)
+    +text+ → yellow (PLAYER_INPUT_COLOR)
     Returns (list of arcade.Text objects for the line, max line height used).
     """
     texts = []
     parts = []
     i = 0
     while i < len(line):
-        if line[i] in '*%':
+        if line[i] in '*+%':
             delimiter = line[i]
             j = line.find(delimiter, i + 1)
             if j != -1:
                 highlighted = line[i + 1:j]
-                color = ACCENT_COLOR if delimiter == '*' else OBJECT_COLOR
+                if delimiter == '*':
+                    color = ACCENT_COLOR
+                elif delimiter == '%':
+                    color = OBJECT_COLOR
+                elif delimiter == '+':
+                    color = PLAYER_INPUT_COLOR
                 parts.append((highlighted, color))
                 i = j + 1
                 continue
         # Normal text up to next delimiter
         next_pos = len(line)
-        for delim in '*%':
+        for delim in '*+%':
             pos = line.find(delim, i)
             if pos != -1 and pos < next_pos:
                 next_pos = pos

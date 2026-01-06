@@ -393,12 +393,19 @@ class CommandProcessor:
             if hasattr(unit, "open_description") and unit.open_description:
                 lines.append(unit.open_description)
 
-        # Always show contents
-        contents_text = unit.get_contents_list()
-        if "empty" in contents_text.lower():
+        # Always show contents with %markup% for purple objects
+        contents_items = unit.contents
+        if not contents_items:
             lines.append("It is empty.")
         else:
-            lines.append(f"Inside you see: {contents_text}")
+            item_names = [f"%{item.name}%" for item in contents_items]
+            if len(item_names) == 1:
+                formatted = item_names[0]
+            elif len(item_names) == 2:
+                formatted = f"{item_names[0]} and {item_names[1]}"
+            else:
+                formatted = ", ".join(item_names[:-1]) + f", and {item_names[-1]}"
+            lines.append(f"Inside you see: {formatted}")
 
         # Refresh UI
         self.ship_view.description_renderer.rebuild_description()

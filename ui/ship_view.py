@@ -75,28 +75,16 @@ class ShipView(arcade.View):
         self.description_renderer.rebuild_description()
         self.description_texts = self.description_renderer.get_description_texts()
 
-        # --- Response section content (global Y) ---
-        self.response_text = arcade.Text(
-            "",
-            x=self.text_left + self.text_padding,
-            y=self.response_section.bottom + self.response_section.height - RESPONSE_PADDING_TOP,
-            color=TEXT_COLOR,
-            font_size=RESPONSE_FONT_SIZE,
-            font_name=FONT_NAME_PRIMARY,
-            width=self.text_width - 2 * self.text_padding,
-            multiline=True,
-            anchor_y="top"
-        )
-
-        # Hidden colored overlay for object names in response
-        self.response_colored_texts = []
+        # --- Response section: list of colored Text objects using markup ---
+        self.response_texts = []
+        self.response_y_start = self.response_section.bottom + self.response_section.height - RESPONSE_PADDING_TOP
 
         # --- Input section content (global Y) ---
         self.input_text = arcade.Text(
             "> ",
             x=self.text_left + self.text_padding,
             y=self.input_section.bottom + self.input_section.height - INPUT_PADDING_TOP,
-            color=TEXT_COLOR,
+            color=PLAYER_INPUT_COLOR,
             font_size=INPUT_FONT_SIZE,
             font_name=FONT_NAME_PRIMARY,
             width=self.text_width - 2 * self.text_padding,
@@ -116,54 +104,8 @@ class ShipView(arcade.View):
             anchor_y="center"
         )
 
-
-
     def _update_response_display(self):
-        self.response_text.text = self.last_response
-        self.response_purple_overlay = []
-
-        if not self.last_response:
-            return
-
-        lines = self.last_response.split("\n")
-        current_y = self.response_section.bottom + self.response_section.height - RESPONSE_PADDING_TOP
-
-        for line in lines:
-            line = line.rstrip()
-            if not line:
-                current_y -= RESPONSE_FONT_SIZE + 4
-                continue
-
-            if line.lower().startswith("inside you see:"):
-                content = line[15:].strip()  # Remove "Inside you see: "
-                if content.lower() == "it is empty.":
-                    current_y -= RESPONSE_FONT_SIZE + 4
-                    continue
-
-                # Measure prefix width
-                prefix_width = self._measure_text_width("Inside you see: ")
-
-                x_pos = self.text_left + self.text_padding + prefix_width
-
-                # Parse items (handles "A, B, C, and D")
-                items = [item.strip(" ,") for item in content.replace(" and ", ", ").split(", ") if item.strip(" ,")]
-
-                for name in items:
-                    if name:
-                        purple_text = arcade.Text(
-                            name,
-                            x=x_pos,
-                            y=current_y,
-                            color=OBJECT_COLOR,
-                            font_size=RESPONSE_FONT_SIZE,
-                            font_name=FONT_NAME_PRIMARY,
-                            anchor_y="top",
-                            anchor_x="left"
-                        )
-                        self.response_purple_overlay.append(purple_text)
-                        x_pos += purple_text.content_width + 8  # spacing between names
-
-            current_y -= RESPONSE_FONT_SIZE + 4
+        self._rebuild_response()
 
     def _update_input_display(self):
         cursor = "█" if self.cursor_visible else " "
@@ -204,6 +146,10 @@ class ShipView(arcade.View):
         # Draw all text (global coordinates)
         self.drawing.draw_text_elements()
 
+        # Draw response texts (markup-colored)
+        for text in self.response_texts:
+            text.draw()
+
         # Draw ship time (always on top)
         self.ship_time_text.draw()
 
@@ -217,7 +163,7 @@ class ShipView(arcade.View):
                 return
 
             # Show what the player typed
-            self.last_response = f"> {cmd}\n"
+            self.last_response = f"+> {cmd}+\n"
 
             # Delegate to command processor
             response = self.command_processor.process(cmd)
@@ -290,4 +236,33 @@ class ShipView(arcade.View):
         """Stop the clock when leaving this view (e.g., inventory)."""
         super().on_hide_view()
         arcade.unschedule(self._clock_tick)
+
+    def _rebuild_response(self):
+        """Rebuild response using markup parsing — same system as description."""
+        self.response_texts = []
+
+        if not self.last_response:
+            return
+
+        from ui.text_utils import parse_markup_line  # Local import to avoid circular
+
+        lines = self.last_response.split("\n")
+        current_y = self.response_y_start
+
+        for line in lines:
+            line = line.rstrip()
+            if not line:
+                current_y -= RESPONSE_FONT_SIZE + 4
+                continue
+
+            line_texts, line_height = parse_markup_line(
+                line=line,
+                x=self.text_left + self.text_padding,
+                y=current_y,
+                width=self.text_width - 2 * self.text_padding,
+                font_size=RESPONSE_FONT_SIZE,
+                font_name=FONT_NAME_PRIMARY
+            )
+            self.response_texts.extend(line_texts)
+            current_y -= line_height + 4
 

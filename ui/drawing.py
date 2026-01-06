@@ -118,7 +118,6 @@ class DrawingManager:
         self.view.description_title.draw()
         for txt in self.view.description_texts:
             txt.draw()
-        self.view.response_text.draw()
         self.view.input_text.draw()
 
     def set_background_image(self, image_path: str):
