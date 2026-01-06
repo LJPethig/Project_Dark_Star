@@ -88,6 +88,9 @@ class ShipView(arcade.View):
             anchor_y="top"
         )
 
+        # Hidden colored overlay for object names in response
+        self.response_colored_texts = []
+
         # --- Input section content (global Y) ---
         self.input_text = arcade.Text(
             "> ",
@@ -117,6 +120,50 @@ class ShipView(arcade.View):
 
     def _update_response_display(self):
         self.response_text.text = self.last_response
+        self.response_purple_overlay = []
+
+        if not self.last_response:
+            return
+
+        lines = self.last_response.split("\n")
+        current_y = self.response_section.bottom + self.response_section.height - RESPONSE_PADDING_TOP
+
+        for line in lines:
+            line = line.rstrip()
+            if not line:
+                current_y -= RESPONSE_FONT_SIZE + 4
+                continue
+
+            if line.lower().startswith("inside you see:"):
+                content = line[15:].strip()  # Remove "Inside you see: "
+                if content.lower() == "it is empty.":
+                    current_y -= RESPONSE_FONT_SIZE + 4
+                    continue
+
+                # Measure prefix width
+                prefix_width = self._measure_text_width("Inside you see: ")
+
+                x_pos = self.text_left + self.text_padding + prefix_width
+
+                # Parse items (handles "A, B, C, and D")
+                items = [item.strip(" ,") for item in content.replace(" and ", ", ").split(", ") if item.strip(" ,")]
+
+                for name in items:
+                    if name:
+                        purple_text = arcade.Text(
+                            name,
+                            x=x_pos,
+                            y=current_y,
+                            color=OBJECT_COLOR,
+                            font_size=RESPONSE_FONT_SIZE,
+                            font_name=FONT_NAME_PRIMARY,
+                            anchor_y="top",
+                            anchor_x="left"
+                        )
+                        self.response_purple_overlay.append(purple_text)
+                        x_pos += purple_text.content_width + 8  # spacing between names
+
+            current_y -= RESPONSE_FONT_SIZE + 4
 
     def _update_input_display(self):
         cursor = "█" if self.cursor_visible else " "
@@ -243,3 +290,4 @@ class ShipView(arcade.View):
         """Stop the clock when leaving this view (e.g., inventory)."""
         super().on_hide_view()
         arcade.unschedule(self._clock_tick)
+

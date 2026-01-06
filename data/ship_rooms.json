@@ -108,8 +108,8 @@
     "id": "storage room",
     "name": "Storage Room",
     "description": [
-      "The ships designated small storage room, a %large storage unit% is attached to the wall ",
-      "a %small cabinet% is mounted next to it.",
+      "The ships designated small storage room, a %large storage unit% is",
+      "attached to the wall, and a %small cabinet% is mounted next to it.",
       "The lighting here is harsh and functional.",
       "An automated storage facility is built into rear wall",
       "A hatch leads back to the *recreation room*."
