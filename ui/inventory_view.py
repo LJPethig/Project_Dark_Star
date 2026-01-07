@@ -28,7 +28,7 @@ class InventoryView(arcade.View):
             title,
             SCREEN_WIDTH / 2,
             SCREEN_HEIGHT - TITLE_PADDING,
-            ACCENT_COLOR,
+            OBJECT_COLOR,
             DESCRIPTION_TITLE_FONT_SIZE,
             anchor_x="center",
             font_name=FONT_NAME_PRIMARY
@@ -62,7 +62,7 @@ class InventoryView(arcade.View):
                     item_name,
                     TEXT_PADDING,
                     current_y,
-                    ACCENT_COLOR,
+                    OBJECT_COLOR,
                     INPUT_FONT_SIZE,
                     font_name=FONT_NAME_PRIMARY
                 )

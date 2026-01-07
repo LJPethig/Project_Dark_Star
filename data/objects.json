@@ -184,7 +184,7 @@
     "type": "fixed",
     "name": "EVA Equipment Locker",
     "description": "Dedicated storage for EVA gear with padded hangers and storage bins.",
-    "keywords": ["eva locker", "eva suit locker", "eva equipment locker","equipment locker"],
+    "keywords": ["locker", "eva locker", "eva suit locker", "eva equipment locker", "equipment locker"],
     "capacity_mass": 150.0,
     "open_description": "The tall door opens to reveal a full-length suit rack and accessory bins."
   },

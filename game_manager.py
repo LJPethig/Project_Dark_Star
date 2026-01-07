@@ -118,50 +118,38 @@ class GameManager:
         cargo_bay = self.ship.rooms["cargo bay"]
         airlock = self.ship.rooms["airlock"]
 
-        # Fixed storage units by current ID
-        crew_locker = next((obj for obj in crew_quarters.objects if obj.id == "crew_quarters_cabinet"), None)
+        # Fixed storage units by current ID (fail fast if missing)
+        crew_locker = next(obj for obj in crew_quarters.objects if obj.id == "crew_quarters_cabinet")
         storage_small = next((obj for obj in storage_room.objects if obj.id == "storage_room_small_cabinet"), None)
         storage_large = next((obj for obj in storage_room.objects if obj.id == "storage_room_large_storage_unit"), None)
         eng_tool_cabinet = next((obj for obj in engineering.objects if obj.id == "engineering_tool_storage_cabinet"), None)
         eng_parts_unit = next((obj for obj in engineering.objects if obj.id == "engineering_large_parts_storage_unit"), None)
-        eva_locker = next((obj for obj in cargo_bay.objects if obj.id == "cargo_bay_eva_equipment_locker"), None)  # Note: in cargo bay now
+        eva_locker = next((obj for obj in cargo_bay.objects if obj.id == "cargo_bay_eva_equipment_locker"), None)
         cargo_large = next((obj for obj in cargo_bay.objects if obj.id == "cargo_bay_large_cabinet"), None)
 
-        # === 1. Guaranteed undamaged high-sec card ===
+        # === 1. Deterministic ID card placement ===
+        # High-sec card: player starts with it
         high_sec_data = self.items["id_card_high_sec"]
         high_sec_item = PortableItem(**{k: v for k, v in high_sec_data.items() if k != "type"})
-        if crew_locker and crew_locker.add_item(high_sec_item):
-            pass
-        else:
-            crew_quarters.add_object(high_sec_item)  # fallback
+        self.player["inventory"].append(high_sec_item)
 
-        # === 2. Random ID cards in key locations ===
-        id_card_ids = ["id_card_low_sec", "id_card_high_sec", "id_card_high_sec_damaged"]
-        for room, container in [
-            (crew_quarters, crew_locker),
-            (engineering, eng_parts_unit),
-            (storage_room, storage_large)
-        ]:
-            card_id = random.choice(id_card_ids)
-            card_data = self.items[card_id]
-            card = PortableItem(**{k: v for k, v in card_data.items() if k != "type"})
-            if container and container.add_item(card):
-                pass
-            else:
-                room.add_object(card)
+        # Low-sec card: placed in personal locker
+        low_sec_data = self.items["id_card_low_sec"]
+        low_sec_item = PortableItem(**{k: v for k, v in low_sec_data.items() if k != "type"})
+        crew_locker.add_item(low_sec_item)
 
-        # === 3. Uniques (EVA suit, scan tool) ===
+        # === 2. Uniques (EVA suit, scan tool) with preferred containers ===
         uniques = {"eva_suit": eva_locker, "scan_tool": eng_tool_cabinet}
         for unique_id, preferred_container in uniques.items():
             item_data = self.items[unique_id]
             item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
             if preferred_container and preferred_container.add_item(item):
                 continue
-            # Fallback scatter
+            # Fallback scatter (kept only for uniques — acceptable variability)
             fallback_room = random.choice([storage_room, engineering, cargo_bay])
             fallback_room.add_object(item)
 
-        # === 4. All other portable tools/wires ===
+        # === 3. All other portable tools/wires ===
         portable_ids = [
             item_id for item_id, data in self.items.items()
             if data.get("type") == "portable" and not item_id.startswith("id_card")
@@ -169,10 +157,10 @@ class GameManager:
         ]
         random.shuffle(portable_ids)
 
-        # Weighted placement targets — bias toward thematic containers
+        # Weighted placement targets
         placement_targets = []
         if eng_tool_cabinet:
-            placement_targets.extend([eng_tool_cabinet] * 6)     # strong bias: tools go here
+            placement_targets.extend([eng_tool_cabinet] * 6)
         if eng_parts_unit:
             placement_targets.extend([eng_parts_unit] * 3)
         if storage_large:
@@ -182,9 +170,9 @@ class GameManager:
         if storage_small:
             placement_targets.extend([storage_small] * 2)
         if crew_locker:
-            placement_targets.append(crew_locker)  # rare personal items
+            placement_targets.append(crew_locker)
 
-        # Fallback rooms if no containers available (safety)
+        # Fallback rooms
         fallback_rooms = [storage_room, engineering, cargo_bay]
 
         for item_id in portable_ids:
@@ -194,8 +182,6 @@ class GameManager:
             if placement_targets:
                 target = random.choice(placement_targets)
                 if not target.add_item(item):
-                    # Full → fall back to loose on floor
                     random.choice(fallback_rooms).add_object(item)
             else:
-                # No containers at all → place loose
                 random.choice(fallback_rooms).add_object(item)
