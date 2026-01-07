@@ -17,17 +17,20 @@ class InventoryView(arcade.View):
         self.clear()
         arcade.set_background_color(BACKGROUND_COLOR)
 
-        # Title
+        # Title determination (unchanged)
         if self.is_player:
             title = "YOUR INVENTORY"
         else:
             current_location = self.game_manager.get_current_location()
             room_name = current_location.name
             title = f"{room_name.upper()} INVENTORY"
+
+        # Title with dedicated top padding
+        title_y = SCREEN_HEIGHT - INVENTORY_TOP_PADDING
         arcade.draw_text(
             title,
             SCREEN_WIDTH / 2,
-            SCREEN_HEIGHT - TITLE_PADDING,
+            title_y,
             OBJECT_COLOR,
             DESCRIPTION_TITLE_FONT_SIZE,
             anchor_x="center",
@@ -36,11 +39,11 @@ class InventoryView(arcade.View):
 
         # Get items — unified handling for both player and cargo
         if self.is_player:
-            items = self.game_manager.get_player_inventory()  # Now list[PortableItem]
+            items = self.game_manager.get_player_inventory()
         else:
             current_location = self.game_manager.get_current_location()
             room_id = current_location.id
-            items = self.game_manager.get_cargo_for_room(room_id)  # Already list[PortableItem]
+            items = self.game_manager.get_cargo_for_room(room_id)
 
         if not items:
             arcade.draw_text(
@@ -53,10 +56,10 @@ class InventoryView(arcade.View):
                 font_name=FONT_NAME_PRIMARY
             )
         else:
-            current_y = SCREEN_HEIGHT - TITLE_PADDING - DESCRIPTION_TITLE_FONT_SIZE - SECTION_TITLE_PADDING
+            # Start item list below the actual title position
+            current_y = title_y - DESCRIPTION_TITLE_FONT_SIZE - SECTION_TITLE_PADDING
 
             for item in items:
-                # Both paths now give live instances → direct access
                 item_name = item.name
                 arcade.draw_text(
                     item_name,
@@ -93,7 +96,6 @@ class InventoryView(arcade.View):
             anchor_x="center",
             font_name=FONT_NAME_PRIMARY
         )
-
     def on_key_press(self, key, modifiers):
         if key == arcade.key.ESCAPE or (key == arcade.key.I and not modifiers):
             if self.previous_view:

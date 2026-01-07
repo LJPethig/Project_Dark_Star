@@ -62,6 +62,7 @@ SECTION_TITLE_PADDING = 20             # Space between title and first descripti
 RESPONSE_PADDING_TOP = 20              # Top padding in response section
 INPUT_PADDING_TOP = 40              # Bottom padding in input section
 LINE_SPACING = 4                      # Vertical space between description lines
+INVENTORY_TOP_PADDING = 40          # Space from screen top to title
 
 # Font sizes
 DESCRIPTION_TITLE_FONT_SIZE = 16
