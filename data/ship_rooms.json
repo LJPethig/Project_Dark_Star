@@ -4,10 +4,8 @@
     "name": "Crew Quarters",
     "description": [
       "Your personal cabin",
-      "The hum of life support fills the air. Dim lights flicker on automatically.",
-      "The bunk is unmade. Personal effects are scattered — reminders of a life spent in the black.",
-      "A %personal locker% with twin sliding doors is built into the far wall.",
-      "A hatch leads to *main corridor CH-1*."
+      "The hum of life support fills the air. Dim lights flicker on automatically. The bunk is unmade. Personal effects are scattered — reminders of a life spent in the black.",
+      "A %personal locker% with twin sliding doors is built into the far wall. A hatch leads to *main corridor CH-1*."
     ],
     "background": "resources/images/quarters.png",
     "exits": {
@@ -108,10 +106,8 @@
     "id": "storage room",
     "name": "Storage Room",
     "description": [
-      "The ships designated small storage room, a %large storage unit% is",
-      "attached to the wall, and a %small cabinet% is mounted next to it.",
-      "The lighting here is harsh and functional.",
-      "An automated storage facility is built into rear wall",
+      "The ships designated small storage room, a %large storage unit% is attached to the wall, and a %small cabinet% is mounted next to it.",
+      "The lighting here is harsh and functional. An automated storage facility is built into rear wall",
       "A hatch leads back to the *recreation room*."
     ],
     "background": "resources/images/storage.png",

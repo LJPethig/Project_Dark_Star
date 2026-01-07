@@ -37,7 +37,7 @@ class DescriptionRenderer:
             current_y -= LINE_SPACING * 2
 
             see_text = arcade.Text(
-                "You see:",
+                "You see",
                 x=self.view.text_left + self.view.text_padding,
                 y=current_y,
                 color=TEXT_COLOR,
@@ -50,9 +50,8 @@ class DescriptionRenderer:
 
             for obj in objects:
                 obj_name = obj.name if hasattr(obj, 'name') else "Unknown"
-                obj_line = f"- {obj_name}"
                 txt = arcade.Text(
-                    obj_line,
+                    obj_name,
                     x=self.view.text_left + self.view.text_padding,
                     y=current_y,
                     color=OBJECT_COLOR,
@@ -62,7 +61,7 @@ class DescriptionRenderer:
                     multiline=True,
                     anchor_y="top"
                 )
-                current_y -= txt.content_height + LINE_SPACING
+                current_y -= txt.content_height #+ LINE_SPACING
                 self.description_texts.append(txt)
 
     def get_description_texts(self):

@@ -24,10 +24,10 @@ FONT_SIZE_PROMPT = 14
 FONT_SIZE_SMALL = 12
 
 # Colours (RGBA tuples)
-TEXT_COLOR = (200, 200, 200, 255)         # Light grey
-ACCENT_COLOR = (0, 220, 220, 255)         # Cyan
-OBJECT_COLOR = (140, 0, 200, 255)         # Deep purple
-PLAYER_INPUT_COLOR = (255, 255, 0, 255)  # Bright yellow for player input and echo
+TEXT_COLOR = (176, 172, 176, 255)         # muted phosphor green
+EXIT_COLOR = (11, 70, 140, 255)         # sharp cyan
+OBJECT_COLOR = (143, 112, 75, 255)         # blood-orange
+PLAYER_INPUT_COLOR = (68, 120, 106, 255)  # amber/yellow
 ALERT_COLOR = (255, 140, 0, 255)          # Dark orange
 CURSOR_COLOR = (0, 255, 0, 255)           # Green
 PANEL_OVERLAY = (0, 0, 0, 200)            # Semi-transparent black panel
@@ -61,7 +61,7 @@ TITLE_PADDING = 20                     # Vertical space below title
 SECTION_TITLE_PADDING = 20             # Space between title and first description line
 RESPONSE_PADDING_TOP = 20              # Top padding in response section
 INPUT_PADDING_TOP = 40              # Bottom padding in input section
-LINE_SPACING = 0                      # Vertical space between description lines
+LINE_SPACING = 4                      # Vertical space between description lines
 
 # Font sizes
 DESCRIPTION_TITLE_FONT_SIZE = 16

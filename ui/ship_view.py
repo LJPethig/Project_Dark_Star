@@ -62,7 +62,7 @@ class ShipView(arcade.View):
             current_location.name,
             x=self.text_left + self.text_padding,
             y=SCREEN_HEIGHT - TITLE_PADDING,
-            color=ACCENT_COLOR,
+            color=EXIT_COLOR,
             font_size=DESCRIPTION_TITLE_FONT_SIZE,
             font_name=FONT_NAME_PRIMARY,
             width=self.text_width - 2 * self.text_padding,
@@ -163,7 +163,7 @@ class ShipView(arcade.View):
                 return
 
             # Show what the player typed
-            self.last_response = f"+> {cmd}+\n"
+            self.last_response = f"+> {cmd}+\n\n"
 
             # Delegate to command processor
             response = self.command_processor.process(cmd)
@@ -252,7 +252,7 @@ class ShipView(arcade.View):
         for line in lines:
             line = line.rstrip()
             if not line:
-                current_y -= RESPONSE_FONT_SIZE + 4
+                current_y -= RESPONSE_FONT_SIZE # + 4
                 continue
 
             line_texts, line_height = parse_markup_line(
@@ -264,5 +264,4 @@ class ShipView(arcade.View):
                 font_name=FONT_NAME_PRIMARY
             )
             self.response_texts.extend(line_texts)
-            current_y -= line_height + 4
-
+            current_y -= line_height + LINE_SPACING
