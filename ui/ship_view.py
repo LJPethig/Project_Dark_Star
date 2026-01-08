@@ -52,9 +52,9 @@ class ShipView(arcade.View):
         # Text padding
         self.text_padding = TEXT_PADDING
 
-        # For security PIN logic
-        self.last_panel = None
-        self.last_door = None
+        # For security PIN logic deprecated?
+        # self.last_panel = None
+        # self.last_door = None
 
         # --- Description section content (global Y) ---
         current_location = self.game_manager.get_current_location()  # Query live from GameManager
@@ -168,10 +168,8 @@ class ShipView(arcade.View):
             # Delegate to command processor
             response = self.command_processor.process(cmd)
 
-            # Handle quit/exit specially (since it calls arcade.exit())
-            if response == "Thanks for playing Project Dark Star. Goodbye!":
-                self.last_response += response + "\n"
-                self._update_response_display()
+            # Handle quit/exit specially
+            if response == "Quit":
                 arcade.exit()
                 return
 

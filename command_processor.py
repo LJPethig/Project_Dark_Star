@@ -42,12 +42,6 @@ class CommandProcessor:
             "examine": self._handle_examine,
             "x": self._handle_examine,
 
-            # Legacy/terminal cargo (to be deprecated)
-            "store": self._handle_store,
-            "retrieve": self._handle_retrieve,
-            "cargo": self._handle_ship_cargo,
-            "debug cargo": self._handle_debug_cargo,
-
             # Door and repair
             "lock": lambda args: self._handle_door_action("lock", args),
             "unlock": lambda args: self._handle_door_action("unlock", args),
@@ -87,40 +81,30 @@ class CommandProcessor:
         # Split into words
         words = cmd.split()
 
-        print(f"DEBUG: Input command: '{cmd}'")
-        print(f"DEBUG: Split words: {words}")
-
         # Find the longest matching verb from the start of the command
         verb = None
         args = ""
         for i in range(len(words), 0, -1):
             candidate = " ".join(words[:i])
-            print(f"  Trying candidate (length {i}): '{candidate}'")
             if candidate in self.commands:
                 verb = candidate
                 args = " ".join(words[i:])
-                print(f"  >>> MATCHED verb: '{verb}'")
-                print(f"  >>> Remaining args: '{args}'")
                 break
 
         if not verb:
-            print("  >>> NO verb matched — unknown command")
             return "I don't understand that command."
 
         # Look up and execute handler
         handler = self.commands.get(verb)
         if handler:
-            print(f"  >>> Calling handler: {handler.__name__}")
             return handler(args)
 
         # No matching command → unknown
-        print("  >>> Handler not found (should not happen)")
         return f"I don't understand '{cmd}'. Try 'help' for available commands."
-
 
     def _handle_quit(self, args: str) -> str:
         """Handle quit/exit commands."""
-        return "Thanks for playing Project Dark Star. Goodbye!"
+        return "Quit"
 
     def _handle_move(self, args: str) -> str:
         """Handle movement commands (go, enter, move) with natural language support."""
@@ -196,32 +180,6 @@ class CommandProcessor:
         self.ship_view.window.show_view(inventory_view)
         return "Opening personal inventory..."
 
-    def _handle_ship_cargo(self, args: str) -> str:
-        """Attempt to show ship cargo manifest (normally terminal-only)."""
-        if not self._can_access_ship_cargo():
-            return "Ship cargo manifest is only accessible from a terminal."
-        cargo_view = InventoryView(self.game_manager, is_player=False)
-        cargo_view.previous_view = self.ship_view
-        self.ship_view.window.show_view(cargo_view)
-        return "Opening ship cargo manifest..."
-
-    def _handle_debug_cargo(self, args: str) -> str:
-        """TEMP: Force access to ship cargo for testing."""
-        current_location = self.game_manager.get_current_location()
-        room_id = current_location.id
-
-        # Get cargo for the current room
-        cargo_items = self.game_manager.get_cargo_for_room(room_id)
-
-        # The rest stays the same - open the view
-        cargo_view = InventoryView(self.game_manager, is_player=False)
-        cargo_view.previous_view = self.ship_view
-        self.ship_view.window.show_view(cargo_view)
-
-        # Optional: Show room-specific info in the response
-        room_name = current_location.name
-        return f"DEBUG: Opening {room_name} cargo manifest (terminal bypass)...\nItems: {len(cargo_items)}"
-
     def _handle_take(self, args: str) -> str:
         """Take a portable item from the current room to player inventory."""
         if not args:
@@ -260,64 +218,6 @@ class CommandProcessor:
                     return random.choice(failure_messages)
 
         return "There's nothing like that here to take."
-
-    def _handle_store(self, args: str) -> str:
-        """Store an item from player inventory to ship cargo."""
-        if not args:
-            return "Store what?"
-
-        target_name = args.strip().lower()
-
-        # NEW: Get current room and check if valid for storage
-        current_location = self.game_manager.get_current_location()
-        room_id = current_location.id
-        if room_id not in ["storage room", "cargo bay"]:
-            return "You can only store items in the storage room or cargo bay."
-
-        inventory = self.game_manager.get_player_inventory()
-
-        for item in inventory[:]:
-            if item.matches(target_name):
-                if self.game_manager.add_to_cargo(item, room_id):
-                    self.game_manager.remove_from_inventory(item)
-                    self.ship_view.description_renderer.rebuild_description()
-                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
-                    return f"You store the {item.name} in the {current_location.name.lower()}."
-
-        return f"You don't have a '{args}' in your inventory."
-
-    def _handle_retrieve(self, args: str) -> str:
-        """Retrieve an item from ship cargo to player inventory."""
-        if not args:
-            return "Retrieve what?"
-
-        # NEW: Check if in a valid storage room
-        current_location = self.game_manager.get_current_location()
-        room_id = current_location.id
-        if room_id not in ["storage room", "cargo bay"]:
-            return "You can only retrieve items in the storage room or cargo bay."
-
-        target_name = args.strip().lower()
-        cargo_items = self.game_manager.get_cargo_for_room(room_id)
-
-        for item in cargo_items[:]:
-            if item.matches(target_name) and isinstance(item, PortableItem):
-                success, message = self.game_manager.add_to_inventory(item)
-                if success:
-                    self.game_manager.remove_from_cargo(item.id, room_id)  # Remove from cargo
-                    self.ship_view.description_renderer.rebuild_description()
-                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
-                    success_messages = [
-                        f"You retrieve the {item.name} from the {current_location.name.lower()}.",
-                        f"You take the {item.name} from the {current_location.name.lower()}.",
-                        f"You pick up the {item.name} from the {current_location.name.lower()}.",
-                        f"The {item.name} is now in your hands."
-                    ]
-                    return random.choice(success_messages)
-                else:
-                    return message  # e.g., "Too heavy!"
-
-        return f"There's nothing like '{args}' in the {current_location.name.lower()}."
 
     def _handle_drop(self, args: str) -> str:
         """Drop an item from player inventory back to the current room."""
@@ -363,8 +263,6 @@ class CommandProcessor:
 
         return f"There's nothing called '{args}' here to examine."
 
-    # === NEW: Storage Unit Handlers ===
-
     def _find_storage_unit(self, target_name: str):
         """Helper: find a StorageUnit in current room by keyword match."""
         current_location = self.game_manager.get_current_location()
@@ -393,7 +291,7 @@ class CommandProcessor:
             if hasattr(unit, "open_description") and unit.open_description:
                 lines.append(unit.open_description)
 
-        # Always show contents with %markup% for purple objects
+        # Always show contents with %markup% for objects
         contents_items = unit.contents
         if not contents_items:
             lines.append("It is empty.")
@@ -452,7 +350,6 @@ class CommandProcessor:
 
     def _handle_take_from(self, args: str) -> str:
         """Take an item from a storage unit: 'take wrench from locker'"""
-        print("_handle_take_from called")
         if not args:
             return "Take what from where?"
 
@@ -462,19 +359,6 @@ class CommandProcessor:
 
         item_name = parts[0].strip()
         container_name = parts[1].strip()
-
-        # === DEBUG BLOCK START ===
-        print(f"DEBUG: Player typed container name: '{container_name}'")
-        current_location = self.game_manager.get_current_location()
-        print(f"DEBUG: Searching in room: {current_location.name}")
-        for obj in current_location.objects:
-            if isinstance(obj, StorageUnit):
-                print(f"  Found StorageUnit: {obj.name} (id: {obj.id})")
-                print(f"    Keywords: {obj.keywords}")
-                match_result = obj.matches(container_name)
-                print(f"    Does '{container_name}' match? {match_result}")
-        # === DEBUG BLOCK END ===
-
         unit = self._find_storage_unit(container_name)
         if not unit:
             return f"There's no {container_name} here."
@@ -537,12 +421,6 @@ class CommandProcessor:
         self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
         return f"You put the {target_item.name} in the {unit.name.lower()}."
 
-    # Helper for access control (expand later with terminal check)
-    def _can_access_ship_cargo(self) -> bool:
-        """Check if player can access ship cargo (for now, always False)."""
-        # Later: check if current room has a terminal or terminal is "unlocked"
-        return False
-
     def _handle_door_action(self, action: str, args: str) -> str:
         """Delegate door lock/unlock to the dedicated handler."""
         door_handler = DoorHandler(self.ship_view)
@@ -571,6 +449,5 @@ class CommandProcessor:
             "You observe your environment."
         ]
         message = random.choice(messages)
-        self.ship_view.response_text.text = message
 
         return message

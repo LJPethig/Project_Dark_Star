@@ -64,7 +64,8 @@ class RepairHandler:
         # Immediate: show damaged panel and starting message
         damaged_image = matching_door.images.get("panel_damaged", "resources/images/image_missing.png")
         self.ship_view.drawing.set_background_image(damaged_image)
-        self.ship_view.response_text.text = "Repairing door access panel..."
+        self.ship_view.last_response += "Repairing door access panel...\n"
+        self.ship_view._rebuild_response()
 
         # Apply repair logic instantly (as before — magic repair)
         panel.is_broken = False
@@ -74,7 +75,8 @@ class RepairHandler:
             # After 8 seconds: show repaired panel
             repaired_image = matching_door.images.get("panel", "resources/images/image_missing.png")
             self.ship_view.drawing.set_background_image(repaired_image)
-            self.ship_view.response_text.text = f"You repair the door access panel to {exit_label}. It is now operational."
+            self.ship_view.last_response += f"You repair the door access panel to {exit_label}. It is now operational.\n"
+            self.ship_view._rebuild_response()
 
             # Refresh description to reflect fixed state
             self.ship_view.description_renderer.rebuild_description()
