@@ -80,7 +80,6 @@ class RepairHandler:
 
             # Refresh description to reflect fixed state
             self.ship_view.description_renderer.rebuild_description()
-            self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
 
             # NEW: Advance ship time and refresh clock immediately
             if self.game_manager.chronometer is not None:

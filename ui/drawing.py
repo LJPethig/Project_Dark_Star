@@ -116,7 +116,7 @@ class DrawingManager:
     def draw_text_elements(self):
         """Draw all text objects."""
         self.view.description_title.draw()
-        for txt in self.view.description_texts:
+        for txt in self.view.description_renderer.description_texts:  # ← direct from renderer
             txt.draw()
         self.view.input_text.draw()
 

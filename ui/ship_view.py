@@ -13,8 +13,6 @@ class ShipView(arcade.View):
     def __init__(self, game_manager):
         super().__init__()
         self.game_manager = game_manager
-        # Removed self.current_location - always query game_manager.get_current_location() live
-
         self.command_processor = CommandProcessor(self)
 
         self.current_input = ""
@@ -27,13 +25,12 @@ class ShipView(arcade.View):
         # Section manager
         self.section_manager = arcade.SectionManager(self)
 
-        # NEW: Use LayoutManager to handle section creation and positioning
+        # Use LayoutManager to handle section creation and positioning
         self.layout = LayoutManager(self)
         sections = self.layout.setup_sections()
         for section in sections:
             self.section_manager.add_section(section)
 
-        # ADD THESE 5 LINES HERE:
         self.image_section = self.layout.image_section
         self.description_section = self.layout.description_section
         self.response_section = self.layout.response_section
@@ -52,10 +49,6 @@ class ShipView(arcade.View):
         # Text padding
         self.text_padding = TEXT_PADDING
 
-        # For security PIN logic deprecated?
-        # self.last_panel = None
-        # self.last_door = None
-
         # --- Description section content (global Y) ---
         current_location = self.game_manager.get_current_location()  # Query live from GameManager
         self.description_title = arcade.Text(
@@ -73,7 +66,6 @@ class ShipView(arcade.View):
         # Description renderer
         self.description_renderer = DescriptionRenderer(self)
         self.description_renderer.rebuild_description()
-        self.description_texts = self.description_renderer.get_description_texts()
 
         # --- Response section: list of colored Text objects using markup ---
         self.response_texts = []
@@ -115,7 +107,6 @@ class ShipView(arcade.View):
         self.game_manager.set_current_location(new_room_id)
         self.drawing.load_background()  # Refresh background
         self.description_renderer.rebuild_description()  # Refresh description
-        self.description_texts = self.description_renderer.get_description_texts()  # NEW: Sync ShipView's texts
         self.description_title.text = self.game_manager.get_current_location().name
 
     def on_update(self, delta_time: float):
@@ -139,9 +130,6 @@ class ShipView(arcade.View):
 
         # Dividers
         self.drawing.draw_dividers()
-
-        # Ensure latest description texts before drawing
-        self.description_texts = self.description_renderer.get_description_texts()  # NEW: Always fresh
 
         # Draw all text (global coordinates)
         self.drawing.draw_text_elements()
@@ -224,7 +212,6 @@ class ShipView(arcade.View):
 
     def schedule_delayed_action(self, delay_seconds: float, callback):
         def _delayed(delta_time):
-            print("schedule_delayed_action is used!")
             callback()
             arcade.unschedule(_delayed)
 
