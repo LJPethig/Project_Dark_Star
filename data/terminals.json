@@ -1,0 +1,30 @@
+[
+{
+    "id": "terminal_personal",
+    "type": "fixed",
+    "name": "Personal Terminal",
+    "description": "Your personal computer terminal.",
+    "keywords": ["console", "computer", "terminal", "personal terminal"]
+  },
+  {
+    "id": "terminal_storage",
+    "type": "fixed",
+    "name": "Storage Terminal",
+    "description": "An inventory management terminal.",
+    "keywords": ["console", "computer", "terminal", "storage terminal", "inventory terminal"]
+  },
+  {
+    "id": "terminal_medical",
+    "type": "fixed",
+    "name": "Medical Terminal",
+    "description": "Medical records and diagnostics terminal.",
+    "keywords": ["console", "computer", "terminal", "medical terminal"]
+  },
+  {
+    "id": "terminal_navigation",
+    "type": "fixed",
+    "name": "Ship navigation terminal",
+    "description": "The ships navigation terminal.",
+    "keywords": ["console", "computer", "terminal", "nav terminal", "navigation terminal"]
+  }
+  ]

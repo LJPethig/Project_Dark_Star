@@ -1,0 +1,100 @@
+[
+  {
+    "id": "crew_quarters_cabinet",
+    "type": "fixed",
+    "name": "Personal Locker",
+    "description": "Your personal closet, with twin doors, built into the wall.",
+    "keywords": [
+      "cabinet",
+      "locker",
+      "closet",
+      "personal cabinet",
+      "personal locker",
+      "personal closet"
+    ],
+    "capacity_mass": 120.0,
+    "open_description": "The cabinet doors slide open smoothly, revealing racks for clothing and several shelves."
+  },
+  {
+    "id": "storage_room_small_cabinet",
+    "type": "fixed",
+    "name": "Small Cabinet",
+    "description": "A compact wall-mounted cabinet.",
+    "keywords": [
+      "cabinet",
+      "small cabinet",
+      "wall mounted cabinet"
+    ],
+    "capacity_mass": 80.0,
+    "open_description": "The door swings open smoothly, revealing several shelves."
+  },
+  {
+    "id": "storage_room_large_storage_unit",
+    "type": "fixed",
+    "name": "Large Storage Unit",
+    "description": "A large wall-mounted storage unit.",
+    "keywords": [
+      "storage",
+      "storage unit",
+      "large storage unit",
+      "large cabinet",
+      "large storage cabinet",
+      "wall mounted storage unit",
+      "wall mounted storage"
+    ],
+    "capacity_mass": 200.0,
+    "open_description": "The door swings open smoothly, revealing several shelves and parts bins."
+  },
+  {
+    "id": "cargo_bay_eva_equipment_locker",
+    "type": "fixed",
+    "name": "EVA Equipment Locker",
+    "description": "Dedicated storage for EVA gear with padded hangers and storage bins.",
+    "keywords": ["locker", "eva locker", "eva suit locker", "eva equipment locker", "equipment locker"],
+    "capacity_mass": 150.0,
+    "open_description": "The tall door opens to reveal a full-length suit rack and accessory bins."
+  },
+  {
+    "id": "cargo_bay_large_cabinet",
+    "type": "fixed",
+    "name": "Large Cabinet",
+    "description": "A large wall-mounted cabinet.",
+    "keywords": [
+      "cabinet",
+      "large cabinet",
+      "wall mounted cabinet"
+    ],
+    "capacity_mass": 150.0,
+    "open_description": "The door swings open smoothly, revealing several shelves."
+  },
+  {
+    "id": "engineering_tool_storage_cabinet",
+    "type": "fixed",
+    "name": "Tool Storage Cabinet",
+    "description": "A professional-grade cabinet for organising hand tools and diagnostic equipment.",
+    "keywords": ["cabinet","tool cabinet", "tool storage", "tool chest"],
+    "capacity_mass": 120.0,
+    "open_description": "Drawers slide out smoothly on ball-bearing runners, displaying precision-cut foam inserts."
+  },
+  {
+    "id": "engineering_large_parts_storage_unit",
+    "type": "fixed",
+    "name": "Large Parts Storage Unit",
+    "description": "A large wall-mounted parts storage cabinet.",
+    "keywords": [
+      "storage",
+      "storage unit",
+      "large storage unit",
+      "parts cabinet",
+      "parts storage",
+      "large storage cabinet",
+      "large parts cabinet",
+      "large cabinet",
+      "wall mounted storage unit",
+      "wall mounted cabinet",
+      "wall mounted parts storage"
+    ],
+    "capacity_mass": 200.0,
+    "open_description": "The door swings open smoothly, revealing several shelves and parts bins."
+  }
+]

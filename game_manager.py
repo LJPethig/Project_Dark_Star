@@ -18,7 +18,7 @@ class GameManager:
         self.player = None
         self.ship = None
         self.current_location = None
-        self.items = {}  # id -> full item dict from objects.json (kept as template source)
+        self.items = {}  # id -> full item dict from tools.json (kept as template source)
 
         self._load_items()
 
@@ -27,14 +27,25 @@ class GameManager:
         self.player_max_carry_mass = 10.0
 
     def _load_items(self):
-        """Load all item definitions from objects.json into self.items."""
-        try:
-            with open("data/objects.json", "r", encoding="utf-8") as f:
+        """Load all item definitions from multiple JSON files into self.items."""
+        self.items = {}
+
+        files_to_load = [
+            "data/tools.json",            # Core portable tools (wrench, bit driver, etc.)
+            "data/storage_units.json",    # Fixed storage containers (lockers, cabinets)
+            "data/terminals.json",        # Fixed terminals
+            "data/consumables.json",      # Wires and future repair/consumable items
+            "data/wearables.json",        # Equippable items (EVA suit, tool belt, etc.)
+            "data/misc_items.json"        # ID cards and future flavor objects
+        ]
+
+        for file_path in files_to_load:
+            with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                self.items = {item["id"]: item for item in data}
-        except Exception as e:
-            print(f"Failed to load objects.json: {e}")
-            self.items = {}
+                for item in data:
+                    if item["id"] in self.items:
+                        raise KeyError(f"Duplicate object ID '{item['id']}' in {file_path}")
+                    self.items[item["id"]] = item
 
     def create_new_game(self, player_name=PLAYER_NAME, ship_name=SHIP_NAME):
         """Create a new game by loading the ship and placing the player."""
@@ -46,10 +57,13 @@ class GameManager:
         self.ship = Ship.load_from_json(name=ship_name, items=self.items)
         self.current_location = self.ship.rooms[STARTING_ROOM]
 
-        # NEW: Place portable items procedurally
+        # strict placement
+        self._place_player_starting_items()
+
+        # Place portable items procedurally
         self._place_portable_items()
 
-        # NEW: Initialize ship chronometer
+        # Initialize ship chronometer
         self.chronometer = Chronometer()
 
     def get_current_location(self):
@@ -104,6 +118,29 @@ class GameManager:
         """Get cargo list for a specific room."""
         return self.ship.get_cargo_for_room(room_id)
 
+    def _place_player_starting_items(self) -> None:
+        """
+        Load player's guaranteed personal starting items from data/starting_items.json.
+        Raises exception on any error (missing file, invalid ID, wrong container type, etc.).
+        """
+        with open("data/starting_items.json", "r", encoding="utf-8") as f:
+            config = json.load(f)
+
+        for item_id in config.get("inventory", []):
+            item_data = self.items[item_id]
+            item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
+            self.player["inventory"].append(item)
+
+        for container_id, item_ids in config.get("containers", {}).items():
+            container = next(
+                obj for room in self.ship.rooms.values()
+                for obj in room.objects if obj.id == container_id
+            )
+            for item_id in item_ids:
+                item_data = self.items[item_id]
+                item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
+                container.add_item(item)
+
     def _place_portable_items(self) -> None:
         """Procedurally place portable items thematically into fixed storage units."""
         if not self.ship or not self.items:
@@ -126,17 +163,6 @@ class GameManager:
         eng_parts_unit = next((obj for obj in engineering.objects if obj.id == "engineering_large_parts_storage_unit"), None)
         eva_locker = next((obj for obj in cargo_bay.objects if obj.id == "cargo_bay_eva_equipment_locker"), None)
         cargo_large = next((obj for obj in cargo_bay.objects if obj.id == "cargo_bay_large_cabinet"), None)
-
-        # === 1. Deterministic ID card placement ===
-        # High-sec card: player starts with it
-        high_sec_data = self.items["id_card_high_sec"]
-        high_sec_item = PortableItem(**{k: v for k, v in high_sec_data.items() if k != "type"})
-        self.player["inventory"].append(high_sec_item)
-
-        # Low-sec card: placed in personal locker
-        low_sec_data = self.items["id_card_low_sec"]
-        low_sec_item = PortableItem(**{k: v for k, v in low_sec_data.items() if k != "type"})
-        crew_locker.add_item(low_sec_item)
 
         # === 2. Uniques (EVA suit, scan tool) with preferred containers ===
         uniques = {"eva_suit": eva_locker, "scan_tool": eng_tool_cabinet}
