@@ -5,6 +5,7 @@ from typing import List
 from constants import STARTING_ROOM, PLAYER_NAME, SHIP_NAME
 from models.interactable import PortableItem, FixedObject, StorageUnit  # Added StorageUnit
 from models.ship import Ship
+from models.player import Player
 from models.chronometer import Chronometer
 
 
@@ -22,9 +23,6 @@ class GameManager:
 
         self._load_items()
 
-        # Mass tracking for player inventory
-        self.player_carry_mass = 0.0
-        self.player_max_carry_mass = 10.0
 
     def _load_items(self):
         """Load all item definitions from multiple JSON files into self.items."""
@@ -49,10 +47,7 @@ class GameManager:
 
     def create_new_game(self, player_name=PLAYER_NAME, ship_name=SHIP_NAME):
         """Create a new game by loading the ship and placing the player."""
-        self.player = {
-            "name": player_name,
-            "inventory": []  # NOW: list of live PortableItem instances
-        }
+        self.player = Player(name=player_name)
 
         self.ship = Ship.load_from_json(name=ship_name, items=self.items)
         self.current_location = self.ship.rooms[STARTING_ROOM]
@@ -62,6 +57,13 @@ class GameManager:
 
         # Place portable items procedurally
         self._place_portable_items()
+
+        # temp debug
+        print(f"Mass: {self.player.current_carry_mass:.1f}/{self.player.max_carry_mass:.1f}")
+        print(f"Player: {self.player.name}")
+        print("Loose inventory:", [i.name for i in self.player.get_inventory()])
+        print("Equipped:", self.player.get_equipped_summary())
+        print(f"Total carry mass: {self.player.current_carry_mass:.1f}/{self.player.max_carry_mass:.1f} kg")
 
         # Initialize ship chronometer
         self.chronometer = Chronometer()
@@ -77,33 +79,15 @@ class GameManager:
         else:
             raise ValueError(f"Invalid room ID: {room_id}")
 
-    # Instance-based inventory helpers
+    # Inventory helpers - delegated to Player
     def add_to_inventory(self, item: PortableItem) -> tuple[bool, str]:
-        """Add a live PortableItem instance to player inventory, checking mass."""
-        if not isinstance(item, PortableItem):
-            return False, "You can't take that."
-
-        mass = getattr(item, "mass", 0.0)
-        if self.player_carry_mass + mass > self.player_max_carry_mass:
-            remaining = self.player_max_carry_mass - self.player_carry_mass
-            return False, f"Too heavy! You can carry {remaining:.1f} kg more."
-
-        self.player["inventory"].append(item)
-        self.player_carry_mass += mass
-        return True, f"You take the {item.name}."
+        return self.player.add_to_inventory(item)
 
     def remove_from_inventory(self, item: PortableItem) -> bool:
-        """Remove a live instance from inventory and update mass."""
-        if item in self.player["inventory"]:
-            mass = getattr(item, "mass", 0.0)
-            self.player["inventory"].remove(item)
-            self.player_carry_mass -= mass
-            return True
-        return False
+        return self.player.remove_from_inventory(item)
 
     def get_player_inventory(self) -> List[PortableItem]:
-        """Return the player's personal inventory (list of live instances)."""
-        return self.player["inventory"]
+        return self.player.get_inventory()
 
     # Cargo helpers — delegated to Ship (already instance-based)
     def add_to_cargo(self, item: PortableItem, room_id: str) -> bool:
@@ -129,7 +113,11 @@ class GameManager:
         for item_id in config.get("inventory", []):
             item_data = self.items[item_id]
             item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
-            self.player["inventory"].append(item)
+            self.player.add_to_inventory(item)  # <-- use new method
+
+            # Optional: auto-equip stasis garment if it's in starting inventory
+            if item_id == "stasis_garment":
+                self.player.equip(item)
 
         for container_id, item_ids in config.get("containers", {}).items():
             container = next(

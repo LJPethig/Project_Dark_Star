@@ -32,7 +32,7 @@ The switch from dataclasses to proper classes enables true object identity and m
 — essential for deep mechanics while keeping current behavior 100% intact.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Any
 
 
 class Interactable:
@@ -79,13 +79,17 @@ class Interactable:
 
 class PortableItem(Interactable):
     """
-    Items that can be taken, carried, equipped, and modified during play.
-    Mutable state will be added on-demand as mechanics require it
-    (e.g., durability for tools, O2 for EVA suit, schematics for scan tool).
+    Items that can be taken, carried, equipped, etc.
+    Common dynamic fields are now declared here for static type checking and IDE support.
+    Defaults are placeholders only — real values from JSON override them via __dict__.update(kwargs).
     """
 
+    mass: float = 0.0
+    equip_slot: Optional[str] = None
+    # Future common fields go here (e.g. condition: float = 1.0)
+
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(**kwargs) # ← JSON values override defaults above
 
         # Core portable flag — can be overridden via JSON if needed
         self.takeable: bool = True
