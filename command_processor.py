@@ -175,7 +175,7 @@ class CommandProcessor:
 
     def _handle_player_inventory(self, args: str) -> str:
         """Show player's personal carried inventory."""
-        inventory_view = InventoryView(self.game_manager, is_player=True)
+        inventory_view = InventoryView(self.game_manager)
         inventory_view.previous_view = self.ship_view
         self.ship_view.window.show_view(inventory_view)
         return "Opening personal inventory..."
