@@ -1,7 +1,7 @@
 # constants.py
 
 # Game starting room
-STARTING_ROOM = "crew quarters"  # The room the player wakes up in
+STARTING_ROOM = "med-bay"  # player start room
 PLAYER_NAME = "Jack Harrow"
 SHIP_NAME = "Tempus Fugit"
 
@@ -36,7 +36,7 @@ CLOCK_COLOR = (100, 100, 100, 255)          # Mid grey
 CLOCK_FLASH_COLOR = (255, 255, 255, 255)    # White
 
 # Chronometer settings
-START_DATE_TIME = (2147, 1, 1, 0, 0)  # year, month, day, hour, minute — launch epoch
+START_DATE_TIME = (2276, 1, 1, 0, 0)  # year, month, day, hour, minute — launch epoch
 SHIP_PANEL_REPAIR_MINUTES = 30        # Ship time advance on panel repair
 SHORT_WAIT = 8.0                      # Player-visible delay in seconds for panel repair
 CLOCK_UPDATE_INTERVAL = 60.0          # Real-time seconds between normal clock ticks

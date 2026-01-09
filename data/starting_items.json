@@ -1,11 +1,16 @@
 {
   "inventory": [
-    "id_card_high_sec"
+    "id_card_high_sec",
+    "stasis_garment"
   ],
 
   "containers": {
     "crew_quarters_cabinet": [
-      "id_card_low_sec"
+      "id_card_low_sec",
+      "flight_coveralls",
+      "mag_boots",
+      "pilot_jacket",
+      "tool_belt"
     ]
   }
 }

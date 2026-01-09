@@ -9,12 +9,66 @@
     "equip_slot": "waist"
   },
   {
-    "id": "eva_suit",
-    "type": "portable",
-    "name": "EVA Suit",
-    "description": "A full EVA suit for spacewalks.",
-    "keywords": ["eva suit", "suit", "spacesuit"],
-    "mass": 12.0,
-    "equip_slot": "body"
-  }
+  "id": "eva_suit",
+  "type": "portable",
+  "name": "EVA Suit",
+  "description": "A heavy-duty extravehicular activity suit rated for hard vacuum and radiation shielding. Integrated gloves and reinforced joints allow precise external work. A bulky life-support backpack provides hours of independent operation—the only reliable barrier between you and the black.",
+  "keywords": ["eva suit", "spacesuit", "vacuum suit", "extravehicular suit"],
+  "mass": 30.0,
+  "equip_slot": "body"
+},
+  {
+  "id": "eva_boots",
+  "type": "portable",
+  "name": "EVA Boots",
+  "description": "Vacuum-sealed extravehicular boots with integrated switchable electromagnetic soles for hull adhesion. Thick insulation, reinforced toes, and sealed joints protect against extreme cold and micrometeorite abrasion—designed to pair with the EVA suit for full external mobility.",
+  "keywords": ["eva boots", "vacuum boots", "spacesuit boots", "extravehicular boots"],
+  "mass": 7.0,
+  "equip_slot": "feet"
+},
+  {
+  "id": "stasis_garment",
+  "type": "portable",
+  "name": "Stasis Interface Garment",
+  "description": "A worn, charcoal-gray one-piece garment designed for long-term stasis pod use. Faded corporate markings and micro-abrasions speak to years of service. Embedded sensor threads and auto-sealing ports allow seamless integration with pod life support systems.",
+  "keywords": ["stasis garment", "pod garment", "pod skin", "pod suit"],
+  "mass": 1.2,
+  "equip_slot": "body"
+},
+  {
+  "id": "flight_coveralls",
+  "type": "portable",
+  "name": "Shipboard Flight Coveralls",
+  "description": "Heavy-duty one-piece coveralls in navy synth-fabric. Reinforced panels at knees and elbows, multiple cargo pockets, and tool loops along the thighs. Standard intra-ship wear for pilots and engineers—functional, flame-resistant, and built for long-haul reliability in the black.",
+  "keywords": ["coveralls", "flight coveralls", "jumpsuit", "flight suit", "work coveralls"],
+  "mass": 3.5,
+  "equip_slot": "body"
+},
+  {
+  "id": "mag_boots",
+  "type": "portable",
+  "name": "Magnetic Work Boots",
+  "description": "Heavy-duty boots with electromagnetic soles activated by a simple in-boot heel switch. Provides secure traction on ferromagnetic surfaces during zero-G or gravity malfunctions. Reinforced construction, essential for artificial gravity failure.",
+  "keywords": ["mag boots", "magnetic boots", "work boots", "boots", "zero-g boots"],
+  "mass": 4.2,
+  "equip_slot": "feet"
+},
+  {
+  "id": "pilot_jacket",
+  "type": "portable",
+  "name": "Pilot's Jacket",
+  "description": "A short black synth-leather jacket with high mandarin collar and structured shoulders. Multiple deep pockets line the chest and sides—designed not to interfere with a tool belt. Clean lines and subtle wear marks give it a sharp, authoritative presence in cold ship corridors.",
+  "keywords": ["pilots jacket", "flight jacket", "jacket", "black jacket", "leather jacket"],
+  "mass": 3.0,
+  "equip_slot": "torso"
+},
+  {
+  "id": "eva_helmet",
+  "type": "portable",
+  "name": "EVA Helmet",
+  "description": "A sealed extravehicular helmet with gold-tinted visor for glare reduction and radiation filtering. Scratched polycarbonate dome and worn neck ring show years of hard use; integrated comms and HUD overlay provide vital readouts in the black. Required to complete the EVA suit seal for external work.",
+  "keywords": ["eva helmet", "spacesuit helmet", "vacuum helmet", "extravehicular helmet", "helmet"],
+  "mass": 5.5,
+  "equip_slot": "head"
+}
 ]
