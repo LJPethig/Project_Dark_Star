@@ -4,9 +4,8 @@
     "name": "Crew Quarters",
     "description": [
       "Your personal cabin",
-      "The hum of life support fills the air. Dim lights flicker on automatically.",
-      "The bunk is unmade. Personal effects are scattered — reminders of a life spent in the black.",
-      "A hatch leads to *main corridor CH-1*."
+      "The hum of life support fills the air. Dim lights flicker on automatically. The bunk is unmade. Personal effects are scattered — reminders of a life spent in the black.",
+      "A %personal locker% with twin sliding doors is built into the far wall. A hatch leads to *main corridor CH-1*."
     ],
     "background": "resources/images/quarters.png",
     "exits": {
@@ -17,11 +16,7 @@
         "shortcuts": ["corridor CH-1", "corridor", "CH-1", "main corridor CH-1"]
       }
     },
-    "objects": [
-      "wrench",
-      "terminal_personal",
-      "id_card_low_sec"
-    ]
+    "fixed_objects": ["terminal_personal", "crew_quarters_cabinet"]
   },
   {
     "id": "galley",
@@ -40,7 +35,7 @@
         "shortcuts": ["rec room", "rec-room","rec"]
       }
     },
-    "objects": []
+    "fixed_objects": []
   },
   {
     "id": "recreation room",
@@ -85,7 +80,7 @@
         "shortcuts": ["storage"]
       }
     },
-    "objects": []
+    "fixed_objects": []
   },
   {
     "id": "cockpit",
@@ -105,16 +100,14 @@
         "shortcuts": ["rec room", "rec-room","rec"]
       }
     },
-    "objects": []
+    "fixed_objects": ["terminal_navigation"]
   },
   {
     "id": "storage room",
     "name": "Storage Room",
     "description": [
-      "The ships designated small storage room, shelves hold",
-      "several containers and various equipment crates.",
-      "The lighting here is harsh and functional.",
-      "An automated storage facility is built into rear wall",
+      "The ships designated small storage room, a %large storage unit% is attached to the wall, and a %small cabinet% is mounted next to it.",
+      "The lighting here is harsh and functional. An automated storage facility is built into rear wall",
       "A hatch leads back to the *recreation room*."
     ],
     "background": "resources/images/storage.png",
@@ -126,7 +119,7 @@
         "shortcuts": ["rec room", "rec-room","rec"]
       }
     },
-    "objects": ["terminal_storage"]
+    "fixed_objects": ["terminal_storage", "storage_room_small_cabinet", "storage_room_large_storage_unit"]
   },
   {
     "id": "hyper-sleep chamber",
@@ -145,7 +138,7 @@
         "shortcuts": ["medbay", "med bay", "medical"]
       }
     },
-    "objects": []
+    "fixed_objects": []
   },
   {
     "id": "med-bay",
@@ -172,7 +165,7 @@
         "shortcuts": ["stasis room", "hypersleep chamber", "stasis chamber"]
       }
     },
-    "objects": []
+    "fixed_objects": ["terminal_medical"]
   },
   {
     "id": "main corridor",
@@ -210,7 +203,7 @@
         "shortcuts": ["quarters"]
       }
     },
-    "objects": ["id_card_high_sec", "scan_tool"]
+    "fixed_objects": []
   },
   {
     "id": "sub corridor",
@@ -235,7 +228,7 @@
         "shortcuts": ["cargo", "hold", "cargo hold"]
       }
     },
-    "objects": []
+    "fixed_objects": []
   },
   {
     "id": "engineering",
@@ -243,7 +236,8 @@
     "description": [
       "The ship's engineering bay, filled with tools and diagnostic equipment.",
       "The reactor core thrums with contained energy.",
-      "Workbenches are cluttered with spare parts.",
+      "A %large parts storage unit% sits next to a workbench, ",
+      "opposite to this is a worn %tool storage cabinet%",
       "A solid door leads back towards *main corridor CH-1*, ",
       "on the left wall a small hatch is labelled *life support*"
     ],
@@ -261,7 +255,7 @@
         "direction": "left"
       }
     },
-    "objects": []
+    "fixed_objects": ["engineering_tool_storage_cabinet", "engineering_large_parts_storage_unit"]
   },
   {
     "id": "life support",
@@ -280,7 +274,7 @@
         "direction": "back"
       }
     },
-    "objects": []
+    "fixed_objects": []
   },
   {
     "id": "airlock",
@@ -299,7 +293,7 @@
         "direction": "back"
       }
     },
-    "objects": []
+    "fixed_objects": []
   },
   {
     "id": "cargo bay",
@@ -308,9 +302,10 @@
       "The main cargo storage area, stacked with containers and crates.",
       "Loading ramps and cargo handlers stand idle.",
       "The bay is spacious but dimly lit to save power.",
+      "On the left wall next to the *airlock* door is an %EVA equipment locker%.",
+      "On the opposite wall you see a %large cabinet%",
       "A large door leads back to *sub corridor CH-2*,",
-      "an access hatch to the *airlock* is on the left wall.",
-      "At the opposite end is a hydraulically operated *external door*"
+      "At the opposite end of the bay is a hydraulically operated *external door*"
     ],
     "background": "resources/images/cargo_bay.png",
     "exits": {
@@ -326,7 +321,6 @@
         "direction": "left"
       }
     },
-    "objects": ["terminal_storage",
-    "id_card_high_sec"]
+    "fixed_objects": ["terminal_storage", "cargo_bay_eva_equipment_locker", "cargo_bay_large_cabinet"]
   }
 ]

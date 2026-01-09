@@ -6,6 +6,8 @@ Designed for future expansion (tools, consumables, progress, other objects).
 """
 
 from models.security_panel import SecurityPanel
+from models.door import Door
+from constants import SHIP_PANEL_REPAIR_MINUTES, SHORT_WAIT
 
 
 class RepairHandler:
@@ -25,19 +27,9 @@ class RepairHandler:
         If multiple → prompt for clarification.
         """
         current_location = self.game_manager.get_current_location()
-        current_room_id = current_location["id"]
 
-        # Find all broken door panels in this room
-        broken_panels = []
-        for door in self.game_manager.door_status:
-            if current_room_id in door["rooms"]:
-                for panel_data in door.get("panel_ids", []):
-                    if panel_data["side"] == current_room_id:
-                        panel = self.game_manager.security_panels.get(panel_data["id"])
-                        if panel and panel.is_broken:
-                            # Get exit label for player-friendly display
-                            exit_label = self._get_exit_label(door, current_room_id)
-                            broken_panels.append((panel, exit_label, door))
+        # NEW: Use centralized helper from Ship — eliminates duplication
+        broken_panels = self.game_manager.ship.get_broken_panels_in_room(current_location)
 
         if not broken_panels:
             return "There are no damaged door access panels in this room."
@@ -50,43 +42,30 @@ class RepairHandler:
         # If explicit target provided
         if args.strip():
             target = args.strip().lower()
-            for panel, exit_label, door in broken_panels:
-                if self._matches_exit(target, door, current_room_id):
-                    return self._perform_repair(panel, exit_label, door)
+            matching_door = self.game_manager.ship.find_door_from_room(current_location, target)
+            if matching_door:
+                panel = matching_door.get_panel_for_room(current_location)
+                if panel and panel.is_broken:
+                    exit_label = next(
+                        (ed.get("label", matching_door.get_other_room(current_location).name)
+                         for ed in current_location.exits.values()
+                         if ed.get("target") == matching_door.get_other_room(current_location).id),
+                        matching_door.get_other_room(current_location).name
+                    )
+                    return self._perform_repair(panel, exit_label, matching_door)
             return f"No damaged door access panel to '{args}'."
 
         # Multiple broken panels — ask for clarification
         labels = [label for _, label, _ in broken_panels]
         return f"Which door access panel do you want to repair? ({', '.join(labels)})"
 
-    def _get_exit_label(self, door: dict, current_room_id: str) -> str:
-        """Get player-friendly label for the exit from current side."""
-        other_room = next(r for r in door["rooms"] if r != current_room_id)
-        exits = self.game_manager.get_current_location()["exits"]
-        for exit_key, ed in exits.items():
-            if ed["target"] == other_room:
-                return ed.get("label", other_room)
-        return other_room
-
-    def _matches_exit(self, target: str, door: dict, current_room_id: str) -> bool:
-        """Check if target matches the exit on this side (using keywords/shortcuts)."""
-        other_room = next(r for r in door["rooms"] if r != current_room_id)
-        if target == other_room.lower():
-            return True
-        exits = self.game_manager.get_current_location()["exits"]
-        for exit_key, ed in exits.items():
-            if ed["target"] == other_room:
-                if (target == exit_key.lower() or
-                    target in [s.lower() for s in ed.get("shortcuts", [])]):
-                    return True
-        return False
-
-    def _perform_repair(self, panel: SecurityPanel, exit_label: str, matching_door: dict) -> str:
+    def _perform_repair(self, panel: SecurityPanel, exit_label: str, matching_door: Door) -> str:
         """Perform the repair with visual flow: damaged panel → 8s delay → repaired panel (persistent)."""
         # Immediate: show damaged panel and starting message
-        damaged_image = matching_door.get("panel_image_damaged", "resources/images/panel_damaged_default.png")
+        damaged_image = matching_door.images.get("panel_damaged", "resources/images/image_missing.png")
         self.ship_view.drawing.set_background_image(damaged_image)
-        self.ship_view.response_text.text = "Repairing door access panel..."
+        self.ship_view.last_response += "Repairing door access panel...\n"
+        self.ship_view._rebuild_response()
 
         # Apply repair logic instantly (as before — magic repair)
         panel.is_broken = False
@@ -94,15 +73,21 @@ class RepairHandler:
 
         def on_repair_complete():
             # After 8 seconds: show repaired panel
-            repaired_image = matching_door.get("panel_image", "resources/images/panel_default.png")  # fallback to normal panel
+            repaired_image = matching_door.images.get("panel", "resources/images/image_missing.png")
             self.ship_view.drawing.set_background_image(repaired_image)
-            self.ship_view.response_text.text = f"You repair the door access panel to {exit_label}. It is now operational."
+            self.ship_view.last_response += f"You repair the door access panel to {exit_label}. It is now operational.\n"
+            self.ship_view._rebuild_response()
 
             # Refresh description to reflect fixed state
             self.ship_view.description_renderer.rebuild_description()
-            self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
 
-        # Schedule the 8-second "working" delay
-        self.ship_view.schedule_delayed_action(8.0, on_repair_complete)
+            # NEW: Advance ship time and refresh clock immediately
+            if self.game_manager.chronometer is not None:
+                self.game_manager.chronometer.advance(SHIP_PANEL_REPAIR_MINUTES)
+                self.ship_view.update_ship_time_display()
+                self.ship_view.flash_ship_time()  # Visual cue for time jump
+
+        # Schedule the player visible delay
+        self.ship_view.schedule_delayed_action(SHORT_WAIT, on_repair_complete)
 
         return ""  # Initial response shown visually

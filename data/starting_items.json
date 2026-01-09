@@ -1,0 +1,11 @@
+{
+  "inventory": [
+    "id_card_high_sec"
+  ],
+
+  "containers": {
+    "crew_quarters_cabinet": [
+      "id_card_low_sec"
+    ]
+  }
+}

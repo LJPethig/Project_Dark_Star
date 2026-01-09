@@ -1,9 +1,11 @@
+# command_processor.py
 from ui.inventory_view import InventoryView
-from models.interactable import PortableItem, FixedObject
+from models.interactable import PortableItem, FixedObject, StorageUnit  # Added StorageUnit
 from door_handler import DoorHandler
 from repair_handler import RepairHandler
 
 import random
+
 
 class CommandProcessor:
     """Command processor that handles player input using a registry pattern."""
@@ -15,32 +17,38 @@ class CommandProcessor:
         # Command registry: verb → handler function
         # Handlers receive the full remaining args (after the verb)
         self.commands = {
+            # Storage unit commands — grouped for clarity (multi-word verbs work due to longest-match logic)
+            "open": self._handle_open,
+            "close": self._handle_close,
+            "look in": self._handle_look_in,
+            "take from": self._handle_take_from,
+            "put in": self._handle_put_in,
+
+            # Core movement and interaction
             "quit": self._handle_quit,
-            "exit": self._handle_quit,  # alias for quit
+            "exit": self._handle_quit,
             "go": self._handle_move,
-            "enter": self._handle_move,  # alias
-            "move": self._handle_move,   # alias
-            # NEW: Inventory & cargo commands
+            "enter": self._handle_move,
+            "move": self._handle_move,
+            "look": self._handle_look,
+            "l": self._handle_look,
+
+            # Inventory and object manipulation
             "inventory": self._handle_player_inventory,
-            "i": self._handle_player_inventory,  # shortcut
+            "i": self._handle_player_inventory,
             "take": self._handle_take,
-            "pick up": self._handle_take,   # alias, spaces are stripped
-            "store": self._handle_store,
-            "cargo": self._handle_ship_cargo,     # Restricted to terminals
-            "debug cargo": self._handle_debug_cargo,  # TEMPORARY: for testing without terminal
-            # NEW: Examine command
-            "examine": self._handle_examine,
-            "x": self._handle_examine,  # shortcut
+            "pick up": self._handle_take,
             "drop": self._handle_drop,
-            "retrieve": self._handle_retrieve,
-            # Door actions delegated to DoorHandler for complex flows
+            "examine": self._handle_examine,
+            "x": self._handle_examine,
+
+            # Door and repair
             "lock": lambda args: self._handle_door_action("lock", args),
             "unlock": lambda args: self._handle_door_action("unlock", args),
             "repair door panel": self._handle_repair_door_panel,
             "repair door access panel": self._handle_repair_door_panel,
-            "repair door": self._handle_repair_door_panel, # shortcut
-            # Future commands will be added here, e.g.:
-            # "look": self._handle_look,
+            "repair access panel": self._handle_repair_door_panel,
+            "repair door": self._handle_repair_door_panel,
         }
 
     def process(self, cmd: str) -> str:
@@ -54,6 +62,21 @@ class CommandProcessor:
             pin = cmd.strip()
             self.ship_view.pending_pin_callback(pin)
             return ""  # Response handled inside callback
+
+        # Special handling for preposition-based container commands
+        if " from " in cmd and cmd.startswith("take "):
+            # 'take wrench from locker'
+            parts = cmd.split(" from ", 1)
+            item_part = parts[0][5:].strip()  # remove "take "
+            container_part = parts[1].strip()
+            return self._handle_take_from(f"{item_part} from {container_part}")
+
+        if " in " in cmd and cmd.startswith("put "):
+            # 'put wrench in locker'
+            parts = cmd.split(" in ", 1)
+            item_part = parts[0][4:].strip()  # remove "put "
+            container_part = parts[1].strip()
+            return self._handle_put_in(f"{item_part} in {container_part}")
 
         # Split into words
         words = cmd.split()
@@ -81,7 +104,7 @@ class CommandProcessor:
 
     def _handle_quit(self, args: str) -> str:
         """Handle quit/exit commands."""
-        return "Thanks for playing Project Dark Star. Goodbye!"
+        return "Quit"
 
     def _handle_move(self, args: str) -> str:
         """Handle movement commands (go, enter, move) with natural language support."""
@@ -104,55 +127,50 @@ class CommandProcessor:
         # Find the exit
         next_id = None
         exit_label = None
-        if normalized_cmd in current_location["exits"]:
-            exit_data = current_location["exits"][normalized_cmd]
-            next_id = exit_data["target"]
-            exit_label = exit_data.get("label", current_location["name"])
+        matching_exit_data = None
+        if normalized_cmd in current_location.exits:
+            matching_exit_data = current_location.exits[normalized_cmd]
         else:
-            for exit_key, ed in current_location["exits"].items():
+            for exit_key, ed in current_location.exits.items():
                 if "direction" in ed and normalized_cmd == ed["direction"].lower():
-                    exit_data = ed
-                    next_id = ed["target"]
-                    exit_label = ed.get("label", current_location["name"])
+                    matching_exit_data = ed
                     break
                 if "shortcuts" in ed and normalized_cmd in [s.lower() for s in ed["shortcuts"]]:
-                    exit_data = ed
-                    next_id = ed["target"]
-                    exit_label = ed.get("label", current_location["name"])
+                    matching_exit_data = ed
                     break
 
-        if not next_id:
+        if not matching_exit_data:
             return "You can't go that way."
 
-        # NEW: Check door status from door_status.json
-        current_room_id = current_location["id"]
-        for door in self.game_manager.door_status:
-            if set(door["rooms"]) == {current_room_id, next_id}:
-                if door["locked"]:
-                    # Show locked door image
-                    image_path = door.get("locked_image", "resources/images/locked_door_default.png")
-                    self.ship_view.drawing.set_background_image(image_path)
+        # Handle movement — support both secured doors and open archways
+        if "door" in matching_exit_data:
+            # Secured door — full lock check
+            target_door = matching_exit_data["door"]
 
-                    # Find the correct panel ID for this side
-                    panel_id = None
-                    for panel_data in door.get("panel_ids", []):
-                        if panel_data["side"] == current_room_id:
-                            panel_id = panel_data["id"]
-                            break
+            if target_door.locked:
+                image_path = target_door.images.get("locked", "resources/images/image_missing.png")
+                self.ship_view.drawing.set_background_image(image_path)
 
-                    if panel_id:
-                        # Set as active immediately so use panel works right now
-                        self.game_manager.last_attempted_panel_id = panel_id
-                        self.game_manager.last_attempted_door_id = door["id"]
-                    else:
-                        print("DEBUG: No panel found for current side — this shouldn't happen")
+                panel = target_door.get_panel_for_room(current_location)
+                if panel:
+                    self.game_manager.last_attempted_panel_id = panel.panel_id
+                    self.game_manager.last_attempted_door_id = target_door.id
 
-                    return door["locked_description"]
-                break  # door found and not locked, proceed
+                return target_door.images.get("locked_description", "The door is locked.")
 
-        # Move normally
+            # Unlocked door — proceed to move
+            target_room = target_door.get_other_room(current_location)
+        else:
+            # Open archway — no door, no lock check
+            target_room_id = matching_exit_data["target"]
+            target_room = self.game_manager.ship.rooms[target_room_id]
+
+        next_id = target_room.id
+        exit_label = matching_exit_data.get("label", target_room.name)
+
+        # Move normally — refresh UI
         self.ship_view.change_location(next_id)
-        display_name = exit_label if exit_label else self.game_manager.get_current_location()["name"]
+        display_name = exit_label if exit_label else target_room.name
         return f"You enter {display_name}."
 
     def _handle_player_inventory(self, args: str) -> str:
@@ -162,32 +180,6 @@ class CommandProcessor:
         self.ship_view.window.show_view(inventory_view)
         return "Opening personal inventory..."
 
-    def _handle_ship_cargo(self, args: str) -> str:
-        """Attempt to show ship cargo manifest (normally terminal-only)."""
-        if not self._can_access_ship_cargo():
-            return "Ship cargo manifest is only accessible from a terminal."
-        cargo_view = InventoryView(self.game_manager, is_player=False)
-        cargo_view.previous_view = self.ship_view
-        self.ship_view.window.show_view(cargo_view)
-        return "Opening ship cargo manifest..."
-
-    def _handle_debug_cargo(self, args: str) -> str:
-        """TEMP: Force access to ship cargo for testing."""
-        current_location = self.game_manager.get_current_location()
-        room_id = current_location["id"]
-
-        # Get cargo for the current room
-        cargo_items = self.game_manager.get_cargo_for_room(room_id)
-
-        # The rest stays the same - open the view
-        cargo_view = InventoryView(self.game_manager, is_player=False)
-        cargo_view.previous_view = self.ship_view
-        self.ship_view.window.show_view(cargo_view)
-
-        # Optional: Show room-specific info in the response
-        room_name = current_location["name"]
-        return f"DEBUG: Opening {room_name} cargo manifest (terminal bypass)...\nItems: {len(cargo_items)}"
-
     def _handle_take(self, args: str) -> str:
         """Take a portable item from the current room to player inventory."""
         if not args:
@@ -195,13 +187,12 @@ class CommandProcessor:
 
         target_name = args.strip().lower()
         current_location = self.game_manager.get_current_location()
-        object_instances = current_location.get("objects", [])
+        object_instances = current_location.objects
 
         for obj in object_instances[:]:  # copy to avoid modification during iteration
             if obj.matches(target_name):
                 if isinstance(obj, PortableItem):
-                    item_id = obj.id
-                    success, message = self.game_manager.add_to_inventory(item_id)
+                    success, message = self.game_manager.add_to_inventory(obj)
                     if success:
                         object_instances.remove(obj)  # Remove from room
                         self.ship_view.description_renderer.rebuild_description()
@@ -228,105 +219,26 @@ class CommandProcessor:
 
         return "There's nothing like that here to take."
 
-    def _handle_store(self, args: str) -> str:
-        """Store an item from player inventory to ship cargo."""
-        if not args:
-            return "Store what?"
-
-        target_name = args.strip().lower()
-
-        # NEW: Get current room and check if valid for storage
-        current_location = self.game_manager.get_current_location()
-        room_id = current_location["id"]
-        if room_id not in ["storage room", "cargo bay"]:
-            return "You can only store items in the storage room or cargo bay."
-
-        inventory_ids = self.game_manager.get_player_inventory()  # list of item IDs (strings)
-
-        for item_id in inventory_ids[:]:
-            obj_data = self.game_manager.items.get(item_id)  # lookup full data by ID
-            if obj_data and obj_data["type"] == "portable" and (
-                target_name == obj_data["name"].lower() or target_name in obj_data.get("keywords", [])
-            ):
-                # Re-create PortableItem object for cargo (since cargo still expects objects)
-                obj_kwargs = {k: v for k, v in obj_data.items() if k != "type"}
-                obj = PortableItem(**obj_kwargs)
-
-                # NEW: Pass room_id to add_to_cargo
-                if self.game_manager.add_to_cargo(obj, room_id):
-                    inventory_ids.remove(item_id)
-                    self.ship_view.description_renderer.rebuild_description()
-                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
-                    current_location = self.game_manager.get_current_location()
-                    room_name = current_location["name"].lower()  # e.g., "storage room" or "cargo bay"
-                    return f"You store the {obj_data['name']} in the {room_name}."
-                else:
-                    return "Failed to store item (cargo full?)."
-
-        return f"You don't have a '{args}' in your inventory."
-
-    def _handle_retrieve(self, args: str) -> str:
-        """Retrieve an item from ship cargo to player inventory."""
-        if not args:
-            return "Retrieve what?"
-
-        # NEW: Check if in a valid storage room
-        current_location = self.game_manager.get_current_location()
-        room_id = current_location["id"]
-        if room_id not in ["storage room", "cargo bay"]:
-            return "You can only retrieve items in the storage room or cargo bay."
-
-        target_name = args.strip().lower()
-        cargo_items = self.game_manager.get_cargo_for_room(room_id)
-
-        for obj in cargo_items[:]:
-            if obj.matches(target_name) and isinstance(obj, PortableItem):
-                item_id = obj.id
-                success, message = self.game_manager.add_to_inventory(item_id)
-                if success:
-                    self.game_manager.remove_from_cargo(item_id, room_id)  # Remove from cargo
-                    self.ship_view.description_renderer.rebuild_description()
-                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
-                    success_messages = [
-                        f"You retrieve the {obj.name} from the {current_location['name'].lower()}.",
-                        f"You take the {obj.name} from the {current_location['name'].lower()}.",
-                        f"You pick up the {obj.name} from the {current_location['name'].lower()}.",
-                        f"The {obj.name} is now in your hands."
-                    ]
-                    return random.choice(success_messages)
-                else:
-                    return message  # e.g., "Too heavy!"
-
-        return f"There's nothing like '{args}' in the {current_location['name'].lower()}."
-
     def _handle_drop(self, args: str) -> str:
         """Drop an item from player inventory back to the current room."""
         if not args:
             return "Drop what?"
 
         target_name = args.strip().lower()
-        inventory_ids = self.game_manager.get_player_inventory()
+        inventory = self.game_manager.get_player_inventory()
 
-        for item_id in inventory_ids[:]:
-            obj_data = self.game_manager.items.get(item_id)
-            if obj_data and (target_name == obj_data["name"].lower() or target_name in obj_data.get("keywords", [])):
-                if self.game_manager.remove_from_inventory(item_id):
+        for item in inventory[:]:
+            if item.matches(target_name):
+                if self.game_manager.remove_from_inventory(item):
                     current_location = self.game_manager.get_current_location()
-                    # Re-instantiate the object for the room
-                    obj_type = obj_data["type"]
-                    obj_kwargs = {k: v for k, v in obj_data.items() if k != "type"}
-                    if obj_type == "portable":
-                        obj = PortableItem(**obj_kwargs)
-                    else:
-                        obj = FixedObject(**obj_kwargs)
-                    current_location["objects"].append(obj)
+                    current_location.objects.append(item)
                     self.ship_view.description_renderer.rebuild_description()  # Refresh immediately
-                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()  # NEW: Sync UI texts
+                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
                     drop_messages = [
-                        f"You drop the {obj_data['name']}.",
-                        f"You put down the {obj_data['name']}.",
-                        f"You leave the {obj_data['name']}.",
-                        f"The {obj_data['name']} is now on the floor."
+                        f"You drop the {item.name}.",
+                        f"You put down the {item.name}.",
+                        f"You leave the {item.name}.",
+                        f"The {item.name} is now on the floor."
                     ]
                     return random.choice(drop_messages)
         return f"You don't have a '{args}' to drop."
@@ -338,27 +250,176 @@ class CommandProcessor:
 
         target_name = args.strip().lower()
         current_location = self.game_manager.get_current_location()
-        object_instances = current_location.get("objects", [])
 
         # Check room objects
-        for obj in object_instances:
+        for obj in current_location.objects:
             if obj.matches(target_name):
-                return obj.on_examine() if hasattr(obj,
-                                                   "on_examine") else f"You see nothing special about the {obj.name}."
+                return obj.on_examine()
 
-        # Check player inventory
-        for item_id in self.game_manager.get_player_inventory():
-            obj_data = self.game_manager.items.get(item_id)
-            if obj_data and (target_name == obj_data["name"].lower() or target_name in obj_data.get("keywords", [])):
-                return obj_data.get("examine_text", f"You see nothing special about the {obj_data['name']}.")
+        # Check player inventory (now live instances)
+        for item in self.game_manager.get_player_inventory():
+            if item.matches(target_name):
+                return item.on_examine()
 
         return f"There's nothing called '{args}' here to examine."
 
-    # Helper for access control (expand later with terminal check)
-    def _can_access_ship_cargo(self) -> bool:
-        """Check if player can access ship cargo (for now, always False)."""
-        # Later: check if current room has a terminal or terminal is "unlocked"
-        return False
+    def _find_storage_unit(self, target_name: str):
+        """Helper: find a StorageUnit in current room by keyword match."""
+        current_location = self.game_manager.get_current_location()
+        for obj in current_location.objects:
+            if isinstance(obj, StorageUnit) and obj.matches(target_name):
+                return obj
+        return None
+
+    def _handle_open(self, args: str) -> str:
+        """Open a storage unit and automatically reveal its contents."""
+        if not args:
+            return "Open what?"
+
+        target_name = args.strip().lower()
+        unit = self._find_storage_unit(target_name)
+        if not unit:
+            return f"There's no {args} here to open."
+
+        lines = []
+
+        if unit.is_open:
+            lines.append(f"The {unit.name.lower()} is already open.")
+        else:
+            unit.is_open = True
+            lines.append(f"You open the {unit.name.lower()}.")
+            if hasattr(unit, "open_description") and unit.open_description:
+                lines.append(unit.open_description)
+
+        # Always show contents with %markup% for objects
+        contents_items = unit.contents
+        if not contents_items:
+            lines.append("It is empty.")
+        else:
+            item_names = [f"%{item.name}%" for item in contents_items]
+            if len(item_names) == 1:
+                formatted = item_names[0]
+            elif len(item_names) == 2:
+                formatted = f"{item_names[0]} and {item_names[1]}"
+            else:
+                formatted = ", ".join(item_names[:-1]) + f", and {item_names[-1]}"
+            lines.append(f"Inside you see: {formatted}")
+
+        # Refresh UI
+        self.ship_view.description_renderer.rebuild_description()
+        self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+
+        return "\n".join(lines)
+
+    def _handle_close(self, args: str) -> str:
+        """Close a storage unit."""
+        if not args:
+            return "Close what?"
+
+        target_name = args.strip().lower()
+        unit = self._find_storage_unit(target_name)
+        if not unit:
+            return f"There's no {args} here to close."
+
+        if not unit.is_open:
+            return f"The {unit.name.lower()} is already closed."
+
+        unit.is_open = False
+        return f"You close the {unit.name.lower()}."
+
+    def _handle_look_in(self, args: str) -> str:
+        """Look inside an open storage unit."""
+        if not args:
+            return "Look in what?"
+
+        target_name = args.strip().lower()
+        unit = self._find_storage_unit(target_name)
+        if not unit:
+            return f"There's no {args} here to look in."
+
+        if not unit.is_open:
+            return f"The {unit.name.lower()} is closed."
+
+        if not unit.contents:
+            return f"The {unit.name.lower()} is empty."
+
+        response = f"Inside the {unit.name.lower()} you see:\n"
+        for item in unit.contents:
+            response += f"• {item.name}\n"
+        return response.strip()
+
+    def _handle_take_from(self, args: str) -> str:
+        """Take an item from a storage unit: 'take wrench from locker'"""
+        if not args:
+            return "Take what from where?"
+
+        parts = args.lower().split(" from ")
+        if len(parts) != 2:
+            return "Take what from where? Try 'take [item] from [locker]'."
+
+        item_name = parts[0].strip()
+        container_name = parts[1].strip()
+        unit = self._find_storage_unit(container_name)
+        if not unit:
+            return f"There's no {container_name} here."
+
+        if not unit.is_open:
+            return f"The {unit.name.lower()} is closed."
+
+        target_item = None
+        for item in unit.contents:
+            if item.matches(item_name):
+                target_item = item
+                break
+
+        if not target_item:
+            return f"There's no {item_name} in the {unit.name.lower()}."
+
+        success, message = self.game_manager.add_to_inventory(target_item)
+        if success:
+            unit.remove_item(target_item)
+            self.ship_view.description_renderer.rebuild_description()
+            self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+            return f"You take the {target_item.name} from the {unit.name.lower()}."
+        else:
+            return message  # e.g., too heavy
+
+    def _handle_put_in(self, args: str) -> str:
+        """Put an item into a storage unit: 'put wrench in locker'"""
+        if not args:
+            return "Put what in where?"
+
+        parts = args.lower().split(" in ")
+        if len(parts) != 2:
+            return "Put what in where? Try 'put [item] in [locker]'."
+
+        item_name = parts[0].strip()
+        container_name = parts[1].strip()
+
+        unit = self._find_storage_unit(container_name)
+        if not unit:
+            return f"There's no {container_name} here."
+
+        if not unit.is_open:
+            return f"The {unit.name.lower()} is closed."
+
+        inventory = self.game_manager.get_player_inventory()
+        target_item = None
+        for item in inventory:
+            if item.matches(item_name):
+                target_item = item
+                break
+
+        if not target_item:
+            return f"You don't have a {item_name}."
+
+        if not unit.add_item(target_item):
+            return f"The {unit.name.lower()} is too full to hold the {target_item.name}."
+
+        self.game_manager.remove_from_inventory(target_item)
+        self.ship_view.description_renderer.rebuild_description()
+        self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+        return f"You put the {target_item.name} in the {unit.name.lower()}."
 
     def _handle_door_action(self, action: str, args: str) -> str:
         """Delegate door lock/unlock to the dedicated handler."""
@@ -369,3 +430,24 @@ class CommandProcessor:
         """Delegate repair of door panels to dedicated handler."""
         repair_handler = RepairHandler(self.ship_view)
         return repair_handler.handle_repair_door_panel(args)
+
+    def _handle_look(self, args: str) -> str:
+        """Survey the current room — reset background and give flavor text.
+        Ignores any arguments for a more natural, forgiving feel."""
+        current_location = self.game_manager.get_current_location()
+        background_image = current_location.background or "resources/images/image_missing.png"
+        self.ship_view.drawing.set_background_image(background_image)
+
+        # Refresh description to ensure consistency
+        self.ship_view.description_renderer.rebuild_description()
+        self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+
+        messages = [
+            "You survey your surroundings.",
+            "You take a moment to look around.",
+            "You scan the room carefully.",
+            "You observe your environment."
+        ]
+        message = random.choice(messages)
+
+        return message

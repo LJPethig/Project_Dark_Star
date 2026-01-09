@@ -51,7 +51,7 @@ class DrawingManager:
     def load_background(self):
         """Load and scale the current room's background image."""
         current_location = self.view.game_manager.get_current_location()
-        self._create_scaled_sprite(current_location["background"])
+        self._create_scaled_sprite(current_location.background)
 
     def draw_background(self):
         """Draw the background image."""
@@ -116,9 +116,8 @@ class DrawingManager:
     def draw_text_elements(self):
         """Draw all text objects."""
         self.view.description_title.draw()
-        for txt in self.view.description_texts:
+        for txt in self.view.description_renderer.description_texts:  # ← direct from renderer
             txt.draw()
-        self.view.response_text.draw()
         self.view.input_text.draw()
 
     def set_background_image(self, image_path: str):

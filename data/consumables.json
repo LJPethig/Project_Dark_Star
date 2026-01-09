@@ -1,0 +1,22 @@
+[
+  {
+    "id": "wire_low_voltage",
+    "type": "portable",
+    "name": "Low Voltage Wire",
+    "description": "Small gauge electrical wire.",
+    "keywords": ["wire spool", "wire","electrical wire"],
+    "mass": 0.1
+  },
+  {
+    "id": "wire_optical",
+    "type": "portable",
+    "name": "Optical Wire",
+    "description": "Hybrid optical wire",
+    "keywords": [
+      "wire spool",
+      "wire",
+      "optical wire"
+    ],
+    "mass": 0.1
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "tool_belt",
+    "type": "portable",
+    "name": "Tool Belt",
+    "description": "A heavy-duty belt with multiple pouches and clips for hand tools.",
+    "keywords": ["tool belt", "belt"],
+    "mass": 0.5,
+    "equip_slot": "waist"
+  },
+  {
+    "id": "eva_suit",
+    "type": "portable",
+    "name": "EVA Suit",
+    "description": "A full EVA suit for spacewalks.",
+    "keywords": ["eva suit", "suit", "spacesuit"],
+    "mass": 12.0,
+    "equip_slot": "body"
+  }
+]

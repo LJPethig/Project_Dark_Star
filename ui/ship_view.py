@@ -13,8 +13,6 @@ class ShipView(arcade.View):
     def __init__(self, game_manager):
         super().__init__()
         self.game_manager = game_manager
-        # Removed self.current_location - always query game_manager.get_current_location() live
-
         self.command_processor = CommandProcessor(self)
 
         self.current_input = ""
@@ -27,13 +25,12 @@ class ShipView(arcade.View):
         # Section manager
         self.section_manager = arcade.SectionManager(self)
 
-        # NEW: Use LayoutManager to handle section creation and positioning
+        # Use LayoutManager to handle section creation and positioning
         self.layout = LayoutManager(self)
         sections = self.layout.setup_sections()
         for section in sections:
             self.section_manager.add_section(section)
 
-        # ADD THESE 5 LINES HERE:
         self.image_section = self.layout.image_section
         self.description_section = self.layout.description_section
         self.response_section = self.layout.response_section
@@ -52,17 +49,13 @@ class ShipView(arcade.View):
         # Text padding
         self.text_padding = TEXT_PADDING
 
-        # For security PIN logic
-        self.last_panel = None
-        self.last_door = None
-
         # --- Description section content (global Y) ---
         current_location = self.game_manager.get_current_location()  # Query live from GameManager
         self.description_title = arcade.Text(
-            current_location["name"],
+            current_location.name,
             x=self.text_left + self.text_padding,
             y=SCREEN_HEIGHT - TITLE_PADDING,
-            color=ACCENT_COLOR,
+            color=EXIT_COLOR,
             font_size=DESCRIPTION_TITLE_FONT_SIZE,
             font_name=FONT_NAME_PRIMARY,
             width=self.text_width - 2 * self.text_padding,
@@ -73,27 +66,17 @@ class ShipView(arcade.View):
         # Description renderer
         self.description_renderer = DescriptionRenderer(self)
         self.description_renderer.rebuild_description()
-        self.description_texts = self.description_renderer.get_description_texts()
 
-        # --- Response section content (global Y) ---
-        self.response_text = arcade.Text(
-            "",
-            x=self.text_left + self.text_padding,
-            y=self.response_section.bottom + self.response_section.height - RESPONSE_PADDING_TOP,
-            color=TEXT_COLOR,
-            font_size=RESPONSE_FONT_SIZE,
-            font_name=FONT_NAME_PRIMARY,
-            width=self.text_width - 2 * self.text_padding,
-            multiline=True,
-            anchor_y="top"
-        )
+        # --- Response section: list of colored Text objects using markup ---
+        self.response_texts = []
+        self.response_y_start = self.response_section.bottom + self.response_section.height - RESPONSE_PADDING_TOP
 
         # --- Input section content (global Y) ---
         self.input_text = arcade.Text(
             "> ",
             x=self.text_left + self.text_padding,
             y=self.input_section.bottom + self.input_section.height - INPUT_PADDING_TOP,
-            color=TEXT_COLOR,
+            color=PLAYER_INPUT_COLOR,
             font_size=INPUT_FONT_SIZE,
             font_name=FONT_NAME_PRIMARY,
             width=self.text_width - 2 * self.text_padding,
@@ -101,9 +84,20 @@ class ShipView(arcade.View):
             anchor_y="top"
         )
 
+        # --- Ship time display (bottom-right, event section) ---
+        self.ship_time_text = arcade.Text(
+            "",
+            x=SCREEN_WIDTH - TEXT_PADDING,
+            y=self.event_section_height // 2,
+            color=CLOCK_COLOR,
+            font_size=FONT_SIZE_SMALL,
+            font_name=FONT_NAME_PRIMARY,
+            anchor_x="right",
+            anchor_y="center"
+        )
 
     def _update_response_display(self):
-        self.response_text.text = self.last_response
+        self._rebuild_response()
 
     def _update_input_display(self):
         cursor = "█" if self.cursor_visible else " "
@@ -113,8 +107,7 @@ class ShipView(arcade.View):
         self.game_manager.set_current_location(new_room_id)
         self.drawing.load_background()  # Refresh background
         self.description_renderer.rebuild_description()  # Refresh description
-        self.description_texts = self.description_renderer.get_description_texts()  # NEW: Sync ShipView's texts
-        self.description_title.text = self.game_manager.get_current_location()["name"]
+        self.description_title.text = self.game_manager.get_current_location().name
 
     def on_update(self, delta_time: float):
         self.blink_timer += delta_time
@@ -138,11 +131,15 @@ class ShipView(arcade.View):
         # Dividers
         self.drawing.draw_dividers()
 
-        # Ensure latest description texts before drawing
-        self.description_texts = self.description_renderer.get_description_texts()  # NEW: Always fresh
-
         # Draw all text (global coordinates)
         self.drawing.draw_text_elements()
+
+        # Draw response texts (markup-colored)
+        for text in self.response_texts:
+            text.draw()
+
+        # Draw ship time (always on top)
+        self.ship_time_text.draw()
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.ENTER:
@@ -154,15 +151,13 @@ class ShipView(arcade.View):
                 return
 
             # Show what the player typed
-            self.last_response = f"> {cmd}\n"
+            self.last_response = f"+> {cmd}+\n\n"
 
             # Delegate to command processor
             response = self.command_processor.process(cmd)
 
-            # Handle quit/exit specially (since it calls arcade.exit())
-            if response == "Thanks for playing Project Dark Star. Goodbye!":
-                self.last_response += response + "\n"
-                self._update_response_display()
+            # Handle quit/exit specially
+            if response == "Quit":
                 arcade.exit()
                 return
 
@@ -180,29 +175,78 @@ class ShipView(arcade.View):
             self.current_input += chr(key)
             self._update_input_display()
 
-    # DEPRECATED
-    # def _show_panel_sequence(self, panel_image: str, final_image: str, success_message: str):
-    #     """Non-blocking: show panel → wait 5s → show success message + final image."""
-    #     print("_show_panel_sequence is used!")
-    #     # Step 1: Show panel and initial message
-    #     self.drawing.set_background_image(panel_image)
-    #     self.response_text.text = "Is this text used? door access panel, checking card ID"
-    #
-    #     # Step 2: Schedule step 2 after 5 seconds
-    #     def step2(delta_time):
-    #         print("Schedule step 2 after 5 seconds")
-    #         # Step 2: Show success and final image
-    #         self.response_text.text = success_message
-    #         self.drawing.set_background_image(final_image)
-    #         # Remove schedule (runs once)
-    #         arcade.unschedule(step2)
-    #
-    #     arcade.schedule(step2, 5.0)
+    def on_show_view(self):
+        """Called when this view becomes active — perfect place to start the clock."""
+        super().on_show_view()  # Always keep this if present
+
+        # Show current time immediately
+        self.update_ship_time_display()
+
+        # Start ticking every 60 seconds
+        arcade.schedule(self._clock_tick, CLOCK_UPDATE_INTERVAL)
+
+    def update_ship_time_display(self):
+        """Refresh the ship time text in the event section."""
+        if hasattr(self.game_manager, "chronometer"):
+            self.ship_time_text.text = self.game_manager.chronometer.get_formatted()
+        else:
+            self.ship_time_text.text = "Chronometer not initialized"
+
+    def _clock_tick(self, delta_time: float):
+        """Called every CLOCK_UPDATE_INTERVAL seconds to update clock during normal play."""
+        if self.game_manager.chronometer is not None:
+            self.game_manager.chronometer.advance(1)
+        self.update_ship_time_display()
+
+    def flash_ship_time(self):
+        """Briefly highlight the clock to signal a significant time advance."""
+        # Temporarily brighten the clock
+        self.ship_time_text.color = CLOCK_FLASH_COLOR
+
+        def reset_color(delta_time):
+            self.ship_time_text.color = CLOCK_COLOR
+            arcade.unschedule(reset_color)
+
+        # Flash for 0.5 seconds
+        arcade.schedule_once(reset_color, 0.5)
 
     def schedule_delayed_action(self, delay_seconds: float, callback):
         def _delayed(delta_time):
-            print("schedule_delayed_action is used!")
             callback()
             arcade.unschedule(_delayed)
 
         arcade.schedule(_delayed, delay_seconds)
+
+    def on_hide_view(self):
+        """Stop the clock when leaving this view (e.g., inventory)."""
+        super().on_hide_view()
+        arcade.unschedule(self._clock_tick)
+
+    def _rebuild_response(self):
+        """Rebuild response using markup parsing — same system as description."""
+        self.response_texts = []
+
+        if not self.last_response:
+            return
+
+        from ui.text_utils import parse_markup_line  # Local import to avoid circular
+
+        lines = self.last_response.split("\n")
+        current_y = self.response_y_start
+
+        for line in lines:
+            line = line.rstrip()
+            if not line:
+                current_y -= RESPONSE_FONT_SIZE # + 4
+                continue
+
+            line_texts, line_height = parse_markup_line(
+                line=line,
+                x=self.text_left + self.text_padding,
+                y=current_y,
+                width=self.text_width - 2 * self.text_padding,
+                font_size=RESPONSE_FONT_SIZE,
+                font_name=FONT_NAME_PRIMARY
+            )
+            self.response_texts.extend(line_texts)
+            current_y -= line_height + LINE_SPACING

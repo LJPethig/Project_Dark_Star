@@ -1,219 +1,213 @@
 # game_manager.py
 import json
+import random
+from typing import List
 from constants import STARTING_ROOM, PLAYER_NAME, SHIP_NAME
-from models.interactable import PortableItem, FixedObject  # Import the new interactable classes
-from models.security_panel import SecurityPanel  # NEW: Import the SecurityPanel class
+from models.interactable import PortableItem, FixedObject, StorageUnit  # Added StorageUnit
+from models.ship import Ship
+from models.chronometer import Chronometer
 
 
 class GameManager:
     """Central coordinator for game state.
 
-    Holds player, ship, current location and provides methods to create a new game.
+    Manages player data and delegates all ship-related state to the Ship class.
     """
 
     def __init__(self):
         self.player = None
         self.ship = None
         self.current_location = None
-        self.items = {}  # id -> full item dict from objects.json
+        self.items = {}  # id -> full item dict from tools.json (kept as template source)
 
-        self._load_items()  # Load global item registry
-        self._load_door_status()  # NEW: Load door status
+        self._load_items()
 
         # Mass tracking for player inventory
         self.player_carry_mass = 0.0
         self.player_max_carry_mass = 10.0
 
-        self.security_panels = {}  # NEW: panel_id -> SecurityPanel
-        self._load_security_panels()  # NEW: Load panels at startup
-
-
     def _load_items(self):
-        """Load all item definitions from objects.json into self.items."""
-        try:
-            with open("data/objects.json", "r", encoding="utf-8") as f:
+        """Load all item definitions from multiple JSON files into self.items."""
+        self.items = {}
+
+        files_to_load = [
+            "data/tools.json",            # Core portable tools (wrench, bit driver, etc.)
+            "data/storage_units.json",    # Fixed storage containers (lockers, cabinets)
+            "data/terminals.json",        # Fixed terminals
+            "data/consumables.json",      # Wires and future repair/consumable items
+            "data/wearables.json",        # Equippable items (EVA suit, tool belt, etc.)
+            "data/misc_items.json"        # ID cards and future flavor objects
+        ]
+
+        for file_path in files_to_load:
+            with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                self.items = {item["id"]: item for item in data}
-        except Exception as e:
-            print(f"Failed to load objects.json: {e}")
-            self.items = {}
+                for item in data:
+                    if item["id"] in self.items:
+                        raise KeyError(f"Duplicate object ID '{item['id']}' in {file_path}")
+                    self.items[item["id"]] = item
 
-    def create_new_game(self, player_name=PLAYER_NAME, ship_name=SHIP_NAME, skills=None):
-        """
-        Loads ship rooms from JSON and places the player in their quarters.
-        'skills' parameter is included for future background selection.
-        """
-        # Use fixed skills for now (will come from background choice later)
-        if skills is None:
-            skills = [
-                "Freighter Pilot License",
-                "Space Systems Engineering",
-                "EVA Certification",
-                "Computer Systems Specialist",
-                "Basic Trade Negotiation",
-                "Zero-G Repair"
-            ]
-
+    def create_new_game(self, player_name=PLAYER_NAME, ship_name=SHIP_NAME):
+        """Create a new game by loading the ship and placing the player."""
         self.player = {
             "name": player_name,
-            "skills": skills,
-            "inventory": []  # list of item IDs (strings)
+            "inventory": []  # NOW: list of live PortableItem instances
         }
 
-        self.ship = {
-            "name": ship_name,
-            "rooms": self._load_ship_rooms(),
-            "cargo_by_room": {  # NEW
-                "storage room": [],  # Personal/small storage
-                "cargo bay": []  # Large/trade cargo
-            }
-        }
+        self.ship = Ship.load_from_json(name=ship_name, items=self.items)
+        self.current_location = self.ship.rooms[STARTING_ROOM]
 
-        # Player always starts in quarters after waking up
-        self.current_location = self.ship["rooms"][STARTING_ROOM]
+        # strict placement
+        self._place_player_starting_items()
 
-    def _load_ship_rooms(self) -> dict:
-        """Load ship room data from JSON and instantiate objects from self.items."""
-        with open("data/ship_rooms.json", "r") as f:
-            rooms_data = json.load(f)
+        # Place portable items procedurally
+        self._place_portable_items()
 
-        rooms = {}
-        for room_data in rooms_data:
-            room_id = room_data["id"]
+        # Initialize ship chronometer
+        self.chronometer = Chronometer()
 
-            # Convert raw "objects" list of IDs into instantiated Interactable objects
-            objects = []
-            for obj_id in room_data.get("objects", []):
-                item_data = self.items.get(obj_id)
-                if not item_data:
-                    print(f"Warning: Item ID '{obj_id}' not found in objects.json")
-                    continue
-
-                obj_type = item_data.get("type", "portable")
-
-                # Remove 'type' key (it's not expected by the dataclasses)
-                obj_kwargs = {k: v for k, v in item_data.items() if k != "type"}
-
-                if obj_type == "portable":
-                    obj = PortableItem(**obj_kwargs)
-                elif obj_type == "fixed":
-                    obj = FixedObject(**obj_kwargs)
-                else:
-                    print(f"Warning: Unknown object type '{obj_type}' for {obj_id}")
-                    continue
-
-                objects.append(obj)
-
-            room_data["objects"] = objects  # Replace ID list with instantiated objects
-            rooms[room_id] = room_data
-
-        return rooms
-
-    def _load_door_status(self):
-        """Load door status from door_status.json."""
-        try:
-            with open("data/door_status.json", "r", encoding="utf-8") as f:
-                data = json.load(f)
-                self.door_status = data["connections"]
-        except Exception as e:
-            print(f"Failed to load door_status.json: {e}")
-            self.door_status = []
-
-    def _load_security_panels(self):
-        """Load and instantiate SecurityPanel instances from door_status.json."""
-        self.security_panels = {}
-
-        try:
-            with open("data/door_status.json", "r", encoding="utf-8") as f:
-                data = json.load(f)
-                connections = data["connections"]
-
-            for door in connections:
-                door_id = door["id"]
-                panel_ids = door.get("panel_ids", [])
-                security_level = door["security_level"]
-                door_pin = door.get("pin") if security_level == 3 else None
-
-                for panel_data in panel_ids:
-                    panel_id = panel_data["id"]
-                    side = panel_data["side"]
-
-                    # NEW: Load damage fields if present
-                    damaged = panel_data.get("damaged", False)
-                    repair_progress = panel_data.get("repair_progress", 0.0)
-
-                    panel = SecurityPanel(
-                        panel_id=panel_id,
-                        door_id=door_id,
-                        security_level=security_level,
-                        side=side,
-                        pin=door_pin,
-                        damaged=damaged,  # NEW
-                        repair_progress=repair_progress  # NEW
-                    )
-                    self.security_panels[panel_id] = panel
-
-        except Exception as e:
-            print(f"Failed to load security panels: {e}")
-            self.security_panels = {}
-
-    def get_current_location(self) -> dict:
-        """Return the current location data."""
+    def get_current_location(self):
+        """Return the current Room instance."""
         return self.current_location
 
     def set_current_location(self, room_id: str) -> None:
-        """Set the current location by room ID. Single source of truth for game state."""
-        if room_id in self.ship["rooms"]:
-            self.current_location = self.ship["rooms"][room_id]
+        """Set the current location by room ID."""
+        if room_id in self.ship.rooms:
+            self.current_location = self.ship.rooms[room_id]
         else:
             raise ValueError(f"Invalid room ID: {room_id}")
 
-    # Inventory helpers (updated to use IDs and mass)
-    def add_to_inventory(self, item_id: str) -> tuple[bool, str]:
-        """Add a portable item by ID to player inventory, checking mass."""
-        item_data = self.items.get(item_id)
-        if not item_data or item_data["type"] != "portable":
+    # Instance-based inventory helpers
+    def add_to_inventory(self, item: PortableItem) -> tuple[bool, str]:
+        """Add a live PortableItem instance to player inventory, checking mass."""
+        if not isinstance(item, PortableItem):
             return False, "You can't take that."
 
-        mass = item_data.get("mass", 0.0)
+        mass = getattr(item, "mass", 0.0)
         if self.player_carry_mass + mass > self.player_max_carry_mass:
-            return False, f"Too heavy! You can carry {self.player_max_carry_mass - self.player_carry_mass:.1f} kg more."
+            remaining = self.player_max_carry_mass - self.player_carry_mass
+            return False, f"Too heavy! You can carry {remaining:.1f} kg more."
 
-        self.player["inventory"].append(item_id)
+        self.player["inventory"].append(item)
         self.player_carry_mass += mass
-        return True, f"You take the {item_data['name']}."
+        return True, f"You take the {item.name}."
 
-    def remove_from_inventory(self, item_id: str) -> bool:
-        """Remove an item by ID from inventory and update mass."""
-        if item_id in self.player["inventory"]:
-            item_data = self.items.get(item_id)
-            if item_data:
-                self.player_carry_mass -= item_data.get("mass", 0.0)
-            self.player["inventory"].remove(item_id)
+    def remove_from_inventory(self, item: PortableItem) -> bool:
+        """Remove a live instance from inventory and update mass."""
+        if item in self.player["inventory"]:
+            mass = getattr(item, "mass", 0.0)
+            self.player["inventory"].remove(item)
+            self.player_carry_mass -= mass
             return True
         return False
 
+    def get_player_inventory(self) -> List[PortableItem]:
+        """Return the player's personal inventory (list of live instances)."""
+        return self.player["inventory"]
+
+    # Cargo helpers — delegated to Ship (already instance-based)
     def add_to_cargo(self, item: PortableItem, room_id: str) -> bool:
         """Add item to the cargo list for the specified room."""
-        if isinstance(item, PortableItem) and room_id in self.ship["cargo_by_room"]:
-            self.ship["cargo_by_room"][room_id].append(item)
-            return True
-        return False
+        return self.ship.add_to_cargo(item, room_id)
 
     def remove_from_cargo(self, item_id: str, room_id: str) -> bool:
         """Remove item from the cargo list for the specified room by ID."""
-        if room_id in self.ship["cargo_by_room"]:
-            cargo_list = self.ship["cargo_by_room"][room_id]
-            for i, item in enumerate(cargo_list):
-                if item.id == item_id:
-                    cargo_list.pop(i)
-                    return True
-        return False
+        return self.ship.remove_from_cargo(item_id, room_id)
 
     def get_cargo_for_room(self, room_id: str) -> list:
         """Get cargo list for a specific room."""
-        return self.ship["cargo_by_room"].get(room_id, [])
+        return self.ship.get_cargo_for_room(room_id)
 
-    def get_player_inventory(self) -> list:
-        """Return the player's personal inventory list (of item IDs)."""
-        return self.player["inventory"]
+    def _place_player_starting_items(self) -> None:
+        """
+        Load player's guaranteed personal starting items from data/starting_items.json.
+        Raises exception on any error (missing file, invalid ID, wrong container type, etc.).
+        """
+        with open("data/starting_items.json", "r", encoding="utf-8") as f:
+            config = json.load(f)
+
+        for item_id in config.get("inventory", []):
+            item_data = self.items[item_id]
+            item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
+            self.player["inventory"].append(item)
+
+        for container_id, item_ids in config.get("containers", {}).items():
+            container = next(
+                obj for room in self.ship.rooms.values()
+                for obj in room.objects if obj.id == container_id
+            )
+            for item_id in item_ids:
+                item_data = self.items[item_id]
+                item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
+                container.add_item(item)
+
+    def _place_portable_items(self) -> None:
+        """Procedurally place portable items thematically into fixed storage units."""
+        if not self.ship or not self.items:
+            return
+
+        random.seed()  # Fresh randomness per new game
+
+        # Room references
+        crew_quarters = self.ship.rooms["crew quarters"]
+        storage_room = self.ship.rooms["storage room"]
+        engineering = self.ship.rooms["engineering"]
+        cargo_bay = self.ship.rooms["cargo bay"]
+        airlock = self.ship.rooms["airlock"]
+
+        # Fixed storage units by current ID (fail fast if missing)
+        crew_locker = next(obj for obj in crew_quarters.objects if obj.id == "crew_quarters_cabinet")
+        storage_small = next((obj for obj in storage_room.objects if obj.id == "storage_room_small_cabinet"), None)
+        storage_large = next((obj for obj in storage_room.objects if obj.id == "storage_room_large_storage_unit"), None)
+        eng_tool_cabinet = next((obj for obj in engineering.objects if obj.id == "engineering_tool_storage_cabinet"), None)
+        eng_parts_unit = next((obj for obj in engineering.objects if obj.id == "engineering_large_parts_storage_unit"), None)
+        eva_locker = next((obj for obj in cargo_bay.objects if obj.id == "cargo_bay_eva_equipment_locker"), None)
+        cargo_large = next((obj for obj in cargo_bay.objects if obj.id == "cargo_bay_large_cabinet"), None)
+
+        # === 2. Uniques (EVA suit, scan tool) with preferred containers ===
+        uniques = {"eva_suit": eva_locker, "scan_tool": eng_tool_cabinet}
+        for unique_id, preferred_container in uniques.items():
+            item_data = self.items[unique_id]
+            item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
+            if preferred_container and preferred_container.add_item(item):
+                continue
+            # Fallback scatter (kept only for uniques — acceptable variability)
+            fallback_room = random.choice([storage_room, engineering, cargo_bay])
+            fallback_room.add_object(item)
+
+        # === 3. All other portable tools/wires ===
+        portable_ids = [
+            item_id for item_id, data in self.items.items()
+            if data.get("type") == "portable" and not item_id.startswith("id_card")
+            and item_id not in uniques
+        ]
+        random.shuffle(portable_ids)
+
+        # Weighted placement targets
+        placement_targets = []
+        if eng_tool_cabinet:
+            placement_targets.extend([eng_tool_cabinet] * 6)
+        if eng_parts_unit:
+            placement_targets.extend([eng_parts_unit] * 3)
+        if storage_large:
+            placement_targets.extend([storage_large] * 3)
+        if cargo_large:
+            placement_targets.extend([cargo_large] * 2)
+        if storage_small:
+            placement_targets.extend([storage_small] * 2)
+        if crew_locker:
+            placement_targets.append(crew_locker)
+
+        # Fallback rooms
+        fallback_rooms = [storage_room, engineering, cargo_bay]
+
+        for item_id in portable_ids:
+            item_data = self.items[item_id]
+            item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
+
+            if placement_targets:
+                target = random.choice(placement_targets)
+                if not target.add_item(item):
+                    random.choice(fallback_rooms).add_object(item)
+            else:
+                random.choice(fallback_rooms).add_object(item)

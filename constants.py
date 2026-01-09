@@ -24,20 +24,32 @@ FONT_SIZE_PROMPT = 14
 FONT_SIZE_SMALL = 12
 
 # Colours (RGBA tuples)
-TEXT_COLOR = (200, 200, 200, 255)         # Light grey
-ACCENT_COLOR = (0, 220, 220, 255)         # Cyan
-OBJECT_COLOR = (140, 0, 200, 255)         # Deep purple
+TEXT_COLOR = (176, 172, 176, 255)         # muted phosphor green
+EXIT_COLOR = (11, 70, 140, 255)         # sharp cyan
+OBJECT_COLOR = (143, 112, 75, 255)         # blood-orange
+PLAYER_INPUT_COLOR = (68, 120, 106, 255)  # amber/yellow
 ALERT_COLOR = (255, 140, 0, 255)          # Dark orange
 CURSOR_COLOR = (0, 255, 0, 255)           # Green
 PANEL_OVERLAY = (0, 0, 0, 200)            # Semi-transparent black panel
 BACKGROUND_OVERLAY = (0, 0, 0, 100)        # Subtle dark overlay for images
+CLOCK_COLOR = (100, 100, 100, 255)          # Mid grey
+CLOCK_FLASH_COLOR = (255, 255, 255, 255)    # White
+
+# Chronometer settings
+START_DATE_TIME = (2147, 1, 1, 0, 0)  # year, month, day, hour, minute — launch epoch
+SHIP_PANEL_REPAIR_MINUTES = 30        # Ship time advance on panel repair
+SHORT_WAIT = 8.0                      # Player-visible delay in seconds for panel repair
+CLOCK_UPDATE_INTERVAL = 60.0          # Real-time seconds between normal clock ticks
+
+CARD_SWIPE_WAIT = 3.0  # Player-visible delay in seconds for door card swipe
+
 
 
 # Added for complete sectioning of ship_view
 
 # Layout ratios and heights
 LEFT_PANEL_RATIO = 0.45                # Image width ratio
-DESCRIPTION_SECTION_RATIO = 0.55       # Proportion of right text area for description
+DESCRIPTION_SECTION_RATIO = 0.50       # Proportion of right text area for description
 EVENT_SECTION_HEIGHT = 60              # Pixels for bottom event section
 
 # Fixed heights
@@ -49,7 +61,8 @@ TITLE_PADDING = 20                     # Vertical space below title
 SECTION_TITLE_PADDING = 20             # Space between title and first description line
 RESPONSE_PADDING_TOP = 20              # Top padding in response section
 INPUT_PADDING_TOP = 40              # Bottom padding in input section
-LINE_SPACING = 0                      # Vertical space between description lines
+LINE_SPACING = 4                      # Vertical space between description lines
+INVENTORY_TOP_PADDING = 40          # Space from screen top to title
 
 # Font sizes
 DESCRIPTION_TITLE_FONT_SIZE = 16
@@ -61,3 +74,4 @@ INPUT_FONT_SIZE = 12
 DIVIDER_COLOR = (100, 150, 200, 180)   # RGBA
 DIVIDER_THICKNESS = 2
 EVENT_SECTION_BG_COLOR = (20, 30, 50, 180)  # Dark semi-transparent for event area
+

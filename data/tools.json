@@ -1,0 +1,50 @@
+[
+  {
+    "id": "wrench",
+    "type": "portable",
+    "name": "Adjustable Wrench",
+    "description": "A sturdy tool for zero-G repairs.",
+    "keywords": ["wrench", "adjustable wrench", "tool"],
+    "mass": 1
+  },
+  {
+    "id": "powered_bit_driver",
+    "type": "portable",
+    "name": "Power Bit Driver",
+    "description": "An electric screwdriver and bit set. Suitable for most small fasteners found on ship access panels. ",
+    "keywords": ["screwdriver", "bit driver", "tool"],
+    "mass": 0.5
+  },
+  {
+    "id": "electrical_service_kit",
+    "type": "portable",
+    "name": "Electrical Service Tool Kit",
+    "description": "A small case of common sized wire strippers, crimping and interconnect assembly tools",
+    "keywords": ["electrical kit", "electrical service kit", "crimping tools"],
+    "mass": 1.5
+  },
+  {
+    "id": "laser_solderer",
+    "type": "portable",
+    "name": "Laser Solderer",
+    "description": "A specialist tool for fast and reliable electrical repair.",
+    "keywords": ["solderer", "laser solderer", "tool"],
+    "mass": 0.5
+  },
+  {
+    "id": "socket_set",
+    "type": "portable",
+    "name": "Socket Set",
+    "description": "A small case of common sized sockets, ratchets and adapters for medium sized fasteners.",
+    "keywords": ["sockets", "socket set", "ratchet set", "tool"],
+    "mass": 2.5
+  },
+  {
+    "id": "scan_tool",
+    "type": "portable",
+    "name": "Scan Tool",
+    "description": "A hand-held tablet based scan tool. Incorporating diagnostic logic, oscilloscope, and thermal imaging with augmented reality overlays. Upgradable with additional ship systems schematics and manuals.",
+    "keywords": ["diag tool", "diagnostic tool","scan tool"],
+    "mass": 1.5
+  }
+]

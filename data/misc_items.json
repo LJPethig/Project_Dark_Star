@@ -1,0 +1,26 @@
+[
+  {
+    "id": "id_card_low_sec",
+    "type": "portable",
+    "name": "Basic level ID Card",
+    "description": "A chipped security card for low security areas.",
+    "keywords": ["id card", "security card", "card", "id"],
+    "mass": 0.0
+  },
+  {
+    "id": "id_card_high_sec",
+    "type": "portable",
+    "name": "High level ID Card",
+    "description": "A chipped security card for high security areas.",
+    "keywords": ["id card", "security card", "card", "id"],
+    "mass": 0.0
+  },
+   {
+    "id": "id_card_high_sec_damaged",
+    "type": "portable",
+    "name": "High level ID Card - Burnt out",
+    "description": "A chipped security card for high security areas, it appears damaged.",
+    "keywords": ["id card", "security card", "card", "id"],
+    "mass": 0.0
+  }
+]

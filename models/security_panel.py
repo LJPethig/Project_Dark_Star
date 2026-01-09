@@ -1,6 +1,8 @@
-# security_panel
+# security_panel.py
 
 from enum import Enum
+# Optional: import for type clarity
+from models.interactable import PortableItem
 
 class SecurityLevel(Enum):
     NONE = 0
@@ -15,14 +17,14 @@ class SecurityPanel:
         self.door_id = door_id
         self.side = side
         self.security_level = SecurityLevel(security_level)
-        self.is_broken = damaged  # ← Load from JSON
-        self.repair_progress = repair_progress  # ← Load from JSON
+        self.is_broken = damaged
+        self.repair_progress = repair_progress
         self.pin = pin
 
-    def _check_keycard(self, player_inventory: list[str]) -> tuple[bool, str]:
+    def _check_keycard(self, player_inventory: list) -> tuple[bool, str]:
         """Check if player has appropriate card."""
-        has_low = "id_card_low_sec" in player_inventory
-        has_high = "id_card_high_sec" in player_inventory
+        has_low = any(item.id == "id_card_low_sec" for item in player_inventory)
+        has_high = any(item.id == "id_card_high_sec" for item in player_inventory)
 
         if self.security_level == SecurityLevel.KEYCARD_LOW:
             if has_low or has_high:
@@ -48,7 +50,7 @@ class SecurityPanel:
             return False, "Incorrect PIN."
         return True, ""
 
-    def attempt_unlock(self, player_inventory: list[str]) -> tuple[bool, str]:
+    def attempt_unlock(self, player_inventory: list) -> tuple[bool, str]:
         """Attempt to unlock the door using this panel (card check only)."""
         if self.is_broken:
             return False, "The panel on this side is damaged."
@@ -59,7 +61,7 @@ class SecurityPanel:
 
         return True, "Access granted. The door unlocks."
 
-    def attempt_lock(self, player_inventory: list[str]) -> tuple[bool, str]:
+    def attempt_lock(self, player_inventory: list) -> tuple[bool, str]:
         """Attempt to lock the door using this panel (card check only)."""
         if self.is_broken:
             return False, "The panel on this side is damaged."
@@ -70,7 +72,7 @@ class SecurityPanel:
 
         return True, "Access granted. The door locks."
 
-    def attempt_pin(self, pin: str, player_inventory: list[str]) -> tuple[bool, str]:
+    def attempt_pin(self, pin: str, player_inventory: list) -> tuple[bool, str]:
         """
         Validate the PIN for level 3 panels.
         Returns (success, message).

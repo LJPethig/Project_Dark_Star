@@ -40,7 +40,7 @@ class StartScreen(arcade.View):
         arcade.draw_text(
             "PROJECT DARK STAR",
             SCREEN_WIDTH / 2, SCREEN_HEIGHT - 120,
-            ACCENT_COLOR, FONT_SIZE_TITLE,
+            EXIT_COLOR, FONT_SIZE_TITLE,
             anchor_x="center", font_name=FONT_NAME_PRIMARY
         )
 
