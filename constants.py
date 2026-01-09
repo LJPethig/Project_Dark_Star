@@ -10,9 +10,6 @@ SCREEN_WIDTH = 1270
 SCREEN_HEIGHT = 770
 SCREEN_TITLE = ""
 
-# Background colour
-BACKGROUND_COLOR = (0, 0, 0, 255)  # Solid black
-
 # Font settings
 FONT_NAME_PRIMARY = "Share Tech Mono"
 FONT_NAME_FALLBACK = "Courier New"
@@ -23,7 +20,20 @@ FONT_SIZE_TITLE = 18
 FONT_SIZE_PROMPT = 14
 FONT_SIZE_SMALL = 12
 
+DESCRIPTION_TITLE_FONT_SIZE = 16
+DESCRIPTION_FONT_SIZE = 12
+RESPONSE_FONT_SIZE = 12
+INPUT_FONT_SIZE = 12
+
+# Colors and styles
+DIVIDER_COLOR = (100, 150, 200, 180)   # RGBA
+DIVIDER_THICKNESS = 2
+EVENT_SECTION_BG_COLOR = (20, 30, 50, 180)  # Dark semi-transparent for event area
+
 # Colours (RGBA tuples)
+
+BACKGROUND_COLOR = (0, 0, 0, 255)  # Solid black
+
 TEXT_COLOR = (176, 172, 176, 255)         # muted phosphor green
 EXIT_COLOR = (11, 70, 140, 255)         # sharp cyan
 OBJECT_COLOR = (143, 112, 75, 255)         # blood-orange
@@ -35,6 +45,9 @@ BACKGROUND_OVERLAY = (0, 0, 0, 100)        # Subtle dark overlay for images
 CLOCK_COLOR = (100, 100, 100, 255)          # Mid grey
 CLOCK_FLASH_COLOR = (255, 255, 255, 255)    # White
 
+INVENTORY_HIGHLIGHT_BG = OBJECT_COLOR    # Background color for selected/highlight bar
+INVENTORY_HIGHLIGHT_TEXT = (0, 0, 0, 255)  # Text color on highlight bar (black for max contrast)
+
 # Chronometer settings
 START_DATE_TIME = (2276, 1, 1, 0, 0)  # year, month, day, hour, minute — launch epoch
 SHIP_PANEL_REPAIR_MINUTES = 30        # Ship time advance on panel repair
@@ -45,7 +58,7 @@ CARD_SWIPE_WAIT = 3.0  # Player-visible delay in seconds for door card swipe
 
 
 
-# Added for complete sectioning of ship_view
+# Ship_view sections, heights, padding and spacing
 
 # Layout ratios and heights
 LEFT_PANEL_RATIO = 0.45                # Image width ratio
@@ -62,16 +75,17 @@ SECTION_TITLE_PADDING = 20             # Space between title and first descripti
 RESPONSE_PADDING_TOP = 20              # Top padding in response section
 INPUT_PADDING_TOP = 40              # Bottom padding in input section
 LINE_SPACING = 4                      # Vertical space between description lines
+
+
+# inventory_view sections, heights, padding and spacing
+
+# padding and spacing
 INVENTORY_TOP_PADDING = 40          # Space from screen top to title
+INVENTORY_SECTION_GAP = 40               # Vertical gap between worn/carried sections
+INVENTORY_ITEM_INDENT = 20               # Left indent for items under headers
 
-# Font sizes
-DESCRIPTION_TITLE_FONT_SIZE = 16
-DESCRIPTION_FONT_SIZE = 12
-RESPONSE_FONT_SIZE = 12
-INPUT_FONT_SIZE = 12
+INVENTORY_HEADER_GAP = 30               # Space after header before first item
+INVENTORY_LINE_GAP = 10                 # Extra vertical space between equipped slot lines
+INVENTORY_DESC_INDENT = 250             # Indent for description text
 
-# Colors and styles
-DIVIDER_COLOR = (100, 150, 200, 180)   # RGBA
-DIVIDER_THICKNESS = 2
-EVENT_SECTION_BG_COLOR = (20, 30, 50, 180)  # Dark semi-transparent for event area
-
+INVENTORY_EMPTY_TEXT = "The black is quiet. No gear aboard."  # Flavor text when inventory is empty
