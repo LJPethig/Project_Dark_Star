@@ -67,6 +67,21 @@ class ShipView(arcade.View):
         self.description_renderer = DescriptionRenderer(self)
         self.description_renderer.rebuild_description()
 
+        # Description renderer
+        self.description_renderer = DescriptionRenderer(self)
+        self.description_renderer.rebuild_description()
+
+        # Backspace autorepeat
+        self.backspace_held = False
+        self.backspace_timer = 0.0
+        self.BACKSPACE_INITIAL_DELAY = 0.4   # seconds before repeat starts
+        self.BACKSPACE_REPEAT_INTERVAL = 0.08 # seconds between repeats
+
+        # Command history
+        self.command_history = []             # oldest first, max 4
+        self.history_index = -1               # -1 = current typing
+        self.current_input_buffer = ""        # preserves typing when browsing history
+
         # --- Response section: list of colored Text objects using markup ---
         self.response_texts = []
         self.response_y_start = self.response_section.bottom + self.response_section.height - RESPONSE_PADDING_TOP
@@ -116,6 +131,12 @@ class ShipView(arcade.View):
             self.cursor_visible = not self.cursor_visible
             self._update_input_display()
 
+        if self.backspace_held:
+            self.backspace_timer += delta_time
+            if self.backspace_timer >= self.BACKSPACE_INITIAL_DELAY:
+                self._handle_backspace()
+                self.backspace_timer -= self.BACKSPACE_REPEAT_INTERVAL
+
     def on_draw(self):
         self.clear()
 
@@ -164,12 +185,29 @@ class ShipView(arcade.View):
             # Normal response
             if response:
                 self.last_response += response + "\n"
-                self._update_response_display()
+                self._rebuild_response()
+
+            # Add to history (avoid duplicates at the end)
+            if cmd and (not self.command_history or self.command_history[-1] != cmd):
+                self.command_history.append(cmd)
+                if len(self.command_history) > 4:
+                    self.command_history.pop(0)
+            self.history_index = len(self.command_history)  # reset to end
+            self.current_input_buffer = ""  # clear temp buffer
 
         elif key == arcade.key.BACKSPACE:
-            if self.current_input:
-                self.current_input = self.current_input[:-1]
-                self._update_input_display()
+            self.backspace_held = True
+            self._handle_backspace()  # immediate first delete
+            return True
+
+        # command history
+        elif key == arcade.key.UP:
+            self._recall_history(-1)  # move to older command
+            return True
+
+        elif key == arcade.key.DOWN:
+            self._recall_history(1)  # move to newer / current typing
+            return True
 
         elif 32 <= key <= 126:
             self.current_input += chr(key)
@@ -250,3 +288,32 @@ class ShipView(arcade.View):
             )
             self.response_texts.extend(line_texts)
             current_y -= line_height + LINE_SPACING
+
+    def _handle_backspace(self):
+        if self.current_input:
+            self.current_input = self.current_input[:-1]
+            self._update_input_display()
+
+    def _recall_history(self, direction: int):
+        if not self.command_history:
+            return
+
+        # Save current typing if moving into history
+        if self.history_index == -1:
+            self.current_input_buffer = self.current_input
+
+        self.history_index += direction
+        self.history_index = max(-1, min(self.history_index, len(self.command_history) - 1))
+
+        if self.history_index == -1:
+            self.current_input = self.current_input_buffer
+        else:
+            self.current_input = self.command_history[self.history_index]
+
+        self._update_input_display()
+
+    def on_key_release(self, key, modifiers):
+        if key == arcade.key.BACKSPACE:
+            self.backspace_held = False
+            self.backspace_timer = 0.0
+            return True
