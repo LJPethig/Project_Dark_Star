@@ -85,8 +85,9 @@ INVENTORY_TOP_PADDING = 40          # Space from screen top to title
 INVENTORY_SECTION_GAP = 40               # Vertical gap between worn/carried sections
 INVENTORY_ITEM_INDENT = 20               # Left indent for items under headers
 
-INVENTORY_HEADER_GAP = 30               # Space after header before first item
-INVENTORY_LINE_GAP = 10                 # Extra vertical space between equipped slot lines
+INVENTORY_LINE_GAP = 14                 # was 10 — bigger breathing room between lines
+INVENTORY_HEADER_GAP = 30               # bigger gap after headers
+
 INVENTORY_DESC_INDENT = 250             # Indent for description text
 
 INVENTORY_EMPTY_TEXT = "The black is quiet. No gear aboard."  # Flavor text when inventory is empty

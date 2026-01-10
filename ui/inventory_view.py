@@ -80,18 +80,6 @@ class InventoryView(arcade.View):
         for idx, (slot_name, item) in enumerate(self.worn_slots):
             is_selected = (self.selected_index == idx)
 
-            # Highlight
-            if is_selected:
-                highlight_padding = 4
-                line_height = INPUT_FONT_SIZE + INVENTORY_LINE_GAP
-                arcade.draw_lbwh_rectangle_filled(
-                    left=list_left,
-                    bottom=current_y - INPUT_FONT_SIZE - highlight_padding,
-                    width=list_width,
-                    height=line_height + (highlight_padding * 2),
-                    color=INVENTORY_HIGHLIGHT_BG
-                )
-
             # Slot label (bigger, TITLE_COLOR, flush left)
             slot_text = f"{slot_name}:"
             arcade.draw_text(
@@ -104,24 +92,59 @@ class InventoryView(arcade.View):
             )
 
             # Measure slot width
-            measure = arcade.Text(slot_text, 0, 0, TITLE_COLOR, INPUT_FONT_SIZE + 2, font_name=FONT_NAME_PRIMARY)
-            slot_w = measure.content_width
+            slot_measure = arcade.Text(
+                slot_text,
+                0, 0,
+                TITLE_COLOR,
+                INPUT_FONT_SIZE + 2,
+                font_name=FONT_NAME_PRIMARY
+            )
+            slot_w = slot_measure.content_width
 
-            # Item name (TEXT_COLOR or highlight, normal size)
+            # Item name
             item_text = item.name if item else "Nothing"
-            color = INVENTORY_HIGHLIGHT_TEXT if is_selected else TEXT_COLOR
+            item_color = INVENTORY_HIGHLIGHT_TEXT if is_selected else TEXT_COLOR
+
+            # Measure item text width for tight highlight
+            item_measure = arcade.Text(
+                item_text,
+                0, 0,
+                item_color,
+                INPUT_FONT_SIZE,
+                font_name=FONT_NAME_PRIMARY
+            )
+            item_text_w = item_measure.content_width
+
+            # Highlight — tight box around item text
+            if is_selected:
+                h_padding = 10   # each side
+                v_padding = 2    # top/bottom
+                line_height = INPUT_FONT_SIZE + INVENTORY_LINE_GAP
+
+                item_start_x = list_left + slot_w + 10
+                item_width = item_text_w + (h_padding * 2)
+
+                arcade.draw_lbwh_rectangle_filled(
+                    left=item_start_x - h_padding,
+                    bottom=current_y - INPUT_FONT_SIZE - v_padding + 2,  # lift to center text
+                    width=item_width,
+                    height=line_height + (v_padding * 2),
+                    color=INVENTORY_HIGHLIGHT_BG
+                )
+
+            # Draw item name
             arcade.draw_text(
                 item_text,
-                list_left + slot_w + 10,  # gap after colon
+                list_left + slot_w + 10,
                 current_y,
-                color,
+                item_color,
                 INPUT_FONT_SIZE,
                 font_name=FONT_NAME_PRIMARY
             )
 
-            current_y -= (INPUT_FONT_SIZE + 2) + INVENTORY_LINE_GAP
+            current_y -= (INPUT_FONT_SIZE + 12) + INVENTORY_LINE_GAP  # ← increased from +2 to +12 for breathing room
 
-        # CARRIED header (extra spacing)
+        # CARRIED header
         current_y -= INVENTORY_SECTION_GAP
         arcade.draw_text("CARRIED", list_left, current_y, TITLE_COLOR, INPUT_FONT_SIZE + 2, font_name=FONT_NAME_PRIMARY)
         current_y -= (INPUT_FONT_SIZE + 2) + INVENTORY_HEADER_GAP
@@ -131,28 +154,42 @@ class InventoryView(arcade.View):
             idx = len(self.worn_slots) + carried_idx
             is_selected = (self.selected_index == idx)
 
+            item_color = INVENTORY_HIGHLIGHT_TEXT if is_selected else TEXT_COLOR
+            item_measure = arcade.Text(
+                item.name,
+                0, 0,
+                item_color,
+                INPUT_FONT_SIZE,
+                font_name=FONT_NAME_PRIMARY
+            )
+            item_text_w = item_measure.content_width
+
             if is_selected:
-                highlight_padding = 4
+                h_padding = 10
+                v_padding = 2
                 line_height = INPUT_FONT_SIZE + INVENTORY_LINE_GAP
+
+                item_start_x = list_left + INVENTORY_ITEM_INDENT
+                item_width = item_text_w + (h_padding * 2)
+
                 arcade.draw_lbwh_rectangle_filled(
-                    left=list_left,
-                    bottom=current_y - INPUT_FONT_SIZE - highlight_padding,
-                    width=list_width,
-                    height=line_height + (highlight_padding * 2),
+                    left=item_start_x - h_padding,
+                    bottom=current_y - INPUT_FONT_SIZE - v_padding + 2,
+                    width=item_width,
+                    height=line_height + (v_padding * 2),
                     color=INVENTORY_HIGHLIGHT_BG
                 )
 
-            color = INVENTORY_HIGHLIGHT_TEXT if is_selected else TEXT_COLOR
             arcade.draw_text(
                 item.name,
                 list_left + INVENTORY_ITEM_INDENT,
                 current_y,
-                color,
+                item_color,
                 INPUT_FONT_SIZE,
                 font_name=FONT_NAME_PRIMARY
             )
 
-            current_y -= INPUT_FONT_SIZE + INVENTORY_LINE_GAP
+            current_y -= INPUT_FONT_SIZE + 8 + INVENTORY_LINE_GAP  # ← +8 for normal font (was +0)
 
         # Right side: detail panel
         if self.selected_index < len(self.worn_slots):
@@ -165,7 +202,6 @@ class InventoryView(arcade.View):
         panel_width = SCREEN_WIDTH // 2 - TEXT_PADDING
 
         if selected_item:
-            # Image (top 50%)
             image_path = f"resources/images/{selected_item.id}.png"
             texture = None
             try:
@@ -205,7 +241,6 @@ class InventoryView(arcade.View):
                     font_name=FONT_NAME_PRIMARY
                 )
 
-            # Description (bottom 50%)
             desc = selected_item.description or "No description available."
             arcade.draw_text(
                 desc,

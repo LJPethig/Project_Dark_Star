@@ -1,5 +1,5 @@
 # models/player.py
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from models.interactable import PortableItem
 from constants import PLAYER_NAME
 
@@ -28,11 +28,14 @@ class Player:
     def get_inventory(self) -> List[PortableItem]:
         return self._inventory.copy()
 
-    def add_to_inventory(self, item: PortableItem) -> bool:
+    def add_to_inventory(self, item: PortableItem) -> Tuple[bool, str]:
+        """Add item to loose inventory with mass check."""
         if self.current_carry_mass + item.mass > self.max_carry_mass:
-            return False
+            remaining = self.max_carry_mass - self.current_carry_mass
+            return False, f"Too heavy! You can carry {remaining:.1f} kg more."
+
         self._inventory.append(item)
-        return True
+        return True, f"You take the {item.name}."
 
     def remove_from_inventory(self, item: PortableItem) -> bool:
         if item in self._inventory:
@@ -40,7 +43,7 @@ class Player:
             return True
         return False
 
-    def equip(self, item: PortableItem) -> tuple[bool, str]:
+    def equip(self, item: PortableItem) -> Tuple[bool, str]:
         """
         Equip an item in its designated slot.
         - Moves any old item in the slot back to loose inventory.
@@ -58,9 +61,9 @@ class Player:
         # Handle old item
         old_item = getattr(self, slot_attr)
         if old_item:
-            if not self.add_to_inventory(old_item):
-                return False, f"Cannot unequip {old_item.name} — inventory too full."
-            # Old item successfully moved back
+            success, msg = self.add_to_inventory(old_item)
+            if not success:
+                return False, f"Cannot unequip {old_item.name} — {msg}"
 
         # Equip new item
         setattr(self, slot_attr, item)
