@@ -17,8 +17,10 @@ FONT_NAME_FALLBACK = "Courier New"
 # Font sizes
 FONT_SIZE_DEFAULT = 14
 FONT_SIZE_TITLE = 18
+FONT_SIZE_SUB_HEADING = 14
 FONT_SIZE_PROMPT = 14
 FONT_SIZE_SMALL = 12
+FONT_SIZE_INVENTORY_HIGHLIGHTED = 14
 
 DESCRIPTION_TITLE_FONT_SIZE = 16
 DESCRIPTION_FONT_SIZE = 12
@@ -83,11 +85,11 @@ LINE_SPACING = 4                      # Vertical space between description lines
 # padding and spacing
 INVENTORY_TOP_PADDING = 40          # Space from screen top to title
 INVENTORY_SECTION_GAP = 30               # Vertical gap between worn/carried sections
-INVENTORY_ITEM_INDENT = 20               # Left indent for items under headers
 
-INVENTORY_LINE_GAP = 2                 # was 10 — bigger breathing room between lines
+INVENTORY_LINE_GAP = 2                 # room between lines
 INVENTORY_HEADER_GAP = 30               # bigger gap after headers
+INVENTORY_HORIZONTAL_PADDING = 10
+INVENTORY_VERTICAL_PADDING = 12
 
-INVENTORY_DESC_INDENT = 250             # Indent for description text
 
 INVENTORY_EMPTY_TEXT = "The black is quiet. No gear aboard."  # Flavor text when inventory is empty
