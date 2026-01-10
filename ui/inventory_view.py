@@ -91,7 +91,7 @@ class InventoryView(arcade.View):
                 font_name=FONT_NAME_PRIMARY
             )
 
-            # Measure slot width
+            # Measure slot width (still needed for item positioning)
             slot_measure = arcade.Text(
                 slot_text,
                 0, 0,
@@ -101,48 +101,22 @@ class InventoryView(arcade.View):
             )
             slot_w = slot_measure.content_width
 
-            # Item name
+            # Item name - larger + bold when selected
             item_text = item.name if item else "Nothing"
             item_color = INVENTORY_HIGHLIGHT_TEXT if is_selected else TEXT_COLOR
+            item_size = INPUT_FONT_SIZE + 4 if is_selected else INPUT_FONT_SIZE
 
-            # Measure item text width for tight highlight
-            item_measure = arcade.Text(
-                item_text,
-                0, 0,
-                item_color,
-                INPUT_FONT_SIZE,
-                font_name=FONT_NAME_PRIMARY
-            )
-            item_text_w = item_measure.content_width
-
-            # Highlight — tight box around item text
-            if is_selected:
-                h_padding = 10   # each side
-                v_padding = 2    # top/bottom
-                line_height = INPUT_FONT_SIZE + INVENTORY_LINE_GAP
-
-                item_start_x = list_left + slot_w + 10
-                item_width = item_text_w + (h_padding * 2)
-
-                arcade.draw_lbwh_rectangle_filled(
-                    left=item_start_x - h_padding,
-                    bottom=current_y - INPUT_FONT_SIZE - v_padding + 2,  # lift to center text
-                    width=item_width,
-                    height=line_height + (v_padding * 2),
-                    color=INVENTORY_HIGHLIGHT_BG
-                )
-
-            # Draw item name
             arcade.draw_text(
                 item_text,
                 list_left + slot_w + 10,
                 current_y,
                 item_color,
-                INPUT_FONT_SIZE,
-                font_name=FONT_NAME_PRIMARY
+                item_size,
+                font_name=FONT_NAME_PRIMARY,
+                bold=is_selected  # Enable bold for selected items
             )
 
-            current_y -= (INPUT_FONT_SIZE + 12) + INVENTORY_LINE_GAP  # ← increased from +2 to +12 for breathing room
+            current_y -= (INPUT_FONT_SIZE + 12) + INVENTORY_LINE_GAP
 
         # CARRIED header
         current_y -= INVENTORY_SECTION_GAP
@@ -155,41 +129,19 @@ class InventoryView(arcade.View):
             is_selected = (self.selected_index == idx)
 
             item_color = INVENTORY_HIGHLIGHT_TEXT if is_selected else TEXT_COLOR
-            item_measure = arcade.Text(
-                item.name,
-                0, 0,
-                item_color,
-                INPUT_FONT_SIZE,
-                font_name=FONT_NAME_PRIMARY
-            )
-            item_text_w = item_measure.content_width
-
-            if is_selected:
-                h_padding = 10
-                v_padding = 2
-                line_height = INPUT_FONT_SIZE + INVENTORY_LINE_GAP
-
-                item_start_x = list_left + INVENTORY_ITEM_INDENT
-                item_width = item_text_w + (h_padding * 2)
-
-                arcade.draw_lbwh_rectangle_filled(
-                    left=item_start_x - h_padding,
-                    bottom=current_y - INPUT_FONT_SIZE - v_padding + 2,
-                    width=item_width,
-                    height=line_height + (v_padding * 2),
-                    color=INVENTORY_HIGHLIGHT_BG
-                )
+            item_size = INPUT_FONT_SIZE + 4 if is_selected else INPUT_FONT_SIZE
 
             arcade.draw_text(
                 item.name,
                 list_left + INVENTORY_ITEM_INDENT,
                 current_y,
                 item_color,
-                INPUT_FONT_SIZE,
-                font_name=FONT_NAME_PRIMARY
+                item_size,
+                font_name=FONT_NAME_PRIMARY,
+                bold=is_selected
             )
 
-            current_y -= INPUT_FONT_SIZE + 8 + INVENTORY_LINE_GAP  # ← +8 for normal font (was +0)
+            current_y -= INPUT_FONT_SIZE + 8 + INVENTORY_LINE_GAP
 
         # Right side: detail panel
         if self.selected_index < len(self.worn_slots):

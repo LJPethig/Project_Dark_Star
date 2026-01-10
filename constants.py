@@ -47,7 +47,7 @@ CLOCK_COLOR = (100, 100, 100, 255)          # Mid grey
 CLOCK_FLASH_COLOR = (255, 255, 255, 255)    # White
 
 INVENTORY_HIGHLIGHT_BG = OBJECT_COLOR    # Background color for selected/highlight bar
-INVENTORY_HIGHLIGHT_TEXT = (0, 0, 0, 255)  # Text color on highlight bar (black for max contrast)
+INVENTORY_HIGHLIGHT_TEXT = (143, 112, 75, 255)  # Text color on highlight bar (black for max contrast)
 
 # Chronometer settings
 START_DATE_TIME = (2276, 1, 1, 0, 0)  # year, month, day, hour, minute — launch epoch
@@ -82,10 +82,10 @@ LINE_SPACING = 4                      # Vertical space between description lines
 
 # padding and spacing
 INVENTORY_TOP_PADDING = 40          # Space from screen top to title
-INVENTORY_SECTION_GAP = 40               # Vertical gap between worn/carried sections
+INVENTORY_SECTION_GAP = 30               # Vertical gap between worn/carried sections
 INVENTORY_ITEM_INDENT = 20               # Left indent for items under headers
 
-INVENTORY_LINE_GAP = 14                 # was 10 — bigger breathing room between lines
+INVENTORY_LINE_GAP = 2                 # was 10 — bigger breathing room between lines
 INVENTORY_HEADER_GAP = 30               # bigger gap after headers
 
 INVENTORY_DESC_INDENT = 250             # Indent for description text
