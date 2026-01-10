@@ -25,6 +25,14 @@ class Player:
         """Mass of loose (unequipped) items only."""
         return sum(item.mass for item in self._inventory)
 
+    def get_carry_status(self) -> str:
+        loose_mass = self.current_carry_mass
+        max_mass = self.max_carry_mass
+        equipped_count = sum(1 for slot in [self.head_slot, self.body_slot, self.torso_slot,
+                                           self.waist_slot, self.feet_slot] if slot is not None)
+        return (f"Carry: {loose_mass:.1f}/{max_mass:.1f} kg "
+                f"({equipped_count} item{'s' if equipped_count != 1 else ''} equipped)")
+
     def get_inventory(self) -> List[PortableItem]:
         return self._inventory.copy()
 
@@ -72,3 +80,42 @@ class Player:
         self.remove_from_inventory(item)
 
         return True, f"You equip the {item.name}."
+
+    def unequip(self, slot_name: str, current_room=None) -> Tuple[bool, str]:
+        """
+        Unequip item from the specified slot.
+        - Tries to move it to loose inventory
+        - If too heavy → drops it on the current room floor
+        - Returns (success, message)
+
+        Note: current_room is required for dropping — passed from command handler
+        """
+        slot_attr = f"{slot_name.lower()}_slot"
+        if not hasattr(self, slot_attr):
+            return False, f"Invalid slot: {slot_name}"
+
+        item = getattr(self, slot_attr)
+        if item is None:
+            return False, f"Nothing is equipped in the {slot_name} slot."
+
+        # First attempt: move to inventory
+        success, msg = self.add_to_inventory(item)
+        if success:
+            setattr(self, slot_attr, None)
+            return True, f"You remove the {item.name}."
+
+        # If failed due to weight → drop on floor (we know current_room exists)
+        if current_room is None:
+            # Safety fallback — should never happen if called correctly
+            return False, f"Cannot unequip {item.name} — no room context to drop it."
+
+        # Drop on floor
+        current_room.objects.append(item)
+        setattr(self, slot_attr, None)
+
+        drop_msg = (
+            f"You take off the {item.name}, but you are now carrying too much — "
+            f"you drop it on the floor."
+        )
+
+        return True, drop_msg

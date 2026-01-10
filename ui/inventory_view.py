@@ -238,6 +238,18 @@ class InventoryView(arcade.View):
         self._draw_footer()
 
     def _draw_footer(self):
+        status_text = self.game_manager.player.get_carry_status()
+
+        arcade.draw_text(
+            status_text,
+            (SCREEN_WIDTH / 4) * 1,
+            TEXT_PADDING,  # slightly higher than return instruction
+            TEXT_COLOR,  # soft cyan/white for visibility
+            FONT_SIZE_SMALL,
+            anchor_x="center",
+            font_name=FONT_NAME_PRIMARY
+        )
+
         arcade.draw_text(
             "Press ESC or I to return",
             (SCREEN_WIDTH / 4) * 3,

@@ -49,6 +49,14 @@ class CommandProcessor:
             "repair door access panel": self._handle_repair_door_panel,
             "repair access panel": self._handle_repair_door_panel,
             "repair door": self._handle_repair_door_panel,
+
+            # Equip commands
+            "wear": self._handle_wear,
+            "put on": self._handle_wear,
+            "equip": self._handle_wear,
+            "remove": self._handle_unequip,
+            "take off": self._handle_unequip,
+            "unequip": self._handle_unequip,
         }
 
     def process(self, cmd: str) -> str:
@@ -242,6 +250,55 @@ class CommandProcessor:
                     ]
                     return random.choice(drop_messages)
         return f"You don't have a '{args}' to drop."
+
+    def _handle_wear(self, args: str) -> str:
+        """Wear/equip an item from inventory."""
+        if not args:
+            return "Wear/equip what? (e.g., 'wear eva suit')"
+
+        target_name = args.strip().lower()
+        inventory = self.game_manager.get_player_inventory()
+
+        for item in inventory:
+            if item.matches(target_name):
+                if not hasattr(item, "equip_slot") or not item.equip_slot:
+                    return f"You can't wear the {item.name}."
+
+                success, message = self.game_manager.player.equip(item)
+                if success:
+                    # Optional: refresh description if equipped items will be shown there later
+                    self.ship_view.description_renderer.rebuild_description()
+                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+                return message
+
+        return f"You don't have a '{args}' to wear."
+
+    def _handle_unequip(self, args: str) -> str:
+        """Remove/unequip item from a slot."""
+        if not args:
+            return "Remove/unequip what? (e.g., 'remove eva suit' or 'unequip head')"
+
+        target = args.strip().lower()
+        player = self.game_manager.player
+        current_location = self.game_manager.get_current_location()
+
+        # Try to match by item name first (most common)
+        for slot_name, item in [
+            ("head", self.game_manager.player.head_slot),
+            ("body", self.game_manager.player.body_slot),
+            ("torso", self.game_manager.player.torso_slot),
+            ("waist", self.game_manager.player.waist_slot),
+            ("feet", self.game_manager.player.feet_slot),
+        ]:
+            if item and item.matches(target):
+                success, message = player.unequip(slot_name, current_room=current_location)
+                if success:
+                    # Refresh room description (item now on floor)
+                    self.ship_view.description_renderer.rebuild_description()
+                    self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+                return message
+
+        return f"Nothing matching '{args}' is currently equipped."
 
     def _handle_examine(self, args: str) -> str:
         """Examine an object in the current room or inventory."""
