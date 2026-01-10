@@ -33,6 +33,19 @@ class InventoryView(arcade.View):
         self.selected_index = 0
         self.scroll_offset = 0
 
+        # Auto-select first non-empty slot (optional, controlled by constant)
+        if INVENTORY_SKIP_EMPTY_SLOTS:
+            # First try worn slots
+            for idx, (_, item) in enumerate(self.worn_slots):
+                if item is not None:
+                    self.selected_index = idx
+                    break
+            else:
+                # If all worn empty, jump to first carried (if any)
+                if self.carried_items:
+                    self.selected_index = len(self.worn_slots)
+
+
     def on_show_view(self):
         self.setup()
 
@@ -191,21 +204,11 @@ class InventoryView(arcade.View):
                     sprite.texture = texture
                     sprite.scale = scale
                     sprite.center_x = right_left + panel_width / 2
-                    sprite.center_y = SCREEN_HEIGHT - INVENTORY_TOP_PADDING - (target_height / 2)
+                    sprite.center_y = INVENTORY_IMAGE_CENTER_Y
 
                     temp_list = arcade.SpriteList()
                     temp_list.append(sprite)
                     temp_list.draw()
-            else:
-                arcade.draw_text(
-                    "No image",
-                    right_left + panel_width / 2,
-                    SCREEN_HEIGHT // 2,
-                    TEXT_COLOR,
-                    FONT_SIZE_SMALL,
-                    anchor_x="center",
-                    font_name=FONT_NAME_PRIMARY
-                )
 
             desc = selected_item.description or "No description available."
             arcade.draw_text(
@@ -218,22 +221,26 @@ class InventoryView(arcade.View):
                 multiline=True,
                 font_name=FONT_NAME_PRIMARY
             )
-        else:
-            arcade.draw_text(
-                "Select an item to view details",
-                right_left + TEXT_PADDING,
-                SCREEN_HEIGHT // 2,
-                TEXT_COLOR,
-                FONT_SIZE_SMALL,
-                font_name=FONT_NAME_PRIMARY
-            )
+
+        # Outer window border
+        arcade.draw_lrbt_rectangle_outline(
+            0, SCREEN_WIDTH, 0, SCREEN_HEIGHT,
+            DIVIDER_COLOR, DIVIDER_THICKNESS
+        )
+
+        # Vertical divider between left list and right panel
+        arcade.draw_line(
+            SCREEN_WIDTH // 2, 0,
+            SCREEN_WIDTH // 2, SCREEN_HEIGHT,
+            DIVIDER_COLOR, DIVIDER_THICKNESS
+        )
 
         self._draw_footer()
 
     def _draw_footer(self):
         arcade.draw_text(
             "Press ESC or I to return",
-            SCREEN_WIDTH / 2,
+            (SCREEN_WIDTH / 4) * 3,
             TEXT_PADDING,
             TEXT_COLOR,
             FONT_SIZE_SMALL,
@@ -247,9 +254,42 @@ class InventoryView(arcade.View):
                 self.window.show_view(self.previous_view)
             return
 
+        if not INVENTORY_SKIP_EMPTY_ON_NAV:
+            # Normal behavior if disabled
+            total_slots = len(self.worn_slots) + len(self.carried_items)
+            if key == arcade.key.UP and self.selected_index > 0:
+                self.selected_index -= 1
+            elif key == arcade.key.DOWN and self.selected_index < total_slots - 1:
+                self.selected_index += 1
+            return
+
+        # Skip empty slots logic
         total_slots = len(self.worn_slots) + len(self.carried_items)
 
-        if key == arcade.key.UP and self.selected_index > 0:
-            self.selected_index -= 1
-        elif key == arcade.key.DOWN and self.selected_index < total_slots - 1:
-            self.selected_index += 1
+        if key == arcade.key.UP:
+            new_index = self.selected_index - 1
+            while new_index >= 0:
+                if new_index < len(self.worn_slots):
+                    if self.worn_slots[new_index][1] is not None:
+                        self.selected_index = new_index
+                        break
+                else:
+                    carried_idx = new_index - len(self.worn_slots)
+                    if carried_idx >= 0 and self.carried_items[carried_idx]:
+                        self.selected_index = new_index
+                        break
+                new_index -= 1
+
+        elif key == arcade.key.DOWN:
+            new_index = self.selected_index + 1
+            while new_index < total_slots:
+                if new_index < len(self.worn_slots):
+                    if self.worn_slots[new_index][1] is not None:
+                        self.selected_index = new_index
+                        break
+                else:
+                    carried_idx = new_index - len(self.worn_slots)
+                    if carried_idx < len(self.carried_items) and self.carried_items[carried_idx]:
+                        self.selected_index = new_index
+                        break
+                new_index += 1

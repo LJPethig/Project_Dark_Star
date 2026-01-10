@@ -48,8 +48,7 @@ BACKGROUND_OVERLAY = (0, 0, 0, 100)        # Subtle dark overlay for images
 CLOCK_COLOR = (100, 100, 100, 255)          # Mid grey
 CLOCK_FLASH_COLOR = (255, 255, 255, 255)    # White
 
-INVENTORY_HIGHLIGHT_BG = OBJECT_COLOR    # Background color for selected/highlight bar
-INVENTORY_HIGHLIGHT_TEXT = (143, 112, 75, 255)  # Text color on highlight bar (black for max contrast)
+INVENTORY_HIGHLIGHT_TEXT = (143, 112, 75, 255)
 
 # Chronometer settings
 START_DATE_TIME = (2276, 1, 1, 0, 0)  # year, month, day, hour, minute — launch epoch
@@ -91,5 +90,8 @@ INVENTORY_HEADER_GAP = 30               # bigger gap after headers
 INVENTORY_HORIZONTAL_PADDING = 10
 INVENTORY_VERTICAL_PADDING = 12
 
-
+INVENTORY_SKIP_EMPTY_SLOTS = True
+INVENTORY_SKIP_EMPTY_ON_NAV = True
 INVENTORY_EMPTY_TEXT = "The black is quiet. No gear aboard."  # Flavor text when inventory is empty
+
+INVENTORY_IMAGE_CENTER_Y = SCREEN_HEIGHT - INVENTORY_TOP_PADDING - ((SCREEN_HEIGHT // 2) - INVENTORY_TOP_PADDING * 2) / 2
