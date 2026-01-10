@@ -1,5 +1,5 @@
 # models/player.py
-from typing import Dict, List, Optional, Tuple
+from typing import List, Optional
 from models.interactable import PortableItem
 from constants import PLAYER_NAME
 
@@ -10,85 +10,62 @@ class Player:
     def __init__(self, name: str = PLAYER_NAME):
         self.name = name
         self._inventory: List[PortableItem] = []
-        self.equipped: Dict[str, Optional[PortableItem]] = {
-            "body": None,
-            "torso": None,
-            "waist": None,
-            "feet": None,
-            "head": None,
-        }
-        self.max_carry_mass: float = 10.0
 
+        # Explicit, fixed slots — simple, debuggable, no dict overhead
+        self.head_slot:  Optional[PortableItem] = None
+        self.body_slot:  Optional[PortableItem] = None
+        self.torso_slot: Optional[PortableItem] = None
+        self.waist_slot: Optional[PortableItem] = None
+        self.feet_slot:  Optional[PortableItem] = None
+
+        self.max_carry_mass: float = 10.0
 
     @property
     def current_carry_mass(self) -> float:
-        """Mass of loose (unequipped) items only. Equipped items don't count against carry limit."""
+        """Mass of loose (unequipped) items only."""
         return sum(item.mass for item in self._inventory)
 
     def get_inventory(self) -> List[PortableItem]:
-        """Return copy of loose (unequipped) inventory."""
         return self._inventory.copy()
 
-    def add_to_inventory(self, item: PortableItem) -> Tuple[bool, str]:
-        """Add item to loose inventory with mass check."""
-        if not isinstance(item, PortableItem):
-            return False, "You can't carry that."
-
-        mass = getattr(item, "mass", 0.0)
-        new_total = self.current_carry_mass + mass  # ← uses property, no direct var
-        if new_total > self.max_carry_mass:
-            remaining = self.max_carry_mass - self.current_carry_mass
-            return False, f"Too heavy! You can carry {remaining:.1f} kg more."
-
+    def add_to_inventory(self, item: PortableItem) -> bool:
+        if self.current_carry_mass + item.mass > self.max_carry_mass:
+            return False
         self._inventory.append(item)
-        # NO direct update needed — property recalculates automatically
-        return True, f"You take the {item.name}."
+        return True
 
     def remove_from_inventory(self, item: PortableItem) -> bool:
-        """Remove from loose inventory."""
         if item in self._inventory:
             self._inventory.remove(item)
-            # NO direct update needed — property recalculates
             return True
         return False
 
-    def equip(self, item: PortableItem) -> Tuple[bool, str]:
-        """Equip item in its slot, auto-unequip old if needed."""
-        if not hasattr(item, "equip_slot") or item.equip_slot not in self.equipped:
-            return False, f"Cannot equip {item.name} — invalid slot."
+    def equip(self, item: PortableItem) -> tuple[bool, str]:
+        """
+        Equip an item in its designated slot.
+        - Moves any old item in the slot back to loose inventory.
+        - Returns (success, message) for feedback.
+        """
+        if not hasattr(item, "equip_slot"):
+            return False, f"Cannot equip {item.name} — no equip slot defined."
 
         slot = item.equip_slot
+        slot_attr = f"{slot}_slot"
 
-        # Auto-unequip old item
-        old = self.equipped[slot]
-        if old:
-            success = self.add_to_inventory(old)
-            if not success:
-                return False, f"Cannot unequip {old.name} — inventory too full/heavy."
-
-        # Remove from loose inventory (if present)
-        self.remove_from_inventory(item)
-
-        self.equipped[slot] = item
-        return True, f"You equip the {item.name}."
-
-    def unequip(self, slot: str) -> Tuple[bool, str]:
-        """Unequip from slot and return to inventory."""
-        if slot not in self.equipped:
+        if not hasattr(self, slot_attr):
             return False, f"Invalid slot: {slot}"
 
-        item = self.equipped[slot]
-        if item is None:
-            return False, f"Nothing equipped in {slot}."
+        # Handle old item
+        old_item = getattr(self, slot_attr)
+        if old_item:
+            if not self.add_to_inventory(old_item):
+                return False, f"Cannot unequip {old_item.name} — inventory too full."
+            # Old item successfully moved back
 
-        success, msg = self.add_to_inventory(item)
-        if success:
-            self.equipped[slot] = None
-            return True, f"You remove the {item.name}."
-        return False, f"Cannot unequip {item.name}: {msg}"
+        # Equip new item
+        setattr(self, slot_attr, item)
 
-    def get_equipped_summary(self) -> str:
-        """Formatted equipped items for UI/description."""
-        lines = [f"{slot.capitalize()}: {item.name if item else 'nothing'}"
-                 for slot, item in self.equipped.items()]
-        return "\n".join(lines)
+        # Remove from loose inventory if it was there
+        self.remove_from_inventory(item)
+
+        return True, f"You equip the {item.name}."

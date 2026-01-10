@@ -58,13 +58,6 @@ class GameManager:
         # Place portable items procedurally
         self._place_portable_items()
 
-        # temp debug
-        print(f"Mass: {self.player.current_carry_mass:.1f}/{self.player.max_carry_mass:.1f}")
-        print(f"Player: {self.player.name}")
-        print("Loose inventory:", [i.name for i in self.player.get_inventory()])
-        print("Equipped:", self.player.get_equipped_summary())
-        print(f"Total carry mass: {self.player.current_carry_mass:.1f}/{self.player.max_carry_mass:.1f} kg")
-
         # Initialize ship chronometer
         self.chronometer = Chronometer()
 

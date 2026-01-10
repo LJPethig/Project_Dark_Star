@@ -10,35 +10,27 @@ class InventoryView(arcade.View):
         self.game_manager = game_manager
         self.previous_view = None
 
-        # Selection state
-        self.items = []          # Flat list of (display_text, item_or_none)
-        self.selected_index = 0
+        # Separate collections — no flat strings, no parsing
+        self.worn_slots = []   # list of (slot_name, item)
+        self.carried_items = []
+        self.selected_index = 0  # 0-4 worn, 5+ carried
         self.scroll_offset = 0
 
     def setup(self):
-        """Build the display list and reset selection."""
         player = self.game_manager.player
-        self.items = []
 
-        # Worn section - fixed order
-        self.items.append(("WORN:", None))
-        slot_order = ["head", "body", "torso", "waist", "feet"]
-        for slot in slot_order:
-            item = player.equipped.get(slot)
-            text = f"{slot.capitalize()}: {item.name if item else 'Nothing'}"
-            self.items.append((text, item))
+        self.worn_slots = [
+            ("Head",  player.head_slot),
+            ("Body",  player.body_slot),
+            ("Torso", player.torso_slot),
+            ("Waist", player.waist_slot),
+            ("Feet",  player.feet_slot),
+        ]
 
-        # Carried section
-        if player.get_inventory():
-            self.items.append(("CARRIED:", None))
-            for item in player.get_inventory():
-                self.items.append((item.name, item))
+        self.carried_items = player.get_inventory().copy()
 
-        # Reset selection
         self.selected_index = 0
         self.scroll_offset = 0
-        if self.items:
-            self.selected_index = min(self.selected_index, len(self.items) - 1)
 
     def on_show_view(self):
         self.setup()
@@ -53,14 +45,14 @@ class InventoryView(arcade.View):
             "YOUR INVENTORY",
             SCREEN_WIDTH / 2,
             title_y,
-            OBJECT_COLOR,
+            TITLE_COLOR,
             DESCRIPTION_TITLE_FONT_SIZE,
             anchor_x="center",
             font_name=FONT_NAME_PRIMARY
         )
 
         # Empty case
-        if not self.items:
+        if not self.worn_slots and not self.carried_items:
             arcade.draw_text(
                 INVENTORY_EMPTY_TEXT,
                 SCREEN_WIDTH / 2,
@@ -77,54 +69,97 @@ class InventoryView(arcade.View):
         list_left = TEXT_PADDING
         list_width = SCREEN_WIDTH // 2 - TEXT_PADDING * 2
         list_top = title_y - DESCRIPTION_TITLE_FONT_SIZE - INVENTORY_HEADER_GAP
-        visible_lines = (SCREEN_HEIGHT - INVENTORY_TOP_PADDING - EVENT_SECTION_HEIGHT - 100) // 30
-
-        # Auto-scroll to keep selected in view
-        if self.selected_index < self.scroll_offset:
-            self.scroll_offset = self.selected_index
-        elif self.selected_index >= self.scroll_offset + visible_lines:
-            self.scroll_offset = self.selected_index - visible_lines + 1
 
         current_y = list_top
-        for i in range(self.scroll_offset, len(self.items)):
-            if current_y < EVENT_SECTION_HEIGHT + 50:
-                break
-            display_text, item = self.items[i]
-            is_header = item is None
-            is_selected = (i == self.selected_index)
 
+        # WORN header
+        arcade.draw_text("WORN", list_left, current_y, TITLE_COLOR, INPUT_FONT_SIZE + 2, font_name=FONT_NAME_PRIMARY)
+        current_y -= (INPUT_FONT_SIZE + 2) + INVENTORY_HEADER_GAP
+
+        # Worn slots
+        for idx, (slot_name, item) in enumerate(self.worn_slots):
+            is_selected = (self.selected_index == idx)
+
+            # Highlight
             if is_selected:
+                highlight_padding = 4
+                line_height = INPUT_FONT_SIZE + INVENTORY_LINE_GAP
                 arcade.draw_lbwh_rectangle_filled(
                     left=list_left,
-                    bottom=current_y - INPUT_FONT_SIZE - 5,
+                    bottom=current_y - INPUT_FONT_SIZE - highlight_padding,
                     width=list_width,
-                    height=(current_y + 5) - (current_y - INPUT_FONT_SIZE - 5),
+                    height=line_height + (highlight_padding * 2),
                     color=INVENTORY_HIGHLIGHT_BG
                 )
-                text_color = INVENTORY_HIGHLIGHT_TEXT
-            else:
-                text_color = OBJECT_COLOR if not is_header else OBJECT_COLOR
-                text_color = TEXT_COLOR if not item and not is_header else text_color
 
-            indent = 0 if is_header else INVENTORY_ITEM_INDENT
-            font_size = INPUT_FONT_SIZE + 2 if is_header else INPUT_FONT_SIZE
-
+            # Slot label (bigger, TITLE_COLOR, flush left)
+            slot_text = f"{slot_name}:"
             arcade.draw_text(
-                display_text,
-                list_left + indent,
+                slot_text,
+                list_left,
                 current_y,
-                text_color,
-                font_size,
+                TITLE_COLOR,
+                INPUT_FONT_SIZE + 2,
                 font_name=FONT_NAME_PRIMARY
             )
-            current_y -= font_size + INVENTORY_LINE_GAP if is_header else INPUT_FONT_SIZE + INVENTORY_LINE_GAP
+
+            # Measure slot width
+            measure = arcade.Text(slot_text, 0, 0, TITLE_COLOR, INPUT_FONT_SIZE + 2, font_name=FONT_NAME_PRIMARY)
+            slot_w = measure.content_width
+
+            # Item name (TEXT_COLOR or highlight, normal size)
+            item_text = item.name if item else "Nothing"
+            color = INVENTORY_HIGHLIGHT_TEXT if is_selected else TEXT_COLOR
+            arcade.draw_text(
+                item_text,
+                list_left + slot_w + 10,  # gap after colon
+                current_y,
+                color,
+                INPUT_FONT_SIZE,
+                font_name=FONT_NAME_PRIMARY
+            )
+
+            current_y -= (INPUT_FONT_SIZE + 2) + INVENTORY_LINE_GAP
+
+        # CARRIED header (extra spacing)
+        current_y -= INVENTORY_SECTION_GAP
+        arcade.draw_text("CARRIED", list_left, current_y, TITLE_COLOR, INPUT_FONT_SIZE + 2, font_name=FONT_NAME_PRIMARY)
+        current_y -= (INPUT_FONT_SIZE + 2) + INVENTORY_HEADER_GAP
+
+        # Carried items
+        for carried_idx, item in enumerate(self.carried_items):
+            idx = len(self.worn_slots) + carried_idx
+            is_selected = (self.selected_index == idx)
+
+            if is_selected:
+                highlight_padding = 4
+                line_height = INPUT_FONT_SIZE + INVENTORY_LINE_GAP
+                arcade.draw_lbwh_rectangle_filled(
+                    left=list_left,
+                    bottom=current_y - INPUT_FONT_SIZE - highlight_padding,
+                    width=list_width,
+                    height=line_height + (highlight_padding * 2),
+                    color=INVENTORY_HIGHLIGHT_BG
+                )
+
+            color = INVENTORY_HIGHLIGHT_TEXT if is_selected else TEXT_COLOR
+            arcade.draw_text(
+                item.name,
+                list_left + INVENTORY_ITEM_INDENT,
+                current_y,
+                color,
+                INPUT_FONT_SIZE,
+                font_name=FONT_NAME_PRIMARY
+            )
+
+            current_y -= INPUT_FONT_SIZE + INVENTORY_LINE_GAP
 
         # Right side: detail panel
-        selected_item = None
-        for i, (_, item) in enumerate(self.items):
-            if i == self.selected_index and item is not None:
-                selected_item = item
-                break
+        if self.selected_index < len(self.worn_slots):
+            selected_item = self.worn_slots[self.selected_index][1]
+        else:
+            carried_idx = self.selected_index - len(self.worn_slots)
+            selected_item = self.carried_items[carried_idx] if carried_idx < len(self.carried_items) else None
 
         right_left = SCREEN_WIDTH // 2
         panel_width = SCREEN_WIDTH // 2 - TEXT_PADDING
@@ -139,7 +174,6 @@ class InventoryView(arcade.View):
                 texture = arcade.load_texture("resources/images/image_missing.png")
 
             if texture:
-                # Target dimensions = top half of right panel
                 target_width = panel_width - TEXT_PADDING * 2
                 target_height = (SCREEN_HEIGHT // 2) - INVENTORY_TOP_PADDING * 2
 
@@ -157,12 +191,10 @@ class InventoryView(arcade.View):
                     sprite.center_x = right_left + panel_width / 2
                     sprite.center_y = SCREEN_HEIGHT - INVENTORY_TOP_PADDING - (target_height / 2)
 
-                    # Use a temporary SpriteList to draw (3.3.3 style)
                     temp_list = arcade.SpriteList()
                     temp_list.append(sprite)
                     temp_list.draw()
             else:
-                # Ultimate fallback if both textures fail
                 arcade.draw_text(
                     "No image",
                     right_left + panel_width / 2,
@@ -186,7 +218,6 @@ class InventoryView(arcade.View):
                 font_name=FONT_NAME_PRIMARY
             )
         else:
-            # No item selected (header) - show hint
             arcade.draw_text(
                 "Select an item to view details",
                 right_left + TEXT_PADDING,
@@ -215,9 +246,9 @@ class InventoryView(arcade.View):
                 self.window.show_view(self.previous_view)
             return
 
+        total_slots = len(self.worn_slots) + len(self.carried_items)
+
         if key == arcade.key.UP and self.selected_index > 0:
             self.selected_index -= 1
-        elif key == arcade.key.DOWN and self.selected_index < len(self.items) - 1:
+        elif key == arcade.key.DOWN and self.selected_index < total_slots - 1:
             self.selected_index += 1
-        else:
-            return

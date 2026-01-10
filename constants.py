@@ -34,11 +34,12 @@ EVENT_SECTION_BG_COLOR = (20, 30, 50, 180)  # Dark semi-transparent for event ar
 
 BACKGROUND_COLOR = (0, 0, 0, 255)  # Solid black
 
-TEXT_COLOR = (176, 172, 176, 255)         # muted phosphor green
-EXIT_COLOR = (11, 70, 140, 255)         # sharp cyan
-OBJECT_COLOR = (143, 112, 75, 255)         # blood-orange
-PLAYER_INPUT_COLOR = (68, 120, 106, 255)  # amber/yellow
-ALERT_COLOR = (255, 140, 0, 255)          # Dark orange
+TITLE_COLOR = (176, 100, 176, 255)
+TEXT_COLOR = (176, 172, 176, 255)
+EXIT_COLOR = (11, 70, 140, 255)
+OBJECT_COLOR = (143, 112, 75, 255)
+PLAYER_INPUT_COLOR = (68, 120, 106, 255)
+ALERT_COLOR = (255, 140, 0, 255)
 CURSOR_COLOR = (0, 255, 0, 255)           # Green
 PANEL_OVERLAY = (0, 0, 0, 200)            # Semi-transparent black panel
 BACKGROUND_OVERLAY = (0, 0, 0, 100)        # Subtle dark overlay for images
