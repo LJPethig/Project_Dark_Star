@@ -7,6 +7,8 @@ Update (30 Dec 25) Now using SuperGrok (paid).
 
 To anyone wishing to go down this same dark path of despair and
 enlightenment. I present the GOLDEN RULES as explained by Grok.
+Unfortunately Grok frequently breaks these rules, in particular
+rule #1.
 
 Here are the golden rules for refactoring Project Dark Star code that we've established and refined together:
 
