@@ -180,7 +180,7 @@ class StorageUnit(FixedObject):
         if not self.contents:
             contents_str = ": empty"
         else:
-            item_names = [f"%{item.name}%" for item in self.contents]
+            item_names = [f"^{item.name}^" for item in self.contents]  # ← CHANGED: ^ for portables
             if len(item_names) == 1:
                 contents_str = f": {item_names[0]}"
             elif len(item_names) == 2:

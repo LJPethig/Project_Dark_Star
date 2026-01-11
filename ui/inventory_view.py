@@ -123,7 +123,11 @@ class InventoryView(arcade.View):
 
             # Item name - larger + bold when selected
             item_text = item.name if item else "Nothing"
-            item_color = INVENTORY_HIGHLIGHT_TEXT if is_selected else TEXT_COLOR
+            item_color = (
+                INVENTORY_HIGHLIGHT_TEXT if is_selected else
+                TEXT_COLOR if item_text == "Nothing" else
+                PORTABLE_OBJECT_COLOR
+            )
             item_size = FONT_SIZE_INVENTORY_HIGHLIGHTED if is_selected else FONT_SIZE_SMALL
 
             arcade.draw_text(
@@ -155,7 +159,7 @@ class InventoryView(arcade.View):
             idx = len(self.worn_slots) + carried_idx
             is_selected = (self.selected_index == idx)
 
-            item_color = INVENTORY_HIGHLIGHT_TEXT if is_selected else TEXT_COLOR
+            item_color = INVENTORY_HIGHLIGHT_TEXT if is_selected else PORTABLE_OBJECT_COLOR
             item_size = FONT_SIZE_INVENTORY_HIGHLIGHTED if is_selected else FONT_SIZE_SMALL
 
             arcade.draw_text(

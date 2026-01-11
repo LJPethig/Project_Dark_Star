@@ -14,7 +14,7 @@ def parse_markup_line(
     Parse a line with markup and render with proper word wrapping across segments.
     Supports:
       *text* → EXIT_COLOR
-      %text% → OBJECT_COLOR
+      %text% → FIXED_OBJECT_COLOR
       +text+ → PLAYER_INPUT_COLOR
     Wraps at word boundaries; preserves colors.
     Returns (list of arcade.Text objects, total height including all wrapped lines).
@@ -30,14 +30,15 @@ def parse_markup_line(
     parts = []
     i = 0
     while i < len(line):
-        if line[i] in '*+%':
+        if line[i] in '*+%^':
             delimiter = line[i]
             j = line.find(delimiter, i + 1)
             if j != -1:
                 highlighted = line[i + 1:j]
                 color = (
                     EXIT_COLOR if delimiter == '*' else
-                    OBJECT_COLOR if delimiter == '%' else
+                    FIXED_OBJECT_COLOR if delimiter == '%' else
+                    PORTABLE_OBJECT_COLOR if delimiter == '^' else  # ← NEW line for portables
                     PLAYER_INPUT_COLOR
                 )
                 parts.append((highlighted, color))
@@ -45,7 +46,7 @@ def parse_markup_line(
                 continue
         # Normal text up to next delimiter
         next_pos = len(line)
-        for delim in '*+%':
+        for delim in '*+%^':
             pos = line.find(delim, i)
             if pos != -1 and pos < next_pos:
                 next_pos = pos

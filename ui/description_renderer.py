@@ -2,7 +2,7 @@
 import arcade
 from constants import *
 from ui.text_utils import parse_markup_line  # Import shared utility
-from models.interactable import StorageUnit
+from models.interactable import StorageUnit, PortableItem
 
 class DescriptionRenderer:
     """Handles parsing and rendering of room descriptions and object lists."""
@@ -51,7 +51,9 @@ class DescriptionRenderer:
 
             for obj in objects:
                 if isinstance(obj, StorageUnit):
-                    obj_line = obj.get_description_string()
+                    obj_line = obj.get_description_string() # already uses ^ for contents
+                elif isinstance(obj, PortableItem):
+                    obj_line = f"^{obj.name}^"  # ← NEW: loose portables get portable color
                 else:
                     obj_name = obj.name if hasattr(obj, 'name') else "Unknown"
                     obj_line = f"%{obj_name}%"
