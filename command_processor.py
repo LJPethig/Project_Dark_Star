@@ -348,20 +348,6 @@ class CommandProcessor:
             if hasattr(unit, "open_description") and unit.open_description:
                 lines.append(unit.open_description)
 
-        # Always show contents with %markup% for objects
-        contents_items = unit.contents
-        if not contents_items:
-            lines.append("It is empty.")
-        else:
-            item_names = [f"%{item.name}%" for item in contents_items]
-            if len(item_names) == 1:
-                formatted = item_names[0]
-            elif len(item_names) == 2:
-                formatted = f"{item_names[0]} and {item_names[1]}"
-            else:
-                formatted = ", ".join(item_names[:-1]) + f", and {item_names[-1]}"
-            lines.append(f"Inside you see: {formatted}")
-
         # Refresh UI
         self.ship_view.description_renderer.rebuild_description()
         self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
@@ -382,6 +368,8 @@ class CommandProcessor:
             return f"The {unit.name.lower()} is already closed."
 
         unit.is_open = False
+        self.ship_view.description_renderer.rebuild_description()
+        self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
         return f"You close the {unit.name.lower()}."
 
     def _handle_look_in(self, args: str) -> str:

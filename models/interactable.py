@@ -170,3 +170,22 @@ class StorageUnit(FixedObject):
             return f"{item_names[0]} and {item_names[1]}"
         else:
             return ", ".join(item_names[:-1]) + f", and {item_names[-1]}"
+
+    def get_description_string(self) -> str:
+        """Return formatted string for room description: name + state + contents."""
+        if not self.is_open:
+            return f"%{self.name}%"
+
+        state = " (open)"
+        if not self.contents:
+            contents_str = ": empty"
+        else:
+            item_names = [f"%{item.name}%" for item in self.contents]
+            if len(item_names) == 1:
+                contents_str = f": {item_names[0]}"
+            elif len(item_names) == 2:
+                contents_str = f": {item_names[0]} and {item_names[1]}"
+            else:
+                contents_str = f": {', '.join(item_names[:-1])}, and {item_names[-1]}"
+
+        return f"%{self.name}%{state}{contents_str}"

@@ -2,6 +2,7 @@
 import arcade
 from constants import *
 from ui.text_utils import parse_markup_line  # Import shared utility
+from models.interactable import StorageUnit
 
 class DescriptionRenderer:
     """Handles parsing and rendering of room descriptions and object lists."""
@@ -49,20 +50,23 @@ class DescriptionRenderer:
             self.description_texts.append(see_text)
 
             for obj in objects:
-                obj_name = obj.name if hasattr(obj, 'name') else "Unknown"
-                txt = arcade.Text(
-                    obj_name,
+                if isinstance(obj, StorageUnit):
+                    obj_line = obj.get_description_string()
+                else:
+                    obj_name = obj.name if hasattr(obj, 'name') else "Unknown"
+                    obj_line = f"%{obj_name}%"
+
+                # Parse the line with markup (handles colors + wrapping)
+                line_texts, line_height = parse_markup_line(
+                    line=obj_line,
                     x=self.view.text_left + self.view.text_padding,
                     y=current_y,
-                    color=OBJECT_COLOR,
-                    font_size=DESCRIPTION_FONT_SIZE,
-                    font_name=FONT_NAME_PRIMARY,
                     width=self.view.text_width - 2 * self.view.text_padding - 60,
-                    multiline=True,
-                    anchor_y="top"
+                    font_size=DESCRIPTION_FONT_SIZE,
+                    font_name=FONT_NAME_PRIMARY
                 )
-                current_y -= txt.content_height #+ LINE_SPACING
-                self.description_texts.append(txt)
+                self.description_texts.extend(line_texts)
+                current_y -= line_height + LINE_SPACING
 
     def get_description_texts(self):
         """Return the list of rendered text objects for drawing."""
