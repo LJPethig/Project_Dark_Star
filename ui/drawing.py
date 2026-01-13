@@ -62,7 +62,7 @@ class DrawingManager:
         arcade.draw_lrbt_rectangle_filled(
             self.view.image_section.left, self.view.image_section.right,
             self.view.image_section.bottom, self.view.image_section.top,
-            BACKGROUND_OVERLAY
+            IMAGE_OVERLAY_COLOR
         )
 
     def draw_window_border(self):

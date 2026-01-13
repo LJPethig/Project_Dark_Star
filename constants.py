@@ -1,7 +1,7 @@
 # constants.py
 
 # Game starting room
-STARTING_ROOM = "med-bay"  # player start room
+STARTING_ROOM = "crew quarters"  # player start room
 PLAYER_NAME = "Jack Harrow"
 SHIP_NAME = "Tempus Fugit"
 
@@ -15,13 +15,12 @@ FONT_NAME_PRIMARY = "Share Tech Mono"
 FONT_NAME_FALLBACK = "Courier New"
 
 # Font sizes
-FONT_SIZE_DEFAULT = 14
-FONT_SIZE_TITLE = 18
-FONT_SIZE_SUB_HEADING = 14
-FONT_SIZE_PROMPT = 14
-FONT_SIZE_SMALL = 12
-FONT_SIZE_INVENTORY_HIGHLIGHTED = 14
-
+DEFAULT_FONT_SIZE = 14
+TITLE_FONT_SIZE = 18
+SUB_HEADING_FONT_SIZE = 14
+PROMPT_FONT_SIZE = 14
+SMALL_FONT_SIZE = 12
+INVENTORY_HIGHLIGHTED_FONT_SIZE = 14
 DESCRIPTION_TITLE_FONT_SIZE = 16
 DESCRIPTION_FONT_SIZE = 12
 RESPONSE_FONT_SIZE = 12
@@ -30,26 +29,23 @@ INPUT_FONT_SIZE = 12
 # Colors and styles
 DIVIDER_COLOR = (100, 150, 200, 180)   # RGBA
 DIVIDER_THICKNESS = 2
-EVENT_SECTION_BG_COLOR = (20, 30, 50, 180)  # Dark semi-transparent for event area
 
 # Colours (RGBA tuples)
 
 BACKGROUND_COLOR = (0, 0, 0, 255)  # Solid black
-
-TITLE_COLOR = (176, 100, 176, 255)
-TEXT_COLOR = (176, 172, 176, 255)
-EXIT_COLOR = (11, 70, 140, 255)
-FIXED_OBJECT_COLOR = (143, 112, 75, 255)
-PORTABLE_OBJECT_COLOR = (200, 180, 140, 255)
-PLAYER_INPUT_COLOR = (68, 120, 106, 255)
+TITLE_COLOR = (39, 230, 236, 200)
+TEXT_COLOR = (186, 186, 186, 255)
+EXIT_COLOR = (39, 230, 236, 200)
+FIXED_OBJECT_COLOR = (39, 230, 236, 255)
+PORTABLE_OBJECT_COLOR = (190, 165, 205, 255)
+INVENTORY_HIGHLIGHT_TEXT_COLOR = (39, 230, 236, 255)
+PLAYER_INPUT_COLOR = (126, 151, 174, 255)
 ALERT_COLOR = (255, 140, 0, 255)
 CURSOR_COLOR = (0, 255, 0, 255)           # Green
-PANEL_OVERLAY = (0, 0, 0, 200)            # Semi-transparent black panel
-BACKGROUND_OVERLAY = (0, 0, 0, 100)        # Subtle dark overlay for images
+START_SCREEN_OVERLAY_COLOR = (0, 0, 0, 200)            # Semi-transparent black panel
+IMAGE_OVERLAY_COLOR = (0, 0, 0, 100)        # Subtle dark overlay for images
 CLOCK_COLOR = (100, 100, 100, 255)          # Mid grey
 CLOCK_FLASH_COLOR = (255, 255, 255, 255)    # White
-
-INVENTORY_HIGHLIGHT_TEXT = (143, 112, 75, 255)
 
 # Chronometer settings
 START_DATE_TIME = (2276, 1, 1, 0, 0)  # year, month, day, hour, minute — launch epoch
@@ -58,7 +54,6 @@ SHORT_WAIT = 8.0                      # Player-visible delay in seconds for pane
 CLOCK_UPDATE_INTERVAL = 60.0          # Real-time seconds between normal clock ticks
 
 CARD_SWIPE_WAIT = 3.0  # Player-visible delay in seconds for door card swipe
-
 
 
 # Ship_view sections, heights, padding and spacing

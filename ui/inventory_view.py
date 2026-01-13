@@ -1,7 +1,7 @@
 # ui/inventory_view.py
 import arcade
 from constants import *
-
+from models.interactable import UtilityBelt
 
 class InventoryView(arcade.View):
     """Full-screen view for player inventory."""
@@ -21,11 +21,11 @@ class InventoryView(arcade.View):
         player = self.game_manager.player
 
         self.worn_slots = [
-            ("Head  :",  player.head_slot),
-            ("Body  :",  player.body_slot),
+            ("Head  :", player.head_slot),
+            ("Body  :", player.body_slot),
             ("Torso :", player.torso_slot),
             ("Waist :", player.waist_slot),
-            ("Feet  :",  player.feet_slot),
+            ("Feet  :", player.feet_slot),
         ]
 
         self.carried_items = player.get_inventory().copy()
@@ -60,7 +60,7 @@ class InventoryView(arcade.View):
             SCREEN_WIDTH / 4,
             title_y,
             TITLE_COLOR,
-            FONT_SIZE_TITLE,
+            TITLE_FONT_SIZE,
             anchor_x="center",
             font_name=FONT_NAME_PRIMARY
         )
@@ -91,10 +91,10 @@ class InventoryView(arcade.View):
             list_left,
             current_y,
             TITLE_COLOR,
-            FONT_SIZE_SUB_HEADING,
+            SUB_HEADING_FONT_SIZE,
             font_name=FONT_NAME_PRIMARY)
 
-        current_y -= FONT_SIZE_SUB_HEADING + INVENTORY_HEADER_GAP
+        current_y -= SUB_HEADING_FONT_SIZE + INVENTORY_HEADER_GAP
 
         # Worn slots
         for idx, (slot_name, item) in enumerate(self.worn_slots):
@@ -107,7 +107,7 @@ class InventoryView(arcade.View):
                 list_left,
                 current_y,
                 TITLE_COLOR,
-                FONT_SIZE_DEFAULT,
+                DEFAULT_FONT_SIZE,
                 font_name=FONT_NAME_PRIMARY
             )
 
@@ -116,19 +116,22 @@ class InventoryView(arcade.View):
                 slot_text,
                 0, 0,
                 TITLE_COLOR,
-                FONT_SIZE_DEFAULT,
+                DEFAULT_FONT_SIZE,
                 font_name=FONT_NAME_PRIMARY
             )
             slot_w = slot_measure.content_width
 
-            # Item name - larger + bold when selected
+            # Item name with optional PAM attachment suffix for waist
             item_text = item.name if item else "Nothing"
+            if slot_name == "Waist :" and item and item.id == "utility_belt" and isinstance(item, UtilityBelt) and item.attached_pam:
+                item_text += " (Attached : PAM)"
+
             item_color = (
-                INVENTORY_HIGHLIGHT_TEXT if is_selected else
+                INVENTORY_HIGHLIGHT_TEXT_COLOR if is_selected else
                 TEXT_COLOR if item_text == "Nothing" else
                 PORTABLE_OBJECT_COLOR
             )
-            item_size = FONT_SIZE_INVENTORY_HIGHLIGHTED if is_selected else FONT_SIZE_SMALL
+            item_size = INVENTORY_HIGHLIGHTED_FONT_SIZE if is_selected else SMALL_FONT_SIZE
 
             arcade.draw_text(
                 item_text,
@@ -140,7 +143,7 @@ class InventoryView(arcade.View):
                 bold=is_selected  # Enable bold for selected items
             )
 
-            current_y -= FONT_SIZE_SMALL + INVENTORY_VERTICAL_PADDING + INVENTORY_LINE_GAP
+            current_y -= SMALL_FONT_SIZE + INVENTORY_VERTICAL_PADDING + INVENTORY_LINE_GAP
 
         # CARRIED header
         current_y -= INVENTORY_SECTION_GAP
@@ -148,19 +151,19 @@ class InventoryView(arcade.View):
                          list_left,
                          current_y,
                          TITLE_COLOR,
-                         FONT_SIZE_SUB_HEADING,
+                         SUB_HEADING_FONT_SIZE,
                          font_name=FONT_NAME_PRIMARY
                          )
 
-        current_y -= FONT_SIZE_SUB_HEADING + INVENTORY_HEADER_GAP
+        current_y -= SUB_HEADING_FONT_SIZE + INVENTORY_HEADER_GAP
 
         # Carried items
         for carried_idx, item in enumerate(self.carried_items):
             idx = len(self.worn_slots) + carried_idx
             is_selected = (self.selected_index == idx)
 
-            item_color = INVENTORY_HIGHLIGHT_TEXT if is_selected else PORTABLE_OBJECT_COLOR
-            item_size = FONT_SIZE_INVENTORY_HIGHLIGHTED if is_selected else FONT_SIZE_SMALL
+            item_color = INVENTORY_HIGHLIGHT_TEXT_COLOR if is_selected else PORTABLE_OBJECT_COLOR
+            item_size = INVENTORY_HIGHLIGHTED_FONT_SIZE if is_selected else SMALL_FONT_SIZE
 
             arcade.draw_text(
                 item.name,
@@ -172,7 +175,7 @@ class InventoryView(arcade.View):
                 bold=is_selected
             )
 
-            current_y -= FONT_SIZE_SMALL + INVENTORY_VERTICAL_PADDING + INVENTORY_LINE_GAP
+            current_y -= SMALL_FONT_SIZE + INVENTORY_VERTICAL_PADDING + INVENTORY_LINE_GAP
 
         # Right side: detail panel
         if self.selected_index < len(self.worn_slots):
@@ -220,7 +223,7 @@ class InventoryView(arcade.View):
                 right_left + TEXT_PADDING,
                 SCREEN_HEIGHT // 2 - 40,
                 TEXT_COLOR,
-                FONT_SIZE_SMALL,
+                SMALL_FONT_SIZE,
                 width=panel_width,
                 multiline=True,
                 font_name=FONT_NAME_PRIMARY
@@ -249,7 +252,7 @@ class InventoryView(arcade.View):
             (SCREEN_WIDTH / 4) * 1,
             TEXT_PADDING,  # slightly higher than return instruction
             TEXT_COLOR,  # soft cyan/white for visibility
-            FONT_SIZE_SMALL,
+            SMALL_FONT_SIZE,
             anchor_x="center",
             font_name=FONT_NAME_PRIMARY
         )
@@ -259,7 +262,7 @@ class InventoryView(arcade.View):
             (SCREEN_WIDTH / 4) * 3,
             TEXT_PADDING,
             TEXT_COLOR,
-            FONT_SIZE_SMALL,
+            SMALL_FONT_SIZE,
             anchor_x="center",
             font_name=FONT_NAME_PRIMARY
         )

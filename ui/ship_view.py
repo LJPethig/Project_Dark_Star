@@ -105,7 +105,7 @@ class ShipView(arcade.View):
             x=SCREEN_WIDTH - TEXT_PADDING,
             y=self.event_section_height // 2,
             color=CLOCK_COLOR,
-            font_size=FONT_SIZE_SMALL,
+            font_size=SMALL_FONT_SIZE,
             font_name=FONT_NAME_PRIMARY,
             anchor_x="right",
             anchor_y="center"

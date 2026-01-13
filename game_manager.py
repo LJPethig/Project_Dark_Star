@@ -3,7 +3,7 @@ import json
 import random
 from typing import List
 from constants import STARTING_ROOM, PLAYER_NAME, SHIP_NAME
-from models.interactable import PortableItem, FixedObject, StorageUnit  # Added StorageUnit
+from models.interactable import PortableItem, FixedObject, StorageUnit, UtilityBelt
 from models.ship import Ship
 from models.player import Player
 from models.chronometer import Chronometer
@@ -23,6 +23,13 @@ class GameManager:
 
         self._load_items()
 
+
+    def _create_item(self, item_data: dict) -> PortableItem:
+        """Factory to instantiate the correct item class based on ID."""
+        item_id = item_data["id"]
+        if item_id == "utility_belt":
+            return UtilityBelt(**{k: v for k, v in item_data.items() if k != "type"})
+        return PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
 
     def _load_items(self):
         """Load all item definitions from multiple JSON files into self.items."""
@@ -105,7 +112,7 @@ class GameManager:
 
         for item_id in config.get("inventory", []):
             item_data = self.items[item_id]
-            item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
+            item = self._create_item(item_data)
             self.player.add_to_inventory(item)  # <-- use new method
 
             # Optional: auto-equip stasis garment if it's in starting inventory
@@ -119,7 +126,7 @@ class GameManager:
             )
             for item_id in item_ids:
                 item_data = self.items[item_id]
-                item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
+                item = self._create_item(item_data)
                 container.add_item(item)
 
     def _place_portable_items(self) -> None:
@@ -149,7 +156,7 @@ class GameManager:
         uniques = {"eva_suit": eva_locker, "scan_tool": eng_tool_cabinet}
         for unique_id, preferred_container in uniques.items():
             item_data = self.items[unique_id]
-            item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
+            item = self._create_item(item_data)
             if preferred_container and preferred_container.add_item(item):
                 continue
             # Fallback scatter (kept only for uniques — acceptable variability)
@@ -184,7 +191,7 @@ class GameManager:
 
         for item_id in portable_ids:
             item_data = self.items[item_id]
-            item = PortableItem(**{k: v for k, v in item_data.items() if k != "type"})
+            item = self._create_item(item_data)
 
             if placement_targets:
                 target = random.choice(placement_targets)

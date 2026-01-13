@@ -34,19 +34,19 @@ class StartScreen(arcade.View):
         self.background_list.draw()
 
         # Dark overlay for text readability
-        arcade.draw_lrbt_rectangle_filled(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT, PANEL_OVERLAY)
+        arcade.draw_lrbt_rectangle_filled(0, SCREEN_WIDTH, 0, SCREEN_HEIGHT, START_SCREEN_OVERLAY_COLOR)
 
         # Title
         arcade.draw_text(
             "PROJECT DARK STAR",
             SCREEN_WIDTH / 2, SCREEN_HEIGHT - 120,
-            TITLE_COLOR, FONT_SIZE_TITLE,
+            TITLE_COLOR, TITLE_FONT_SIZE,
             anchor_x="center", font_name=FONT_NAME_PRIMARY
         )
 
         # Flavor introduction
         intro_lines = [
-            "The year is 2178.",
+            "The year is 2276.",
             "Humanity has spread across the solar system and beyond.",
             "Corporations dominate, but out in the black, independent traders still carve out a living.",
             "",
@@ -58,7 +58,7 @@ class StartScreen(arcade.View):
             arcade.draw_text(
                 line,
                 SCREEN_WIDTH / 2, y,
-                TEXT_COLOR, FONT_SIZE_DEFAULT,
+                TEXT_COLOR, DEFAULT_FONT_SIZE,
                 anchor_x="center", font_name=FONT_NAME_PRIMARY
             )
             y -= 40
@@ -67,7 +67,7 @@ class StartScreen(arcade.View):
         arcade.draw_text(
             "Press ENTER to continue",
             SCREEN_WIDTH / 2, 100,
-            (150, 150, 150, 255), FONT_SIZE_SMALL,
+            (150, 150, 150, 255), SMALL_FONT_SIZE,
             anchor_x="center", font_name=FONT_NAME_PRIMARY
         )
 

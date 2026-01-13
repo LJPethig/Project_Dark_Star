@@ -1,6 +1,6 @@
 # command_processor.py
 from ui.inventory_view import InventoryView
-from models.interactable import PortableItem, FixedObject, StorageUnit  # Added StorageUnit
+from models.interactable import PortableItem, FixedObject, StorageUnit, UtilityBelt
 from door_handler import DoorHandler
 from repair_handler import RepairHandler
 
@@ -237,6 +237,11 @@ class CommandProcessor:
 
         for item in inventory[:]:
             if item.matches(target_name):
+                # Block drop if PAM is attached
+                if item.id == "personal_atm_monitor":
+                    belt = self.game_manager.player.waist_slot
+                    if belt and isinstance(belt, UtilityBelt) and belt.attached_pam:
+                        return "You can't drop the PAM while it's clipped to your belt. Unclip it first."
                 if self.game_manager.remove_from_inventory(item):
                     current_location = self.game_manager.get_current_location()
                     current_location.objects.append(item)
@@ -261,6 +266,20 @@ class CommandProcessor:
 
         for item in inventory:
             if item.matches(target_name):
+                # Special case for Personal Atmosphere monitor PAM
+                if item.id == "personal_atm_monitor":
+                    belt = self.game_manager.player.waist_slot
+                    if belt and isinstance(belt, UtilityBelt):
+                        if belt.attached_pam:
+                            return "It's already clipped to your belt."
+                        belt.attached_pam = True
+                        # NO remove_from_inventory — PAM stays in loose inventory
+                        self.ship_view.description_renderer.rebuild_description()
+                        self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+                        return "You clip the Personal Atmosphere Monitor (PAM) to your utility belt."
+                    else:
+                        return "The PAM is designed to clip onto a utility belt. Wear a belt first."
+
                 if not hasattr(item, "equip_slot") or not item.equip_slot:
                     return f"You can't wear the {item.name}."
 
@@ -282,7 +301,18 @@ class CommandProcessor:
         player = self.game_manager.player
         current_location = self.game_manager.get_current_location()
 
-        # Try to match by item name first (most common)
+        # Special case for unclipping PAM
+        if target in ["pam", "personal atmosphere monitor", "atmosphere monitor"]:
+            belt = self.game_manager.player.waist_slot
+            if belt and isinstance(belt, UtilityBelt) and belt.attached_pam:
+                belt.attached_pam = False
+                self.ship_view.description_renderer.rebuild_description()
+                self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
+                return "You unclip the Personal Atmosphere Monitor (PAM) from your belt."
+            else:
+                return "No PAM is attached to your belt."
+
+        # Try to match by item name (most common)
         for slot_name, item in [
             ("head", self.game_manager.player.head_slot),
             ("body", self.game_manager.player.body_slot),
@@ -293,12 +323,16 @@ class CommandProcessor:
             if item and item.matches(target):
                 success, message = player.unequip(slot_name, current_room=current_location)
                 if success:
+                    # Special case for removing utility belt with PAM still attached
+                    if slot_name == "waist" and isinstance(item, UtilityBelt) and item.attached_pam:
+                        item.attached_pam = False
+                        message += " The PAM is unclipped."
                     # Refresh room description (item now on floor)
                     self.ship_view.description_renderer.rebuild_description()
                     self.ship_view.description_texts = self.ship_view.description_renderer.get_description_texts()
                 return message
 
-        return f"Nothing matching '{args}' is currently equipped."
+        return f"You are not wearing {args}."
 
     def _handle_examine(self, args: str) -> str:
         """Examine an object in the current room or inventory."""
@@ -317,6 +351,19 @@ class CommandProcessor:
         for item in self.game_manager.get_player_inventory():
             if item.matches(target_name):
                 return item.on_examine()
+
+            # NEW: Check equipped slots
+            player = self.game_manager.player
+            equipped_slots = [
+                player.head_slot,
+                player.body_slot,
+                player.torso_slot,
+                player.waist_slot,
+                player.feet_slot,
+            ]
+            for item in equipped_slots:
+                if item and item.matches(target_name):
+                    return item.on_examine()
 
         return f"There's nothing called '{args}' here to examine."
 

@@ -1,12 +1,21 @@
 [
   {
-    "id": "tool_belt",
+    "id": "utility_belt",
     "type": "portable",
-    "name": "Tool Belt",
-    "description": "A heavy-duty belt with multiple pouches and clips for hand tools.",
-    "keywords": ["tool belt", "belt"],
+    "name": "Utility Belt",
+    "description": "A heavy-duty belt with multiple pouches and clips for tools and personal equipment.",
+    "keywords": ["utility belt", "belt"],
     "mass": 0.5,
     "equip_slot": "waist"
+  },
+  {
+    "id": "personal_atm_monitor",
+    "type": "portable",
+    "name": "Personal Atmosphere Monitor (PAM)",
+    "description": "A compact, rugged sensor unit designed to clip onto a utility belt. Provides real-time local readout of pressure, temperature, and composite air quality — essential for any spacer who wants to know if they're still breathing.",
+    "keywords": ["PAM", "monitor", "air monitor", "atmosphere monitor", "personal atmosphere monitor"],
+    "mass": 0.15,
+    "equip_slot": "none"
   },
   {
   "id": "eva_suit",
