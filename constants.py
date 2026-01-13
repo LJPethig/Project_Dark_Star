@@ -5,6 +5,14 @@ STARTING_ROOM = "crew quarters"  # player start room
 PLAYER_NAME = "Jack Harrow"
 SHIP_NAME = "Tempus Fugit"
 
+ROOM_TEMP_PRESETS = {
+    "cold":     8.0,    # Unheated storage, deep cargo holds
+    "cool":     14.0,   # Cargo bays, airlocks, secondary storage
+    "normal":   20.0,   # Crew quarters, galley, rec room (comfort baseline)
+    "warm":     24.0,   # Medical bay, some living areas (patient/drug optimal)
+    "hot":      28.0,   # Engineering spaces (machinery heat load)
+}
+
 # Window settings
 SCREEN_WIDTH = 1270
 SCREEN_HEIGHT = 770

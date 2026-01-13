@@ -10,6 +10,7 @@ from models.room import Room
 from models.door import Door
 from models.interactable import PortableItem, FixedObject, StorageUnit
 from models.security_panel import SecurityPanel
+from constants import ROOM_TEMP_PRESETS
 
 import json
 
@@ -44,12 +45,16 @@ class Ship:
             room_id = room_data["id"]
             raw_object_ids[room_id] = room_data.get("fixed_objects", [])
 
+            target_label = room_data.get("target_temperature", "normal").lower()
+            target_temp = ROOM_TEMP_PRESETS.get(target_label, 20.0)
+
             room = Room(
                 room_id=room_id,
                 name=room_data["name"],
                 description=room_data["description"],
                 background=room_data["background"],
-                exits=room_data["exits"]
+                exits=room_data["exits"],
+                target_temperature=target_temp  # resolved float
             )
             ship.rooms[room_id] = room
 
@@ -124,10 +129,6 @@ class Ship:
                 damaged = panel_data.get("damaged", False)
                 repair_progress = panel_data.get("repair_progress", 0.0)
 
-                print("START------------------------------")
-                print(panel_data)
-                print(f"DEBUG: damaged = {damaged}")
-
                 panel = SecurityPanel(
                     panel_id=panel_id,
                     door_id=door_id,
@@ -138,12 +139,7 @@ class Ship:
                     repair_progress=repair_progress,
                 )
 
-                print(f"panel is broken : {panel.is_broken}")
-
                 door.panels[side_room_id] = panel
-                print(f"ATTACHED PANEL: side={side_room_id}, panel_id={panel_id}, is_broken={panel.is_broken}")
-                print("END ---------------------")
-
                 side_room = room_a if side_room_id == room_a.id else room_b
                 side_room.panels[door_id] = panel
 

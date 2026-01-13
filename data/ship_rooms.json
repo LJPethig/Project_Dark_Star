@@ -2,6 +2,7 @@
   {
     "id": "crew quarters",
     "name": "Crew Quarters",
+    "target_temperature": "normal",
     "description": [
       "Your personal cabin",
       "The hum of life support fills the air. Dim lights flicker on automatically. The bunk is unmade. Personal effects are scattered — reminders of a life spent in the black.",
@@ -21,6 +22,7 @@
   {
     "id": "galley",
     "name": "Galley",
+    "target_temperature": "normal",
     "description": [
       "A cramped kitchen area. Food synthesizer, water recycler, small table bolted to the floor.",
       "Everything is functional, nothing is luxurious.",
@@ -40,6 +42,7 @@
   {
     "id": "recreation room",
     "name": "Recreation Room",
+    "target_temperature": "normal",
     "description": [
       "The ship's central hub for relaxation and social interaction.",
       "Soft lighting and warm colors create a welcoming atmosphere.",
@@ -85,6 +88,7 @@
   {
     "id": "cockpit",
     "name": "Cockpit",
+    "target_temperature": "normal",
     "description": [
       "The command center of the ship.",
       "Pilot's console, navigation charts, and sensor displays dominate the space.",
@@ -105,6 +109,7 @@
   {
     "id": "storage room",
     "name": "Storage Room",
+    "target_temperature": "cool",
     "description": [
       "The ships designated small storage room, a %large storage unit% is attached to the wall, and a %small cabinet% is mounted next to it.",
       "The lighting here is harsh and functional. An automated storage facility is built into rear wall",
@@ -124,6 +129,7 @@
   {
     "id": "hyper-sleep chamber",
     "name": "Hyper-sleep Chamber",
+    "target_temperature": "warm",
     "description": [
       "A cramped room with dual stasis pods and various life support equipment.",
       "A vital system to survive the month long journeys between worlds.",
@@ -143,6 +149,7 @@
   {
     "id": "med-bay",
     "name": "Med-Bay",
+    "target_temperature": "warm",
     "description": [
       "A small medical facility with diagnostic equipment and first aid supplies.",
       "The auto-doc hums quietly in the corner.",
@@ -170,6 +177,7 @@
   {
     "id": "main corridor",
     "name": "Main Corridor CH-1",
+    "target_temperature": "normal",
     "description": [
       "This passageway connects the main sections of the ship.",
       "Overhead lights cast a steady glow on the metal deck plates.",
@@ -208,6 +216,7 @@
   {
     "id": "sub corridor",
     "name": "Sub Corridor CH-2",
+    "target_temperature": "cool",
     "description": [
       "A secondary corridor that branches off *main corridor CH-1*.",
       "Less trafficked, with fewer lights and occasional flickering panels.",
@@ -233,6 +242,7 @@
   {
     "id": "engineering",
     "name": "Engineering",
+    "target_temperature": "hot",
     "description": [
       "The ship's engineering bay, filled with tools and diagnostic equipment.",
       "The reactor core thrums with contained energy.",
@@ -260,6 +270,7 @@
   {
     "id": "life support",
     "name": "Life Support",
+    "target_temperature": "normal",
     "description": [
       "The life support systems room, with air recyclers and water purifiers.",
       "Gauges show oxygen levels and humidity controls.",
@@ -279,6 +290,7 @@
   {
     "id": "airlock",
     "name": "Airlock",
+    "target_temperature": "cool",
     "description": [
       "The ship's airlock for spacewalks and docking.",
       "EVA suits are racked along one wall.",
@@ -298,6 +310,7 @@
   {
     "id": "cargo bay",
     "name": "Cargo Bay",
+    "target_temperature": "cool",
     "description": [
       "The main cargo storage area, stacked with containers and crates.",
       "Loading ramps and cargo handlers stand idle.",

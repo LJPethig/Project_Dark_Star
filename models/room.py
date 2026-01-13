@@ -17,6 +17,7 @@ class Room:
         description: List[str],
         background: str,
         exits: Dict[str, Dict[str, Any]],
+        target_temperature: float = 20.0,  # resolved numeric °C
     ):
         self.id = room_id
         self.name = name
@@ -29,6 +30,8 @@ class Room:
 
         # Placeholder for per-side security panels (filled later by Door loading)
         self.panels: Dict[str, Any] = {}  # door_id → SecurityPanel
+
+        self.target_temperature = target_temperature
 
 
     def add_object(self, obj: PortableItem | FixedObject) -> None:
