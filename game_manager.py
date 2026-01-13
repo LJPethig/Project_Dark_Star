@@ -23,6 +23,12 @@ class GameManager:
 
         self._load_items()
 
+    def advance_time(self, minutes: float):
+        """Advance chronometer and all time-dependent systems."""
+        self.chronometer.advance(minutes)
+        if hasattr(self.ship, 'life_support'):
+            self.ship.life_support.advance_time(minutes)
+        # Future: add power, crew, radiation, etc. here
 
     def _create_item(self, item_data: dict) -> PortableItem:
         """Factory to instantiate the correct item class based on ID."""

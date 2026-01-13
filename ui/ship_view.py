@@ -230,10 +230,9 @@ class ShipView(arcade.View):
         else:
             self.ship_time_text.text = "Chronometer not initialized"
 
-    def _clock_tick(self, delta_time: float):
+    def _clock_tick(self, delta_time: int):
         """Called every CLOCK_UPDATE_INTERVAL seconds to update clock during normal play."""
-        if self.game_manager.chronometer is not None:
-            self.game_manager.chronometer.advance(1)
+        self.game_manager.advance_time(1)
         self.update_ship_time_display()
 
     def flash_ship_time(self):

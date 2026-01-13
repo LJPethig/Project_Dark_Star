@@ -81,11 +81,10 @@ class RepairHandler:
             # Refresh description to reflect fixed state
             self.ship_view.description_renderer.rebuild_description()
 
-            # NEW: Advance ship time and refresh clock immediately
-            if self.game_manager.chronometer is not None:
-                self.game_manager.chronometer.advance(SHIP_PANEL_REPAIR_MINUTES)
-                self.ship_view.update_ship_time_display()
-                self.ship_view.flash_ship_time()  # Visual cue for time jump
+            # Advance time through centralized GameManager method
+            self.game_manager.advance_time(SHIP_PANEL_REPAIR_MINUTES)
+            self.ship_view.update_ship_time_display()
+            self.ship_view.flash_ship_time()  # Visual cue for time jump
 
         # Schedule the player visible delay
         self.ship_view.schedule_delayed_action(SHORT_WAIT, on_repair_complete)
