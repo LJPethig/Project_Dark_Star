@@ -57,6 +57,9 @@ class CommandProcessor:
             "remove": self._handle_unequip,
             "take off": self._handle_unequip,
             "unequip": self._handle_unequip,
+
+            # testing commands
+            "advance time": self._handle_advance_time
         }
 
     def process(self, cmd: str) -> str:
@@ -543,3 +546,23 @@ class CommandProcessor:
         message = random.choice(messages)
 
         return message
+
+    def _handle_advance_time(self, args: str) -> str:
+        """Advance time by a whole number of days (converted to minutes)."""
+        """Strictly for testing purposes for events and life support etc."""
+        if not args:
+            return "Advance how many days? (e.g. 'advance time 5')"
+
+        args = args.strip()
+        if not args.isdigit():
+            return "Days must be a whole positive number (no decimals). Example: 'advance time 3'"
+
+        days = int(args)
+        if days <= 0:
+            return "Days must be positive."
+
+        minutes = days * 1440  # 24 * 60
+
+        self.game_manager.advance_time(minutes)
+
+        return f"Advanced {days} day{'s' if days != 1 else ''} ({minutes} minutes)."

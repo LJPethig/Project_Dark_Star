@@ -73,7 +73,7 @@ class LifeSupport:
 
     def advance_time(self, minutes: int):
         """Advance simulation by given minutes, looping per minute (capped at 72 hours)."""
-        MAX_MINUTES_PER_STEP = 20160  # Realistic life support calculations for up to 14 days of time advance
+        MAX_MINUTES_PER_STEP = 259200  # Realistic life support calculations for up to 180 days of time advance
 
         # Cap the loop to prevent huge jumps from freezing (rare for MVP)
         effective_minutes = min(minutes, MAX_MINUTES_PER_STEP)
