@@ -26,6 +26,7 @@ class Ship:
         self.rooms: Dict[str, Room] = {}                    # room_id → Room
         self.doors: List[Door] = []                         # All doors
         self.cargo_by_room: Dict[str, List[PortableItem]] = {}  # room_id → [PortableItem]
+        # After ship.rooms populated
 
     @classmethod
     def load_from_json(cls, name: str, items: Dict[str, dict]) -> 'Ship':

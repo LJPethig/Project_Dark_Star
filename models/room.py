@@ -32,6 +32,7 @@ class Room:
         self.panels: Dict[str, Any] = {}  # door_id → SecurityPanel
 
         self.target_temperature = target_temperature
+        self.current_temperature = target_temperature
 
 
     def add_object(self, obj: PortableItem | FixedObject) -> None:

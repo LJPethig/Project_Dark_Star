@@ -7,6 +7,7 @@ from models.interactable import PortableItem, FixedObject, StorageUnit, UtilityB
 from models.ship import Ship
 from models.player import Player
 from models.chronometer import Chronometer
+from models.life_support import LifeSupport
 
 
 class GameManager:
@@ -23,7 +24,7 @@ class GameManager:
 
         self._load_items()
 
-    def advance_time(self, minutes: float):
+    def advance_time(self, minutes: int):
         """Advance chronometer and all time-dependent systems."""
         self.chronometer.advance(minutes)
         if hasattr(self.ship, 'life_support'):
@@ -65,6 +66,8 @@ class GameManager:
         self.ship = Ship.load_from_json(name=ship_name, items=self.items)
         self.current_location = self.ship.rooms[STARTING_ROOM]
 
+        self.ship.life_support = LifeSupport(self.ship)
+
         # strict placement
         self._place_player_starting_items()
 
@@ -73,6 +76,8 @@ class GameManager:
 
         # Initialize ship chronometer
         self.chronometer = Chronometer()
+
+
 
     def get_current_location(self):
         """Return the current Room instance."""

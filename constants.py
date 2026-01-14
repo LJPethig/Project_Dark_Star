@@ -4,6 +4,8 @@
 STARTING_ROOM = "crew quarters"  # player start room
 PLAYER_NAME = "Jack Harrow"
 SHIP_NAME = "Tempus Fugit"
+# Ship total pressurized volume (m³) — approximate for a small freighter (Serenity-sized)
+SHIP_VOLUME_M3 = 550.0 # For life-support logic
 
 ROOM_TEMP_PRESETS = {
     "cold":     8.0,    # Unheated storage, deep cargo holds
@@ -57,9 +59,9 @@ CLOCK_FLASH_COLOR = (255, 255, 255, 255)    # White
 
 # Chronometer settings
 START_DATE_TIME = (2276, 1, 1, 0, 0)  # year, month, day, hour, minute — launch epoch
-SHIP_PANEL_REPAIR_MINUTES = 30        # Ship time advance on panel repair
+SHIP_PANEL_REPAIR_MINUTES = 20000        # Increased for testing life support
 SHORT_WAIT = 8.0                      # Player-visible delay in seconds for panel repair
-CLOCK_UPDATE_INTERVAL = 60.0          # Real-time seconds between normal clock ticks
+CLOCK_UPDATE_INTERVAL = 60         # Real-time seconds between normal clock ticks
 
 CARD_SWIPE_WAIT = 3.0  # Player-visible delay in seconds for door card swipe
 
