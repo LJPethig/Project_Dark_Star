@@ -6,6 +6,7 @@ from command_processor import CommandProcessor
 from ui.layout_manager import LayoutManager  # Import the new layout manager
 from ui.drawing import DrawingManager
 from ui.description_renderer import DescriptionRenderer
+from models.interactable import UtilityBelt
 
 class ShipView(arcade.View):
     """Main view with correct section-based layout."""
@@ -162,6 +163,34 @@ class ShipView(arcade.View):
         # Draw ship time (always on top)
         self.ship_time_text.draw()
 
+        # Draw PAM readouts if worn
+        if self._is_pam_attached():
+            room = self.game_manager.get_current_location()
+            values = self.game_manager.ship.life_support.get_current_values(room)
+
+            x_left = self.text_left
+            y_base = self.event_section_height // 2
+            font_size = SMALL_FONT_SIZE
+            color = CLOCK_COLOR  # or TEXT_COLOR for consistency
+
+            # Line 1
+            line1 = f"Temp: {values['temperature_c']:.2f} °C | Pressure: {values['pressure_psi']:.2f} psi"
+            arcade.draw_text(
+                line1,
+                x_left, y_base + 10,
+                color, font_size, font_name=FONT_NAME_PRIMARY,
+                anchor_x="left", anchor_y="center"
+            )
+
+            # Line 2
+            line2 = f"ppO₂: {values['ppO2']:.2f} mmHg | ppCO₂: {values['ppCO2']:.2f} mmHg | Air Q: {values['air_quality']:.2f}%"
+            arcade.draw_text(
+                line2,
+                x_left, y_base - 10,
+                color, font_size, font_name=FONT_NAME_PRIMARY,
+                anchor_x="left", anchor_y="center"
+            )
+
     def on_key_press(self, key, modifiers):
         if key == arcade.key.ENTER:
             cmd = self.current_input.strip()
@@ -229,6 +258,10 @@ class ShipView(arcade.View):
             self.ship_time_text.text = self.game_manager.chronometer.get_formatted()
         else:
             self.ship_time_text.text = "Chronometer not initialized"
+
+    def _is_pam_attached(self) -> bool:
+        belt = self.game_manager.player.waist_slot
+        return belt is not None and isinstance(belt, UtilityBelt) and belt.attached_pam
 
     def _clock_tick(self, delta_time: int):
         """Called every CLOCK_UPDATE_INTERVAL seconds to update clock during normal play."""

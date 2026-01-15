@@ -198,15 +198,3 @@ class UtilityBelt(PortableItem):
         super().__init__(**kwargs)
         # List of attached portable devices (PAM to start, room for future attachments)
         self.attached_pam: bool = False
-
-    def get_description_string(self) -> str:
-        """Return description for room listings or examine."""
-        desc = f"%{self.name}%"
-        if self.attached_devices:
-            attached = ", ".join(f"^{d.name}^ (attached)" for d in self.attached_devices)
-            desc += f" with attachments: {attached}"
-        return desc
-
-    # Optional helper (very useful for command_processor checks)
-    def has_attached(self, device_id: str) -> bool:
-        return any(d.id == device_id for d in self.attached_devices)

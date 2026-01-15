@@ -1,7 +1,9 @@
 {
   "inventory": [
     "id_card_high_sec",
-    "stasis_garment"
+    "stasis_garment",
+    "utility_belt",
+    "personal_atm_monitor"
   ],
 
   "containers": {
@@ -9,9 +11,7 @@
       "id_card_low_sec",
       "flight_coveralls",
       "mag_boots",
-      "pilot_jacket",
-      "utility_belt",
-      "personal_atm_monitor"
+      "pilot_jacket"
     ]
   }
 }

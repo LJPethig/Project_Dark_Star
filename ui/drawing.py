@@ -108,7 +108,7 @@ class DrawingManager:
 
         # Divider at top of event section
         arcade.draw_line(
-            0, 60, SCREEN_WIDTH, 60,
+            0, EVENT_SECTION_HEIGHT, SCREEN_WIDTH, EVENT_SECTION_HEIGHT,
             divider_color,
             DIVIDER_THICKNESS
         )

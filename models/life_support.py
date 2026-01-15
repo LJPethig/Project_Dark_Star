@@ -2,7 +2,7 @@
 from typing import Dict
 from models.ship import Ship
 from models.room import Room
-from constants import SHIP_VOLUME_M3
+from constants import SHIP_VOLUME_M3, CO2_SCRUBBER_EFFICIENCY, OXYGEN_GENERATOR_EFFICIENCY, THERMAL_CONTROL_EFFICIENCY
 import random
 
 
@@ -32,9 +32,9 @@ class LifeSupport:
 
         # Components (dumb for MVP — efficiency 0.0–1.0)
         # set to 0.0 for testing - essentially life support is off.
-        self.co2_scrubber = {"efficiency": 0.0}
-        self.oxygen_generator = {"efficiency": 0.0}
-        self.thermal_control = {"efficiency": 0.0}
+        self.co2_scrubber = {"efficiency": CO2_SCRUBBER_EFFICIENCY}
+        self.oxygen_generator = {"efficiency": OXYGEN_GENERATOR_EFFICIENCY}
+        self.thermal_control = {"efficiency": THERMAL_CONTROL_EFFICIENCY}
 
         # Per-room current temp (init to target, will drift)
         for room in self.ship.rooms.values():
@@ -67,6 +67,8 @@ class LifeSupport:
         return {
             "pressure_psi": self.global_pressure_psi,
             "temperature_c": room.current_temperature,
+            "ppO2": self.global_ppo2_mmhg,
+            "ppCO2": self.global_ppco2_mmhg,
             "air_quality": self.air_quality_percent,
         }
 

@@ -4,8 +4,14 @@
 STARTING_ROOM = "crew quarters"  # player start room
 PLAYER_NAME = "Jack Harrow"
 SHIP_NAME = "Tempus Fugit"
-# Ship total pressurized volume (m³) — approximate for a small freighter (Serenity-sized)
-SHIP_VOLUME_M3 = 550.0 # For life-support logic
+
+# Life support constants
+
+SHIP_VOLUME_M3 = 550.0 # Ship total pressurized volume (m³) — approximate for a small freighter (Serenity-sized)
+# Range 0.0 to 1.0 - 0% Efficient (Turned off/broken) to 100% Efficient (No faults)
+CO2_SCRUBBER_EFFICIENCY = 0.79
+OXYGEN_GENERATOR_EFFICIENCY = 0.79
+THERMAL_CONTROL_EFFICIENCY = 0.79
 
 ROOM_TEMP_PRESETS = {
     "cold":     8.0,    # Unheated storage, deep cargo holds
@@ -14,6 +20,7 @@ ROOM_TEMP_PRESETS = {
     "warm":     24.0,   # Medical bay, some living areas (patient/drug optimal)
     "hot":      28.0,   # Engineering spaces (machinery heat load)
 }
+
 
 # Window settings
 SCREEN_WIDTH = 1270
@@ -71,7 +78,7 @@ CARD_SWIPE_WAIT = 3.0  # Player-visible delay in seconds for door card swipe
 # Layout ratios and heights
 LEFT_PANEL_RATIO = 0.45                # Image width ratio
 DESCRIPTION_SECTION_RATIO = 0.60       # Proportion of right text area for description
-EVENT_SECTION_HEIGHT = 60              # Pixels for bottom event section
+EVENT_SECTION_HEIGHT = 70              # Pixels for bottom event section
 
 # Fixed heights
 INPUT_SECTION_HEIGHT = 100              # Fixed pixel height for input section
