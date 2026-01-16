@@ -2,7 +2,15 @@
 from typing import Dict
 from models.ship import Ship
 from models.room import Room
-from constants import SHIP_VOLUME_M3, CO2_SCRUBBER_EFFICIENCY, OXYGEN_GENERATOR_EFFICIENCY, THERMAL_CONTROL_EFFICIENCY
+from constants import (
+    SHIP_VOLUME_M3,
+    DEFAULT_CREW_COUNT,
+    HUMAN_O2_CONSUMPTION_M3_PER_MIN,
+    HUMAN_CO2_PRODUCTION_M3_PER_MIN,
+    CO2_SCRUBBER_EFFICIENCY,
+    OXYGEN_GENERATOR_EFFICIENCY,
+    THERMAL_CONTROL_EFFICIENCY,
+)
 import random
 
 
@@ -18,8 +26,8 @@ class LifeSupport:
         self.ship_volume_m3 = SHIP_VOLUME_M3
 
         # Volume-scaled per-minute rates (human consumption in m³/min, converted to mmHg drop at 1 atm = 760 mmHg)
-        o2_consumed_m3_per_min = 0.00058  # ~0.84 m³/day per person / 1440 min
-        co2_produced_m3_per_min = 0.00049  # ~0.7 m³/day per person / 1440 min
+        o2_consumed_m3_per_min = HUMAN_O2_CONSUMPTION_M3_PER_MIN * DEFAULT_CREW_COUNT
+        co2_produced_m3_per_min = HUMAN_CO2_PRODUCTION_M3_PER_MIN * DEFAULT_CREW_COUNT
 
         self.ppo2_drop_per_min = (o2_consumed_m3_per_min / self.ship_volume_m3) * 760
         self.ppco2_rise_per_min = (co2_produced_m3_per_min / self.ship_volume_m3) * 760
@@ -31,17 +39,14 @@ class LifeSupport:
         self.global_ppco2_mmhg: float = 2.5
 
         # Components (dumb for MVP — efficiency 0.0–1.0)
-        # set to 0.0 for testing - essentially life support is off.
         self.co2_scrubber = {"efficiency": CO2_SCRUBBER_EFFICIENCY}
         self.oxygen_generator = {"efficiency": OXYGEN_GENERATOR_EFFICIENCY}
         self.thermal_control = {"efficiency": THERMAL_CONTROL_EFFICIENCY}
 
-        # Per-room current temp (init to target, will drift)
+        # Per-room current temp (init to target with realistic variation)
         for room in self.ship.rooms.values():
-            room.current_temperature = room.target_temperature
-            # Add random initial drift (±1.0 °C for MVP)
-            drift_range = 1.0
-            room.current_temperature += random.uniform(-drift_range, drift_range)
+            # Add random initial variation ±0.5 °C
+            room.current_temperature = random.uniform(room.target_temperature - 0.5, room.target_temperature + 0.5)
 
         # Debug initial values (remove later)
         print(
@@ -52,7 +57,6 @@ class LifeSupport:
             f"ppCO₂: {self.global_ppco2_mmhg:.2f} mmHg | "
             f"Air Quality: {self.air_quality_percent:.2f}%"
         )
-
 
     @property
     def air_quality_percent(self) -> float:
@@ -72,38 +76,87 @@ class LifeSupport:
             "air_quality": self.air_quality_percent,
         }
 
+    # def advance_time(self, minutes: int):
+    #     """Advance simulation by given minutes, looping per minute (capped at 180 days)."""
+    #     MAX_MINUTES_PER_STEP = 259200  # Realistic life support calculations for up to 180 days of time advance
+    #
+    #     # Cap the loop to prevent huge jumps from freezing (rare for MVP)
+    #     effective_minutes = min(minutes, MAX_MINUTES_PER_STEP)
+    #
+    #     for _ in range(effective_minutes):
+    #         # Metabolic + correction
+    #         self.global_ppco2_mmhg += self.ppco2_rise_per_min * (1 - self.co2_scrubber["efficiency"])
+    #         self.global_ppo2_mmhg -= self.ppo2_drop_per_min * (1 - self.oxygen_generator["efficiency"])
+    #
+    #         # Temp passive loss if thermal control efficiency under 100% or temp variation if efficiency at 100%
+    #         for room in self.ship.rooms.values():
+    #             if self.thermal_control["efficiency"] == 1.0:
+    #                 room.current_temperature = random.uniform(room.target_temperature - 0.5,
+    #                                                           room.target_temperature + 0.5)
+    #             elif self.thermal_control["efficiency"] >= 0.2 and self.thermal_control["efficiency"] <= 0.9:
+    #                 room.current_temperature -= 0.00008 * (1 - self.thermal_control["efficiency"])
+    #             elif self.thermal_control["efficiency"] == 0.1:
+    #                 room.current_temperature -= 0.00009 * (1 - self.thermal_control["efficiency"])
+    #             elif self.thermal_control["efficiency"] == 0.0:
+    #                 room.current_temperature -= 0.0002 * (1 - self.thermal_control["efficiency"])
+    #
+    #     for room in self.ship.rooms.values():
+    #         # final variation applied to all results under 100% efficiency
+    #         if self.thermal_control["efficiency"] < 1.0:
+    #             room.current_temperature += random.uniform(-0.5,0.5)
+    #
+    #
+    #     # Clamp
+    #     self.global_ppo2_mmhg = max(0, self.global_ppo2_mmhg)
+    #     self.global_ppco2_mmhg = max(0, self.global_ppco2_mmhg)
+    #
+    #     # Debug (remove later)
+    #     print(
+    #         f"Time +{minutes} min | "
+    #         f"Crew quarters temp: {self.ship.rooms['crew quarters'].current_temperature:.2f} °C | "
+    #         f"Pressure: {self.global_pressure_psi:.2f} psi | "
+    #         f"ppO₂: {self.global_ppo2_mmhg:.2f} mmHg | "
+    #         f"ppCO₂: {self.global_ppco2_mmhg:.2f} mmHg | "
+    #         f"Air Quality: {self.air_quality_percent:.2f}%"
+    #     )
 
+    # grok looping improvements - untested atm
     def advance_time(self, minutes: int):
-        """Advance simulation by given minutes, looping per minute (capped at 72 hours)."""
-        MAX_MINUTES_PER_STEP = 259200  # Realistic life support calculations for up to 180 days of time advance
-
-        # Cap the loop to prevent huge jumps from freezing (rare for MVP)
+        """Advance simulation by given minutes, looping per minute (capped at 180 days)."""
+        MAX_MINUTES_PER_STEP = 259200
         effective_minutes = min(minutes, MAX_MINUTES_PER_STEP)
 
+        eff = self.thermal_control["efficiency"]
 
+        # Pre-calculate total passive loss for the entire time step (vectorized, no per-minute loop for temp)
+        if eff < 1.0:
+            if eff >= 0.2 and eff <= 0.9:
+                total_loss = effective_minutes * 0.00008 * (1 - eff)
+            elif eff == 0.1:
+                total_loss = effective_minutes * 0.00009 * (1 - eff)
+            elif eff == 0.0:
+                total_loss = effective_minutes * 0.0003 * (1 - eff)
+            else:
+                total_loss = 0.0
+
+            for room in self.ship.rooms.values():
+                room.current_temperature -= total_loss
+
+        # Gas simulation (unchanged per-minute loop)
         for _ in range(effective_minutes):
-            # Metabolic + correction
             self.global_ppco2_mmhg += self.ppco2_rise_per_min * (1 - self.co2_scrubber["efficiency"])
             self.global_ppo2_mmhg -= self.ppo2_drop_per_min * (1 - self.oxygen_generator["efficiency"])
 
-            # Temp drift
-            for room in self.ship.rooms.values():
-                current = room.current_temperature
-                target = room.target_temperature
+        # Final variation applied to all results
+        fluctuation = random.uniform(-0.5, 0.5)
+        for room in self.ship.rooms.values():
+            room.current_temperature += fluctuation
 
-                # Active thermal correction only functions when efficiency is high enough (≥ 80%)
-                if self.thermal_control["efficiency"] >= 0.8:
-                    drift_rate_per_min = 0.005  # full healthy-system correction rate
-                    room.current_temperature += (target - current) * drift_rate_per_min
-
-                # Passive heat loss always occurs (even when correction is active)
-                room.current_temperature -= 0.001 * (1 - self.thermal_control["efficiency"])
-
-        # Clamp
+        # Clamp gases
         self.global_ppo2_mmhg = max(0, self.global_ppo2_mmhg)
         self.global_ppco2_mmhg = max(0, self.global_ppco2_mmhg)
 
-        # Debug (remove later)
+        # Debug print (unchanged)
         print(
             f"Time +{minutes} min | "
             f"Crew quarters temp: {self.ship.rooms['crew quarters'].current_temperature:.2f} °C | "
@@ -112,3 +165,4 @@ class LifeSupport:
             f"ppCO₂: {self.global_ppco2_mmhg:.2f} mmHg | "
             f"Air Quality: {self.air_quality_percent:.2f}%"
         )
+

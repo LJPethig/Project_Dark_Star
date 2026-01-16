@@ -7,18 +7,30 @@ SHIP_NAME = "Tempus Fugit"
 
 # Life support constants
 
-SHIP_VOLUME_M3 = 550.0 # Ship total pressurized volume (m³) — approximate for a small freighter (Serenity-sized)
-# Range 0.0 to 1.0 - 0% Efficient (Turned off/broken) to 100% Efficient (No faults)
-CO2_SCRUBBER_EFFICIENCY = 0.79
-OXYGEN_GENERATOR_EFFICIENCY = 0.79
-THERMAL_CONTROL_EFFICIENCY = 0.79
+# Ship physical parameters
+SHIP_VOLUME_M3 = 550.0                  # Approximate total pressurized habitable volume (m³)
+                                        # Roughly Serenity-class small freighter scale
 
+# Crew & human metabolism (resting adult baseline)
+# Sources: NASA ECLSS, submariner physiology refs
+DEFAULT_CREW_COUNT = 1                  # Metabolic load factor (humans consuming/producing gas)
+
+HUMAN_O2_CONSUMPTION_M3_PER_MIN = 0.000275   # ≈ 0.275 L/min (midpoint of 0.25–0.3 L/min range)
+HUMAN_CO2_PRODUCTION_M3_PER_MIN = 0.000225   # ≈ 0.225 L/min (midpoint of 0.20–0.25 L/min range)
+
+# System efficiencies (0.0 = failed/off → 1.0 = perfect)
+# Current defaults reflect current testing values
+CO2_SCRUBBER_EFFICIENCY    = 1.0
+OXYGEN_GENERATOR_EFFICIENCY = 1.0
+THERMAL_CONTROL_EFFICIENCY  = 0.0
+
+# Room temperature presets (°C) — used for target_temperature in Room init
 ROOM_TEMP_PRESETS = {
-    "cold":     8.0,    # Unheated storage, deep cargo holds
-    "cool":     14.0,   # Cargo bays, airlocks, secondary storage
-    "normal":   20.0,   # Crew quarters, galley, rec room (comfort baseline)
-    "warm":     24.0,   # Medical bay, some living areas (patient/drug optimal)
-    "hot":      28.0,   # Engineering spaces (machinery heat load)
+    "cold":   8.0,     # Unheated storage, deep holds, external-adjacent spaces
+    "cool":  14.0,     # Cargo bays, airlocks, utility corridors
+    "normal": 20.0,    # Crew quarters, galley, recreation (human comfort baseline)
+    "warm":  24.0,     # Medical bay, passenger cabins, drug/herb storage
+    "hot":   28.0,     # Engineering, reactor spaces, machinery heat load
 }
 
 
