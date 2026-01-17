@@ -1,8 +1,8 @@
 {
   "connections": [
     {
-      "id": "crew_quarters_main_corridor",
-      "rooms": ["crew quarters", "main corridor"],
+      "id": "captains_quarters_main_corridor",
+      "rooms": ["captains quarters", "main corridor"],
       "locked": false,
       "open_image": "resources/images/open_hatch.png",
       "locked_image": "resources/images/closed_hatch.png",
@@ -11,13 +11,37 @@
       "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
       "panel_ids": [
         {
-          "id": "crew_quarters_main_corridor_panel_crew",
-          "side": "crew quarters",
+          "id": "captains_quarters_main_corridor_panel_crew",
+          "side": "captains quarters",
           "damaged": true,
           "repair_progress": 0.0
         },
         {
-          "id": "crew_quarters_main_corridor_panel_main",
+          "id": "captains_quarters_main_corridor_panel_main",
+          "side": "main corridor",
+          "damaged": false,
+          "repair_progress": 0.0
+        }
+      ]
+    },
+    {
+      "id": "crew_cabin_main_corridor",
+      "rooms": ["crew cabin", "main corridor"],
+      "locked": true,
+      "open_image": "resources/images/open_hatch.png",
+      "locked_image": "resources/images/closed_hatch.png",
+      "security_level": 1,
+      "panel_image": "resources/images/panel_level1_swipe.png",
+      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
+      "panel_ids": [
+        {
+          "id": "crew_cabin_main_corridor_panel_crew",
+          "side": "crew cabin",
+          "damaged": false,
+          "repair_progress": 0.0
+        },
+        {
+          "id": "crew_cabin_main_corridor_panel_main",
           "side": "main corridor",
           "damaged": false,
           "repair_progress": 0.0
@@ -211,6 +235,30 @@
         {
           "id": "sub_corridor_cargo_bay_panel_cargo",
           "side": "cargo bay",
+          "damaged": false,
+          "repair_progress": 0.0
+        }
+      ]
+    },
+    {
+      "id": "sub_corridor_head",
+      "rooms": ["sub corridor", "head"],
+      "locked": false,
+      "open_image": "resources/images/open_hatch.png",
+      "locked_image": "resources/images/closed_hatch.png",
+      "security_level": 1,
+      "panel_image": "resources/images/panel_level1_swipe.png",
+      "panel_image_damaged": "resources/images/panel_level1_swipe_damaged.png",
+      "panel_ids": [
+        {
+          "id": "sub_corridor_head_panel_sub",
+          "side": "sub corridor",
+          "damaged": false,
+          "repair_progress": 0.0
+        },
+        {
+          "id": "sub_corridor_head_panel_cargo",
+          "side": "head",
           "damaged": false,
           "repair_progress": 0.0
         }

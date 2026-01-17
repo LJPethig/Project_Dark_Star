@@ -77,6 +77,17 @@ class GameManager:
         # Initialize ship chronometer
         self.chronometer = Chronometer()
 
+        # DEBUGGING ONLY - Quick ship volume check & per-room breakdown
+        total_volume = sum(room.volume_m3 for room in self.ship.rooms.values())
+        print(f"Ship loaded: {len(self.ship.rooms)} rooms, total pressurized volume {total_volume:.2f} m³")
+
+        # Per-room details — sorted by volume descending for easy spotting of big/small
+        print("\nPer-room volumes (L x W x H:)")
+        for room in sorted(self.ship.rooms.values(), key=lambda r: r.volume_m3, reverse=True):
+            dims = room.dimensions_m
+            print(
+                f"  {room.id:20}  {dims['length']:5.1f} × {dims['width']:5.1f} × {dims['height']:5.1f}  = {room.volume_m3:7.2f} m³")
+
 
 
     def get_current_location(self):
@@ -148,14 +159,14 @@ class GameManager:
         random.seed()  # Fresh randomness per new game
 
         # Room references
-        crew_quarters = self.ship.rooms["crew quarters"]
+        captains_quarters = self.ship.rooms["captains quarters"]
         storage_room = self.ship.rooms["storage room"]
         engineering = self.ship.rooms["engineering"]
         cargo_bay = self.ship.rooms["cargo bay"]
         airlock = self.ship.rooms["airlock"]
 
         # Fixed storage units by current ID (fail fast if missing)
-        crew_locker = next(obj for obj in crew_quarters.objects if obj.id == "crew_quarters_cabinet")
+        captains_locker = next(obj for obj in captains_quarters.objects if obj.id == "captains_quarters_cabinet")
         storage_small = next((obj for obj in storage_room.objects if obj.id == "storage_room_small_cabinet"), None)
         storage_large = next((obj for obj in storage_room.objects if obj.id == "storage_room_large_storage_unit"), None)
         eng_tool_cabinet = next((obj for obj in engineering.objects if obj.id == "engineering_tool_storage_cabinet"), None)
@@ -194,8 +205,8 @@ class GameManager:
             placement_targets.extend([cargo_large] * 2)
         if storage_small:
             placement_targets.extend([storage_small] * 2)
-        if crew_locker:
-            placement_targets.append(crew_locker)
+        if captains_locker:
+            placement_targets.append(captains_locker)
 
         # Fallback rooms
         fallback_rooms = [storage_room, engineering, cargo_bay]

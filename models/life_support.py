@@ -51,7 +51,7 @@ class LifeSupport:
         # Debug initial values (remove later)
         print(
             f"Initial state | "
-            f"Crew quarters temp: {self.ship.rooms['crew quarters'].current_temperature:.2f} °C | "
+            f"Captains quarters temp: {self.ship.rooms['captains quarters'].current_temperature:.2f} °C | "
             f"Pressure: {self.global_pressure_psi:.2f} psi | "
             f"ppO₂: {self.global_ppo2_mmhg:.2f} mmHg | "
             f"ppCO₂: {self.global_ppco2_mmhg:.2f} mmHg | "
@@ -76,51 +76,6 @@ class LifeSupport:
             "air_quality": self.air_quality_percent,
         }
 
-    # def advance_time(self, minutes: int):
-    #     """Advance simulation by given minutes, looping per minute (capped at 180 days)."""
-    #     MAX_MINUTES_PER_STEP = 259200  # Realistic life support calculations for up to 180 days of time advance
-    #
-    #     # Cap the loop to prevent huge jumps from freezing (rare for MVP)
-    #     effective_minutes = min(minutes, MAX_MINUTES_PER_STEP)
-    #
-    #     for _ in range(effective_minutes):
-    #         # Metabolic + correction
-    #         self.global_ppco2_mmhg += self.ppco2_rise_per_min * (1 - self.co2_scrubber["efficiency"])
-    #         self.global_ppo2_mmhg -= self.ppo2_drop_per_min * (1 - self.oxygen_generator["efficiency"])
-    #
-    #         # Temp passive loss if thermal control efficiency under 100% or temp variation if efficiency at 100%
-    #         for room in self.ship.rooms.values():
-    #             if self.thermal_control["efficiency"] == 1.0:
-    #                 room.current_temperature = random.uniform(room.target_temperature - 0.5,
-    #                                                           room.target_temperature + 0.5)
-    #             elif self.thermal_control["efficiency"] >= 0.2 and self.thermal_control["efficiency"] <= 0.9:
-    #                 room.current_temperature -= 0.00008 * (1 - self.thermal_control["efficiency"])
-    #             elif self.thermal_control["efficiency"] == 0.1:
-    #                 room.current_temperature -= 0.00009 * (1 - self.thermal_control["efficiency"])
-    #             elif self.thermal_control["efficiency"] == 0.0:
-    #                 room.current_temperature -= 0.0002 * (1 - self.thermal_control["efficiency"])
-    #
-    #     for room in self.ship.rooms.values():
-    #         # final variation applied to all results under 100% efficiency
-    #         if self.thermal_control["efficiency"] < 1.0:
-    #             room.current_temperature += random.uniform(-0.5,0.5)
-    #
-    #
-    #     # Clamp
-    #     self.global_ppo2_mmhg = max(0, self.global_ppo2_mmhg)
-    #     self.global_ppco2_mmhg = max(0, self.global_ppco2_mmhg)
-    #
-    #     # Debug (remove later)
-    #     print(
-    #         f"Time +{minutes} min | "
-    #         f"Crew quarters temp: {self.ship.rooms['crew quarters'].current_temperature:.2f} °C | "
-    #         f"Pressure: {self.global_pressure_psi:.2f} psi | "
-    #         f"ppO₂: {self.global_ppo2_mmhg:.2f} mmHg | "
-    #         f"ppCO₂: {self.global_ppco2_mmhg:.2f} mmHg | "
-    #         f"Air Quality: {self.air_quality_percent:.2f}%"
-    #     )
-
-    # grok looping improvements - untested atm
     def advance_time(self, minutes: int):
         """Advance simulation by given minutes, looping per minute (capped at 180 days)."""
         MAX_MINUTES_PER_STEP = 259200
@@ -159,7 +114,7 @@ class LifeSupport:
         # Debug print (unchanged)
         print(
             f"Time +{minutes} min | "
-            f"Crew quarters temp: {self.ship.rooms['crew quarters'].current_temperature:.2f} °C | "
+            f"Captains quarters temp: {self.ship.rooms['captains quarters'].current_temperature:.2f} °C | "
             f"Pressure: {self.global_pressure_psi:.2f} psi | "
             f"ppO₂: {self.global_ppo2_mmhg:.2f} mmHg | "
             f"ppCO₂: {self.global_ppco2_mmhg:.2f} mmHg | "

@@ -1,7 +1,7 @@
 # constants.py
 
 # Game starting room
-STARTING_ROOM = "crew quarters"  # player start room
+STARTING_ROOM = "captains quarters"  # player start room
 PLAYER_NAME = "Jack Harrow"
 SHIP_NAME = "Tempus Fugit"
 
@@ -28,7 +28,7 @@ THERMAL_CONTROL_EFFICIENCY  = 0.0
 ROOM_TEMP_PRESETS = {
     "cold":   8.0,     # Unheated storage, deep holds, external-adjacent spaces
     "cool":  14.0,     # Cargo bays, airlocks, utility corridors
-    "normal": 20.0,    # Crew quarters, galley, recreation (human comfort baseline)
+    "normal": 20.0,    # Cabins, galley, recreation (human comfort baseline)
     "warm":  24.0,     # Medical bay, passenger cabins, drug/herb storage
     "hot":   28.0,     # Engineering, reactor spaces, machinery heat load
 }

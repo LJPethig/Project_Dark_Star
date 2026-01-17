@@ -1,14 +1,18 @@
 [
   {
-    "id": "crew quarters",
-    "name": "Crew Quarters",
+    "id": "crew cabin",
+    "name": "Crew Cabin",
     "target_temperature": "normal",
     "description": [
-      "Your personal cabin",
-      "The hum of life support fills the air. Dim lights flicker on automatically. The bunk is unmade. Personal effects are scattered — reminders of a life spent in the black.",
-      "A %personal locker% with twin sliding doors is built into the far wall. A hatch leads to *main corridor CH-1*."
+      "The crew cabin",
+       "Currently empty. A door leads to *main corridor CH-1*."
     ],
-    "background": "resources/images/quarters.png",
+    "dimensions_m": {
+    "length": 4.0,
+    "width": 3.5,
+    "height": 2.5
+  },
+    "background": "resources/images/crew_cabin.png",
     "exits": {
       "main corridor": {
         "target": "main corridor",
@@ -17,8 +21,59 @@
         "shortcuts": ["corridor CH-1", "corridor", "CH-1", "main corridor CH-1"]
       }
     },
-    "fixed_objects": ["terminal_personal", "crew_quarters_cabinet"]
+    "fixed_objects": []
   },
+  {
+    "id": "captains quarters",
+    "name": "Captains Quarters",
+    "target_temperature": "normal",
+    "description": [
+      "Your personal quarters",
+      "The hum of life support fills the air. Dim lights flicker on automatically. The bunk is unmade. Personal effects are scattered — reminders of a life spent in the black.",
+      "A %personal locker% with twin sliding doors is built into the far wall. A hatch leads to *main corridor CH-1*."
+    ],
+    "dimensions_m": {
+    "length": 4.5,
+    "width": 4.0,
+    "height": 2.5
+  },
+    "background": "resources/images/captains_quarters.png",
+    "exits": {
+      "main corridor": {
+        "target": "main corridor",
+        "label": "Main Corridor CH-1",
+        "direction": "forward",
+        "shortcuts": ["corridor CH-1", "corridor", "CH-1", "main corridor CH-1"]
+      }
+    },
+    "fixed_objects": ["terminal_personal", "captains_quarters_cabinet"]
+  },
+  {
+  "id": "head",
+  "name": "Bathroom",
+  "target_temperature": "warm",
+  "description": [
+    "A compact, utilitarian wet room.",
+    "The air is humid, carrying the faint tang of recycled water and sanitizer.",
+    "Sink, vacuum toilet, and a shower stall.",
+    "The single hatch leads back to *sub corridor CH-2*."
+  ],
+    "dimensions_m": {
+    "length": 3.5,
+    "width": 2.5,
+    "height": 2.5
+  },
+  "background": "resources/images/head.png",
+  "exits": {
+    "sub corridor": {
+        "target": "sub corridor",
+        "label": "Sub Corridor CH-2",
+        "direction": "back",
+        "shortcuts": ["sub corridor", "corridor", "CH-2", "corridor CH-2"]
+      }
+  },
+  "fixed_objects": []
+},
   {
     "id": "galley",
     "name": "Galley",
@@ -28,6 +83,11 @@
       "Everything is functional, nothing is luxurious.",
       "A hatch leads back to the *recreation room*."
     ],
+    "dimensions_m": {
+    "length": 3.0,
+    "width": 3.5,
+    "height": 2.5
+  },
     "background": "resources/images/galley.png",
     "exits": {
       "recreation room": {
@@ -51,6 +111,11 @@
       "The *galley* entrance is on the right side wall, while a",
       "small *storage room* and *med-bay* access are opposite."
     ],
+    "dimensions_m": {
+    "length": 5.5,
+    "width": 4.0,
+    "height": 2.5
+  },
     "background": "resources/images/recreation.png",
     "exits": {
       "galley": {
@@ -95,6 +160,11 @@
       "The viewscreen shows the vastness of space ahead.",
       "A solid door leads back to the *recreation room*."
     ],
+    "dimensions_m": {
+    "length": 3.0,
+    "width": 2.5,
+    "height": 2.5
+  },
     "background": "resources/images/cockpit.png",
     "exits": {
       "recreation room": {
@@ -115,6 +185,11 @@
       "The lighting here is harsh and functional. An automated storage facility is built into rear wall",
       "A hatch leads back to the *recreation room*."
     ],
+    "dimensions_m": {
+    "length": 3.5,
+    "width": 2.5,
+    "height": 2.5
+  },
     "background": "resources/images/storage.png",
     "exits": {
       "recreation room": {
@@ -135,6 +210,11 @@
       "A vital system to survive the month long journeys between worlds.",
       "An archway leads back to the *med-bay*."
     ],
+    "dimensions_m": {
+    "length": 3.0,
+    "width": 4.0,
+    "height": 2.5
+  },
     "background": "resources/images/hypersleep.png",
     "exits": {
       "med-bay": {
@@ -157,6 +237,11 @@
       "A hatch leads back to the *recreation room*.",
       "On the left is an archway leading to the *stasis chamber*."
     ],
+    "dimensions_m": {
+    "length": 3.5,
+    "width": 4.0,
+    "height": 2.5
+  },
     "background": "resources/images/med_bay.png",
     "exits": {
       "recreation room": {
@@ -182,9 +267,14 @@
       "This passageway connects the main sections of the ship.",
       "Overhead lights cast a steady glow on the metal deck plates.",
       "The *recreation room* entrance leads forward towards the bridge.",
-      "Opposite your *crew quarters* is *sub corridor CH-2* to cargo hold.",
-      "While the *engineering* section is aft."
+      "Next to your *captains quarters* is the *crew cabin*.",
+      "A *sub corridor CH-2* leads to the cargo hold while the *engineering* section is aft."
     ],
+    "dimensions_m": {
+    "length": 10.0,
+    "width": 2.0,
+    "height": 2.5
+  },
     "background": "resources/images/main_corridor.png",
     "exits": {
       "recreation room": {
@@ -204,11 +294,17 @@
         "label": "engineering",
         "direction": "aft"
       },
-      "crew quarters": {
-        "target": "crew quarters",
-        "label": "crew quarters",
+      "captains quarters": {
+        "target": "captains quarters",
+        "label": "captains quarters",
         "direction": "",
         "shortcuts": ["quarters"]
+      },
+      "crew cabin": {
+        "target": "crew cabin",
+        "label": "crew cabin",
+        "direction": "",
+        "shortcuts": ["cabin"]
       }
     },
     "fixed_objects": []
@@ -220,8 +316,14 @@
     "description": [
       "A secondary corridor that branches off *main corridor CH-1*.",
       "Less trafficked, with fewer lights and occasional flickering panels.",
+      "One the left wall is a door to the *shower unit*",
       "At the end a large door leads to the *cargo bay*"
     ],
+    "dimensions_m": {
+    "length": 8.0,
+    "width": 2.0,
+    "height": 2.5
+  },
     "background": "resources/images/sub_corridor.png",
     "exits": {
       "main corridor": {
@@ -235,6 +337,12 @@
         "label": "cargo bay",
         "direction": "forward",
         "shortcuts": ["cargo", "hold", "cargo hold"]
+      },
+      "head": {
+        "target": "head",
+        "label": "head",
+        "direction": "",
+        "shortcuts": ["shower", "head", "bathroom", "toilet", "shower unit"]
       }
     },
     "fixed_objects": []
@@ -251,6 +359,11 @@
       "A solid door leads back towards *main corridor CH-1*, ",
       "on the left wall a small hatch is labelled *life support*"
     ],
+    "dimensions_m": {
+    "length": 6.0,
+    "width": 7.5,
+    "height": 3.5
+  },
     "background": "resources/images/engineering.png",
     "exits": {
       "main corridor": {
@@ -277,6 +390,11 @@
       "The air is fresh and slightly humid.",
       "A small hatch leads back to *engineering*."
     ],
+    "dimensions_m": {
+    "length": 4.5,
+    "width": 3.5,
+    "height": 3.5
+  },
     "background": "resources/images/life_support.png",
     "exits": {
       "engineering": {
@@ -297,6 +415,11 @@
       "The outer door seals tightly against the vacuum.",
       "An inner hatch leads back to the *cargo bay*."
     ],
+    "dimensions_m": {
+    "length": 3.5,
+    "width": 2.5,
+    "height": 2.5
+  },
     "background": "resources/images/airlock.png",
     "exits": {
       "cargo bay": {
@@ -320,6 +443,11 @@
       "A large door leads back to *sub corridor CH-2*,",
       "At the opposite end of the bay is a hydraulically operated *external door*"
     ],
+    "dimensions_m": {
+    "length": 10.0,
+    "width": 8.5,
+    "height": 4.5
+  },
     "background": "resources/images/cargo_bay.png",
     "exits": {
       "sub corridor": {

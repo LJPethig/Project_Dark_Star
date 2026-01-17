@@ -55,7 +55,8 @@ class Ship:
                 description=room_data["description"],
                 background=room_data["background"],
                 exits=room_data["exits"],
-                target_temperature=target_temp  # resolved float
+                target_temperature=target_temp,  # resolved float
+                dimensions_m=room_data["dimensions_m"]
             )
             ship.rooms[room_id] = room
 
