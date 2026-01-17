@@ -23,8 +23,8 @@ class LifeSupport:
 
     def __init__(self, ship: Ship):
         self.ship = ship
-        self.ship_volume_m3 = SHIP_VOLUME_M3
-
+        self.ship_volume_m3 = sum(room.volume_m3 for room in self.ship.rooms.values())
+        print(self.ship_volume_m3)
         # Volume-scaled per-minute rates (human consumption in m³/min, converted to mmHg drop at 1 atm = 760 mmHg)
         o2_consumed_m3_per_min = HUMAN_O2_CONSUMPTION_M3_PER_MIN * DEFAULT_CREW_COUNT
         co2_produced_m3_per_min = HUMAN_CO2_PRODUCTION_M3_PER_MIN * DEFAULT_CREW_COUNT
@@ -85,15 +85,7 @@ class LifeSupport:
 
         # Pre-calculate total passive loss for the entire time step (vectorized, no per-minute loop for temp)
         if eff < 1.0:
-            if eff >= 0.2 and eff <= 0.9:
-                total_loss = effective_minutes * 0.00008 * (1 - eff)
-            elif eff == 0.1:
-                total_loss = effective_minutes * 0.00009 * (1 - eff)
-            elif eff == 0.0:
-                total_loss = effective_minutes * 0.0002 * (1 - eff)
-            else:
-                total_loss = 0.0
-
+            total_loss = effective_minutes * 9.0e-5 * (1 - eff) ** 2
             for room in self.ship.rooms.values():
                 room.current_temperature -= total_loss
 
@@ -118,15 +110,6 @@ class LifeSupport:
         self.global_ppo2_mmhg = max(0, self.global_ppo2_mmhg)
         self.global_ppco2_mmhg = max(0, self.global_ppco2_mmhg)
 
-        # # Debug print (unchanged)
-        # print(
-        #     f"Time +{minutes} min | "
-        #     f"Captains quarters temp: {self.ship.rooms['captains quarters'].current_temperature:.2f} °C | "
-        #     f"Pressure: {self.global_pressure_psi:.2f} psi | "
-        #     f"ppO₂: {self.global_ppo2_mmhg:.2f} mmHg | "
-        #     f"ppCO₂: {self.global_ppco2_mmhg:.2f} mmHg | "
-        #     f"Air Quality: {self.air_quality_percent:.2f}%"
-        # )
 
     def test_life_support(self):
         """Baseline test: , accumulate time jumps per eff,
@@ -191,11 +174,11 @@ class LifeSupport:
             delta_ppco2 = self.global_ppco2_mmhg - start_values[list(start_values.keys())[0]]['ppco2']
             delta_pressure = self.global_pressure_psi - start_values[list(start_values.keys())[0]]['pressure']
 
-            print(f"  Min temp delta: {min(temp_deltas):+.2f} °C")
-            print(f"  Max temp delta: {max(temp_deltas):+.2f} °C")
-            print(
-                f"  Global deltas: ppO₂ {delta_ppo2:+.2f} mmHg, "
-                f"ppCO₂ {delta_ppco2:+.2f} mmHg, Pressure {delta_pressure:+.2f} psi\n")
+            # print(f"  Min temp delta: {min(temp_deltas):+.2f} °C")
+            # print(f"  Max temp delta: {max(temp_deltas):+.2f} °C")
+            # print(
+            #     f"  Global deltas: ppO₂ {delta_ppo2:+.2f} mmHg, "
+            #     f"ppCO₂ {delta_ppco2:+.2f} mmHg, Pressure {delta_pressure:+.2f} psi\n")
 
         # Restore original efficiencies
         self.thermal_control["efficiency"] = original_thermal_eff
@@ -208,8 +191,8 @@ class LifeSupport:
     def _print_room_temps(self, start_values: dict):
         """Print current state and delta vs start_values for all rooms, sorted by id."""
         rooms_sorted = sorted(self.ship.rooms.values(), key=lambda r: r.id)
-        print("  Room                  Temp     ΔTemp   ppO₂    ΔppO₂   ppCO₂   ΔppCO₂  Pressure  ΔPressure")
-        print("  -------------------- -------  ------  ------  ------  ------  ------  --------  ---------")
+        print("  Room                  Temp    ppO₂    ppCO₂   Pressure  ")
+        print("  -------------------- -------  ------  ------  --------  ")
         for room in rooms_sorted:
             sv = start_values[room.id]
             delta_temp = room.current_temperature - sv['temp']
@@ -217,7 +200,7 @@ class LifeSupport:
             delta_ppco2 = self.global_ppco2_mmhg - sv['ppco2']
             delta_pressure = self.global_pressure_psi - sv['pressure']
 
-            print(f"    {room.id:20} {room.current_temperature:5.2f} {delta_temp:+6.2f}  "
-                  f"{self.global_ppo2_mmhg:6.2f} {delta_ppo2:+6.2f}  "
-                  f"{self.global_ppco2_mmhg:6.2f} {delta_ppco2:+6.2f}  "
-                  f"{self.global_pressure_psi:6.2f} {delta_pressure:+9.2f}")
+            print(f"    {room.id:20} {room.current_temperature:5.2f}   "
+                  f"{self.global_ppo2_mmhg:6.2f} "
+                  f"{self.global_ppco2_mmhg:6.2f} "
+                  f"{self.global_pressure_psi:6.2f} ")
