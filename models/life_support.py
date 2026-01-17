@@ -48,15 +48,15 @@ class LifeSupport:
             # Add random initial variation ±0.5 °C
             room.current_temperature = random.uniform(room.target_temperature - 0.5, room.target_temperature + 0.5)
 
-        # Debug initial values (remove later)
-        print(
-            f"Initial state | "
-            f"Captains quarters temp: {self.ship.rooms['captains quarters'].current_temperature:.2f} °C | "
-            f"Pressure: {self.global_pressure_psi:.2f} psi | "
-            f"ppO₂: {self.global_ppo2_mmhg:.2f} mmHg | "
-            f"ppCO₂: {self.global_ppco2_mmhg:.2f} mmHg | "
-            f"Air Quality: {self.air_quality_percent:.2f}%"
-        )
+        # # Debug initial values (remove later)
+        # print(
+        #     f"Initial state | "
+        #     f"Captains quarters temp: {self.ship.rooms['captains quarters'].current_temperature:.2f} °C | "
+        #     f"Pressure: {self.global_pressure_psi:.2f} psi | "
+        #     f"ppO₂: {self.global_ppo2_mmhg:.2f} mmHg | "
+        #     f"ppCO₂: {self.global_ppco2_mmhg:.2f} mmHg | "
+        #     f"Air Quality: {self.air_quality_percent:.2f}%"
+        # )
 
     @property
     def air_quality_percent(self) -> float:
@@ -90,7 +90,7 @@ class LifeSupport:
             elif eff == 0.1:
                 total_loss = effective_minutes * 0.00009 * (1 - eff)
             elif eff == 0.0:
-                total_loss = effective_minutes * 0.0003 * (1 - eff)
+                total_loss = effective_minutes * 0.0002 * (1 - eff)
             else:
                 total_loss = 0.0
 
@@ -102,8 +102,15 @@ class LifeSupport:
             self.global_ppco2_mmhg += self.ppco2_rise_per_min * (1 - self.co2_scrubber["efficiency"])
             self.global_ppo2_mmhg -= self.ppo2_drop_per_min * (1 - self.oxygen_generator["efficiency"])
 
-        # Final variation applied to all results
-        fluctuation = random.uniform(-0.5, 0.5)
+        # Final variation applied to results, dependent on efficiency
+
+        if eff >= 0.7:
+            fluctuation = random.uniform(-0.5, 0.5)
+        elif eff >= 0.3 and eff <= 0.6:
+            fluctuation = random.uniform(-0.8, 0.2)
+        else:
+            fluctuation = random.uniform(-1.5, 0.0)
+
         for room in self.ship.rooms.values():
             room.current_temperature += fluctuation
 
@@ -111,61 +118,106 @@ class LifeSupport:
         self.global_ppo2_mmhg = max(0, self.global_ppo2_mmhg)
         self.global_ppco2_mmhg = max(0, self.global_ppco2_mmhg)
 
-        # Debug print (unchanged)
-        print(
-            f"Time +{minutes} min | "
-            f"Captains quarters temp: {self.ship.rooms['captains quarters'].current_temperature:.2f} °C | "
-            f"Pressure: {self.global_pressure_psi:.2f} psi | "
-            f"ppO₂: {self.global_ppo2_mmhg:.2f} mmHg | "
-            f"ppCO₂: {self.global_ppco2_mmhg:.2f} mmHg | "
-            f"Air Quality: {self.air_quality_percent:.2f}%"
-        )
+        # # Debug print (unchanged)
+        # print(
+        #     f"Time +{minutes} min | "
+        #     f"Captains quarters temp: {self.ship.rooms['captains quarters'].current_temperature:.2f} °C | "
+        #     f"Pressure: {self.global_pressure_psi:.2f} psi | "
+        #     f"ppO₂: {self.global_ppo2_mmhg:.2f} mmHg | "
+        #     f"ppCO₂: {self.global_ppco2_mmhg:.2f} mmHg | "
+        #     f"Air Quality: {self.air_quality_percent:.2f}%"
+        # )
 
-    def test_thermal_baseline(self):
-        """Baseline test: sweep efficiency, accumulate jumps per eff, show per-room temps and min/max delta."""
-        print("=== Thermal Baseline Test (global logic, SHIP_VOLUME_M3=550) ===")
-        print("Time jumps: 1, 7, 14, 30, 180, 180 days (cumulative per efficiency)\n")
+    def test_life_support(self):
+        """Baseline test: , accumulate time jumps per eff,
+        show per-room temps/gases/pressure and deltas. Each efficiency starts from clean state."""
+        print("=== Life Support Baseline Test (global logic, SHIP_VOLUME_M3=550) ===")
+        print("Time jumps: 1, 7, 14, 30, 180, 180 days (cumulative per efficiency)")
+        print("Each efficiency level starts from the same initial global state.\n")
 
         time_jumps_days = [1, 7, 14, 30, 180, 180]
-        # Use exact decimals to avoid float precision issues
         efficiencies = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0]
 
-        original_eff = self.thermal_control["efficiency"]
+        original_thermal_eff = self.thermal_control["efficiency"]
+        original_co2_scrubber_eff = self.co2_scrubber["efficiency"]
+        original_oxygen_generator_eff = self.oxygen_generator["efficiency"]
 
-        # Snapshot true initial temps once
+
+        # Snapshot initial state ONCE — before any changes
         initial_temps = {room.id: room.current_temperature for room in self.ship.rooms.values()}
+        initial_globals = {
+            'ppo2': self.global_ppo2_mmhg,
+            'ppco2': self.global_ppco2_mmhg,
+            'pressure': self.global_pressure_psi
+        }
 
         for eff in efficiencies:
-            print(f"Efficiency: {eff:.1f}")
+            print(f"\nEfficiency: {eff:.1f}")
             self.thermal_control["efficiency"] = eff
 
-            # Reset to initial ONLY for this sweep
+            # Reset both per-room temperatures and global gas/pressure states
             for room in self.ship.rooms.values():
                 room.current_temperature = initial_temps[room.id]
+            self.global_ppo2_mmhg = initial_globals['ppo2']
+            self.global_ppco2_mmhg = initial_globals['ppco2']
+            self.global_pressure_psi = initial_globals['pressure']
+
+            # Snapshot start values for deltas (after reset)
+            start_values = {
+                room.id: {
+                    'temp': room.current_temperature,
+                    'ppo2': self.global_ppo2_mmhg,
+                    'ppco2': self.global_ppco2_mmhg,
+                    'pressure': self.global_pressure_psi
+                }
+                for room in self.ship.rooms.values()
+            }
 
             print("  Initial:")
-            self._print_room_temps()
+            self._print_room_temps(start_values)
 
             cumulative_days = 0
-            start_temps = {room.id: room.current_temperature for room in self.ship.rooms.values()}
-
             for days in time_jumps_days:
                 cumulative_days += days
                 minutes = days * 1440
                 self.advance_time(minutes)
                 print(f"  After +{cumulative_days} days total:")
-                self._print_room_temps()
+                self._print_room_temps(start_values)
 
-            deltas = [room.current_temperature - start_temps[room.id] for room in self.ship.rooms.values()]
-            print(f"  Min delta: {min(deltas):+.2f} °C")
-            print(f"  Max delta: {max(deltas):+.2f} °C\n")
+            # Compute deltas
+            temp_deltas = [room.current_temperature - start_values[room.id]['temp']
+                           for room in self.ship.rooms.values()]
+            delta_ppo2 = self.global_ppo2_mmhg - start_values[list(start_values.keys())[0]]['ppo2']
+            delta_ppco2 = self.global_ppco2_mmhg - start_values[list(start_values.keys())[0]]['ppco2']
+            delta_pressure = self.global_pressure_psi - start_values[list(start_values.keys())[0]]['pressure']
 
-        self.thermal_control["efficiency"] = original_eff
+            print(f"  Min temp delta: {min(temp_deltas):+.2f} °C")
+            print(f"  Max temp delta: {max(temp_deltas):+.2f} °C")
+            print(
+                f"  Global deltas: ppO₂ {delta_ppo2:+.2f} mmHg, "
+                f"ppCO₂ {delta_ppco2:+.2f} mmHg, Pressure {delta_pressure:+.2f} psi\n")
+
+        # Restore original efficiencies
+        self.thermal_control["efficiency"] = original_thermal_eff
+        self.co2_scrubber["efficiency"] = original_co2_scrubber_eff
+        self.oxygen_generator["efficiency"] = original_oxygen_generator_eff
+
+
         print("Test complete. Efficiency restored.")
 
-    def _print_room_temps(self):
-        """Print current temperatures for all rooms, sorted by id."""
+    def _print_room_temps(self, start_values: dict):
+        """Print current state and delta vs start_values for all rooms, sorted by id."""
         rooms_sorted = sorted(self.ship.rooms.values(), key=lambda r: r.id)
+        print("  Room                  Temp     ΔTemp   ppO₂    ΔppO₂   ppCO₂   ΔppCO₂  Pressure  ΔPressure")
+        print("  -------------------- -------  ------  ------  ------  ------  ------  --------  ---------")
         for room in rooms_sorted:
-            print(f"    {room.id:20}: {room.current_temperature:5.2f} °C")
+            sv = start_values[room.id]
+            delta_temp = room.current_temperature - sv['temp']
+            delta_ppo2 = self.global_ppo2_mmhg - sv['ppo2']
+            delta_ppco2 = self.global_ppco2_mmhg - sv['ppco2']
+            delta_pressure = self.global_pressure_psi - sv['pressure']
 
+            print(f"    {room.id:20} {room.current_temperature:5.2f} {delta_temp:+6.2f}  "
+                  f"{self.global_ppo2_mmhg:6.2f} {delta_ppo2:+6.2f}  "
+                  f"{self.global_ppco2_mmhg:6.2f} {delta_ppco2:+6.2f}  "
+                  f"{self.global_pressure_psi:6.2f} {delta_pressure:+9.2f}")

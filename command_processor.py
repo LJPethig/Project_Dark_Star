@@ -61,7 +61,7 @@ class CommandProcessor:
             # testing commands
             "advance time": self._handle_advance_time,
             # loop over all rooms and efficiencies for 1, 7, 14, 30, 180, 180 day time advances
-            "test thermal baseline": lambda args: self.game_manager.ship.life_support.test_thermal_baseline(),
+            "test": lambda args: self.game_manager.ship.life_support.test_life_support(),
         }
 
     def process(self, cmd: str) -> str:
