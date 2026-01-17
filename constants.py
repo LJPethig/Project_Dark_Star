@@ -22,15 +22,15 @@ HUMAN_CO2_PRODUCTION_M3_PER_MIN = 0.000225   # ≈ 0.225 L/min (midpoint of 0.20
 # Current defaults reflect current testing values
 CO2_SCRUBBER_EFFICIENCY    = 1.0
 OXYGEN_GENERATOR_EFFICIENCY = 1.0
-THERMAL_CONTROL_EFFICIENCY  = 0.0
+THERMAL_CONTROL_EFFICIENCY  = 0.1
 
 # Room temperature presets (°C) — used for target_temperature in Room init
 ROOM_TEMP_PRESETS = {
-    "cold":   8.0,     # Unheated storage, deep holds, external-adjacent spaces
-    "cool":  14.0,     # Cargo bays, airlocks, utility corridors
-    "normal": 20.0,    # Cabins, galley, recreation (human comfort baseline)
-    "warm":  24.0,     # Medical bay, passenger cabins, drug/herb storage
-    "hot":   28.0,     # Engineering, reactor spaces, machinery heat load
+    "cold":   11.0,
+    "cool":   16.5,
+    "normal": 21.5,
+    "warm":   23.5,
+    "hot":    25.5,
 }
 
 

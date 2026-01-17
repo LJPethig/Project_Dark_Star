@@ -121,3 +121,51 @@ class LifeSupport:
             f"Air Quality: {self.air_quality_percent:.2f}%"
         )
 
+    def test_thermal_baseline(self):
+        """Baseline test: sweep efficiency, accumulate jumps per eff, show per-room temps and min/max delta."""
+        print("=== Thermal Baseline Test (global logic, SHIP_VOLUME_M3=550) ===")
+        print("Time jumps: 1, 7, 14, 30, 180, 180 days (cumulative per efficiency)\n")
+
+        time_jumps_days = [1, 7, 14, 30, 180, 180]
+        # Use exact decimals to avoid float precision issues
+        efficiencies = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0]
+
+        original_eff = self.thermal_control["efficiency"]
+
+        # Snapshot true initial temps once
+        initial_temps = {room.id: room.current_temperature for room in self.ship.rooms.values()}
+
+        for eff in efficiencies:
+            print(f"Efficiency: {eff:.1f}")
+            self.thermal_control["efficiency"] = eff
+
+            # Reset to initial ONLY for this sweep
+            for room in self.ship.rooms.values():
+                room.current_temperature = initial_temps[room.id]
+
+            print("  Initial:")
+            self._print_room_temps()
+
+            cumulative_days = 0
+            start_temps = {room.id: room.current_temperature for room in self.ship.rooms.values()}
+
+            for days in time_jumps_days:
+                cumulative_days += days
+                minutes = days * 1440
+                self.advance_time(minutes)
+                print(f"  After +{cumulative_days} days total:")
+                self._print_room_temps()
+
+            deltas = [room.current_temperature - start_temps[room.id] for room in self.ship.rooms.values()]
+            print(f"  Min delta: {min(deltas):+.2f} °C")
+            print(f"  Max delta: {max(deltas):+.2f} °C\n")
+
+        self.thermal_control["efficiency"] = original_eff
+        print("Test complete. Efficiency restored.")
+
+    def _print_room_temps(self):
+        """Print current temperatures for all rooms, sorted by id."""
+        rooms_sorted = sorted(self.ship.rooms.values(), key=lambda r: r.id)
+        for room in rooms_sorted:
+            print(f"    {room.id:20}: {room.current_temperature:5.2f} °C")
+

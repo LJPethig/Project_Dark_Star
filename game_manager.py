@@ -78,15 +78,15 @@ class GameManager:
         self.chronometer = Chronometer()
 
         # DEBUGGING ONLY - Quick ship volume check & per-room breakdown
-        total_volume = sum(room.volume_m3 for room in self.ship.rooms.values())
-        print(f"Ship loaded: {len(self.ship.rooms)} rooms, total pressurized volume {total_volume:.2f} m³")
-
-        # Per-room details — sorted by volume descending for easy spotting of big/small
-        print("\nPer-room volumes (L x W x H:)")
-        for room in sorted(self.ship.rooms.values(), key=lambda r: r.volume_m3, reverse=True):
-            dims = room.dimensions_m
-            print(
-                f"  {room.id:20}  {dims['length']:5.1f} × {dims['width']:5.1f} × {dims['height']:5.1f}  = {room.volume_m3:7.2f} m³")
+        # total_volume = sum(room.volume_m3 for room in self.ship.rooms.values())
+        # print(f"Ship loaded: {len(self.ship.rooms)} rooms, total pressurized volume {total_volume:.2f} m³")
+        #
+        # # Per-room details — sorted by volume descending for easy spotting of big/small
+        # print("\nPer-room volumes (L x W x H:)")
+        # for room in sorted(self.ship.rooms.values(), key=lambda r: r.volume_m3, reverse=True):
+        #     dims = room.dimensions_m
+        #     print(
+        #         f"  {room.id:20}  {dims['length']:5.1f} × {dims['width']:5.1f} × {dims['height']:5.1f}  = {room.volume_m3:7.2f} m³")
 
 
 
