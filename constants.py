@@ -7,10 +7,6 @@ SHIP_NAME = "Tempus Fugit"
 
 # Life support constants
 
-# Ship physical parameters
-SHIP_VOLUME_M3 = 550.0                  # Approximate total pressurized habitable volume (m³)
-                                        # Roughly Serenity-class small freighter scale
-
 # Crew & human metabolism (resting adult baseline)
 # Sources: NASA ECLSS, submariner physiology refs
 DEFAULT_CREW_COUNT = 1                  # Metabolic load factor (humans consuming/producing gas)
@@ -22,7 +18,7 @@ HUMAN_CO2_PRODUCTION_M3_PER_MIN = 0.000225   # ≈ 0.225 L/min (midpoint of 0.20
 # Current defaults reflect current testing values
 CO2_SCRUBBER_EFFICIENCY    = 1.0
 OXYGEN_GENERATOR_EFFICIENCY = 1.0
-THERMAL_CONTROL_EFFICIENCY  = 0.1
+THERMAL_CONTROL_EFFICIENCY  = 1.0
 
 # Room temperature presets (°C) — used for target_temperature in Room init
 ROOM_TEMP_PRESETS = {
