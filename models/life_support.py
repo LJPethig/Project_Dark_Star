@@ -65,16 +65,15 @@ class LifeSupport:
         }
 
     def advance_time(self, minutes: int):
-        """Advance simulation by given minutes (capped at 180 days)."""
-        MAX_MINUTES_PER_STEP = 259200
-        effective_minutes = min(minutes, MAX_MINUTES_PER_STEP)
+        """Advance simulation by given minutes"""
+        minutes = int(minutes)  # ensure integer (optional safety)
 
         eff = self.thermal_control["efficiency"]
 
         if eff < 1.0:
             # Global heat loss rate per minute (quadratic inefficiency scaling)
             loss_per_minute = 10.0e-5 * (1 - eff) ** 2
-            total_loss = effective_minutes * loss_per_minute
+            total_loss = minutes * loss_per_minute
 
             # Per-room thermal mass variation: larger rooms cool slower
             # Normalized so ship-wide average temperature drop matches uniform case
@@ -111,8 +110,8 @@ class LifeSupport:
         co2_eff = self.co2_scrubber["efficiency"]
         o2_eff = self.oxygen_generator["efficiency"]
 
-        self.global_ppco2_mmhg += effective_minutes * self.ppco2_rise_per_min * (1 - co2_eff)
-        self.global_ppo2_mmhg -= effective_minutes * self.ppo2_drop_per_min * (1 - o2_eff)
+        self.global_ppco2_mmhg += minutes * self.ppco2_rise_per_min * (1 - co2_eff)
+        self.global_ppo2_mmhg -= minutes * self.ppo2_drop_per_min * (1 - o2_eff)
 
         # Clamp partial pressures
         self.global_ppo2_mmhg = max(0.0, self.global_ppo2_mmhg)
@@ -123,11 +122,11 @@ class LifeSupport:
         All components (thermal, CO₂ scrubber, O₂ generator) use the same efficiency.
         Each level starts from identical initial state."""
         print("=== Life Support Baseline Test (global logic, SHIP_VOLUME_M3=550) ===")
-        print("Time jumps: 1, 7, 14, 30, 180, 180 days (cumulative per efficiency)")
+        print("Time jumps: 1, 7, 14, 30, 60, 90, 180, 360 days (cumulative per efficiency)")
         print("All efficiencies (thermal, CO₂, O₂) set to same value per run")
         print("Each efficiency level starts from the same initial global state.\n")
 
-        time_jumps_days = [1, 7, 14, 30, 180, 180]
+        time_jumps_days = [1, 7, 14, 30, 60, 90, 180, 360]
         efficiencies = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0]
 
         original_eff = {
