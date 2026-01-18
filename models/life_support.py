@@ -77,39 +77,56 @@ class LifeSupport:
         }
 
     def advance_time(self, minutes: int):
-        """Advance simulation by given minutes, looping per minute (capped at 180 days)."""
+        """Advance simulation by given minutes (capped at 180 days)."""
         MAX_MINUTES_PER_STEP = 259200
         effective_minutes = min(minutes, MAX_MINUTES_PER_STEP)
 
         eff = self.thermal_control["efficiency"]
 
-        # Pre-calculate total passive loss for the entire time step (vectorized, no per-minute loop for temp)
         if eff < 1.0:
-            total_loss = effective_minutes * 9.0e-5 * (1 - eff) ** 2
-            for room in self.ship.rooms.values():
-                room.current_temperature -= total_loss
+            # Global heat loss rate per minute (quadratic inefficiency scaling)
+            loss_per_minute = 10.0e-5 * (1 - eff) ** 2
+            total_loss = effective_minutes * loss_per_minute
 
-        # Gas simulation (unchanged per-minute loop)
+            # Per-room thermal mass variation: larger rooms cool slower
+            # Normalized so ship-wide average temperature drop matches uniform case
+            avg_volume = self.ship_volume_m3 / len(self.ship.rooms)
+
+            # Precompute raw factors and their volume-weighted sum
+            raw_factors = {}
+            weighted_sum = 0.0
+            for room in self.ship.rooms.values():
+                raw_factor = (avg_volume / room.volume_m3) ** 0.15
+                raw_factors[room.id] = raw_factor
+                weighted_sum += raw_factor * room.volume_m3
+
+            # Normalization ensures weighted average factor = 1.0
+            normalization = self.ship_volume_m3 / weighted_sum
+
+            # Apply normalized loss to each room
+            for room in self.ship.rooms.values():
+                factor = raw_factors[room.id] * normalization
+                room.current_temperature -= total_loss * factor
+
+            # Apply efficiency-dependent fluctuation (global)
+            if eff >= 0.7:
+                fluctuation = random.uniform(-0.5, 0.5)
+            elif 0.3 <= eff <= 0.6:
+                fluctuation = random.uniform(-0.8, 0.2)
+            else:
+                fluctuation = random.uniform(-1.5, 0.0)
+
+            for room in self.ship.rooms.values():
+                room.current_temperature += fluctuation
+
+        # Gas simulation
         for _ in range(effective_minutes):
             self.global_ppco2_mmhg += self.ppco2_rise_per_min * (1 - self.co2_scrubber["efficiency"])
             self.global_ppo2_mmhg -= self.ppo2_drop_per_min * (1 - self.oxygen_generator["efficiency"])
 
-        # Final variation applied to results, dependent on efficiency
-
-        if eff >= 0.7:
-            fluctuation = random.uniform(-0.5, 0.5)
-        elif eff >= 0.3 and eff <= 0.6:
-            fluctuation = random.uniform(-0.8, 0.2)
-        else:
-            fluctuation = random.uniform(-1.5, 0.0)
-
-        for room in self.ship.rooms.values():
-            room.current_temperature += fluctuation
-
-        # Clamp gases
+        # Clamp gas partial pressures
         self.global_ppo2_mmhg = max(0, self.global_ppo2_mmhg)
         self.global_ppco2_mmhg = max(0, self.global_ppco2_mmhg)
-
 
     def test_life_support(self):
         """Baseline test: , accumulate time jumps per eff,
